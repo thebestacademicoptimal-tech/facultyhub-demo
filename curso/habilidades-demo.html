@@ -665,19 +665,59 @@ $('#qform').addEventListener('submit',e=>{ e.preventDefault(); const t=$('#ftype
 })();
 </script>
 
-<!-- fh-volver: botón para regresar al menú de demos -->
-<a id="fh-volver" href="../" aria-label="Volver a todas las demos de FacultyHub" title="Ver otras demos">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-  <span>Otras demos</span>
-</a>
+<!-- fh-volver: menú para cambiar de demo o volver a la entrada -->
+<div id="fh-nav">
+  <button type="button" id="fh-nav-btn" aria-haspopup="true" aria-expanded="false" aria-controls="fh-nav-panel">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    <span>Otras demos</span>
+  </button>
+  <div id="fh-nav-panel" role="menu" hidden>
+    <p class="fh-t">Elige otra demo</p>
+    <a role="menuitem" data-k="torre" href="../torre/"><b>Torre de Control</b><small>Pagos y programación por docente</small></a>
+    <a role="menuitem" data-k="docentes" href="../docentes/"><b>Gestión de Docentes</b><small>CV, disponibilidad y evaluaciones</small></a>
+    <a role="menuitem" data-k="programacion" href="../programacion/"><b>Programación Académica</b><small>Horarios, secciones y reportes</small></a>
+    <a role="menuitem" data-k="radar" href="../radar/"><b>Radar de Aula</b><small>Participación e incidencias en clase</small></a>
+    <a role="menuitem" data-k="curso" href="../curso/"><b>IM // Terminal</b><small>Curso Investigación de Mercado</small></a>
+    <a role="menuitem" data-k="juego" href="../curso/habilidades-demo.html"><b>Imperio Global</b><small>Juego en vivo con ranking</small></a>
+    <a role="menuitem" class="fh-end" id="fh-entrada" href="../"><b>← Volver a la entrada</b><small>Inicio de FacultyHub</small></a>
+  </div>
+</div>
 <style>
-#fh-volver{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:1100;
-  display:inline-flex;align-items:center;gap:6px;padding:9px 14px 9px 10px;border-radius:999px;
-  background:#0c1a3a;color:#fff;border:1px solid rgba(255,255,255,.22);box-shadow:0 8px 24px -8px rgba(12,26,58,.6);
-  font:600 13px/1 "IBM Plex Sans",Inter,system-ui,sans-serif;text-decoration:none;opacity:.92;transition:transform .15s ease,opacity .15s ease,background .15s ease}
-#fh-volver:hover,#fh-volver:focus-visible{opacity:1;transform:translateY(-2px);background:#173a8c;outline:none}
-@media (max-width:520px){#fh-volver span{display:none}#fh-volver{padding:10px}}
-@media print{#fh-volver{display:none}}
+#fh-nav{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:max(14px,env(safe-area-inset-bottom,0px));z-index:1100;font:500 14px/1.3 "IBM Plex Sans",Inter,system-ui,sans-serif}
+#fh-nav-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 15px 10px 12px;border-radius:999px;cursor:pointer;
+  background:#0c1a3a;color:#fff;border:1px solid rgba(255,255,255,.22);box-shadow:0 8px 24px -8px rgba(12,26,58,.6);font:600 13px/1 inherit;font-family:inherit;opacity:.94;transition:transform .15s ease,opacity .15s ease,background .15s ease}
+#fh-nav-btn:hover,#fh-nav-btn:focus-visible,#fh-nav-btn[aria-expanded="true"]{opacity:1;background:#173a8c;outline:none}
+#fh-nav-btn:hover{transform:translateY(-2px)}
+#fh-nav-panel{position:absolute;left:0;bottom:calc(100% + 10px);width:min(310px,calc(100vw - 28px));background:#fff;color:#0c1a3a;border:1px solid #d7dfee;border-radius:16px;box-shadow:0 24px 60px -18px rgba(12,26,58,.5);padding:8px;animation:fhpop .16s ease-out}
+#fh-nav-panel[hidden]{display:none}
+@keyframes fhpop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#fh-nav-panel .fh-t{margin:6px 10px 6px;font:700 11px/1 inherit;font-family:inherit;letter-spacing:.09em;text-transform:uppercase;color:#6b7a99}
+#fh-nav-panel a{display:block;padding:9px 12px;border-radius:10px;text-decoration:none;color:inherit}
+#fh-nav-panel a b{display:block;font-weight:600;font-size:14px}
+#fh-nav-panel a small{display:block;font-size:12px;color:#6b7a99;margin-top:2px}
+#fh-nav-panel a:hover,#fh-nav-panel a:focus-visible{background:#eef3fc;outline:none}
+#fh-nav-panel a.fh-here{background:#e3ecff;pointer-events:none}
+#fh-nav-panel a.fh-here b::after{content:"  · estás aquí";font-weight:500;font-size:12px;color:#1f55d6}
+#fh-nav-panel a.fh-end{margin-top:6px;border-top:1px solid #e3e9f4;border-radius:0 0 10px 10px;padding-top:12px}
+#fh-nav-panel a.fh-end b{color:#1f55d6}
+@media (max-width:520px){#fh-nav-btn span{display:none}#fh-nav-btn{padding:11px}}
+@media print{#fh-nav{display:none}}
 </style>
+<script>
+(function(){
+  var btn=document.getElementById('fh-nav-btn'), panel=document.getElementById('fh-nav-panel');
+  if(!btn||!panel) return;
+  var p=location.pathname, key = p.indexOf('habilidades-demo')>-1 ? 'juego'
+    : p.indexOf('/torre')>-1 ? 'torre' : p.indexOf('/docentes')>-1 ? 'docentes'
+    : p.indexOf('/programacion')>-1 ? 'programacion' : p.indexOf('/radar')>-1 ? 'radar'
+    : p.indexOf('/curso')>-1 ? 'curso' : '';
+  var here = panel.querySelector('[data-k="'+key+'"]'); if(here) here.classList.add('fh-here');
+  function setOpen(o){ panel.hidden=!o; btn.setAttribute('aria-expanded', o?'true':'false'); }
+  btn.addEventListener('click', function(e){ e.stopPropagation(); setOpen(panel.hidden); });
+  document.addEventListener('click', function(e){ if(!panel.hidden && !panel.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !panel.hidden){ setOpen(false); btn.focus(); } });
+  document.getElementById('fh-entrada').addEventListener('click', function(){ try{ sessionStorage.removeItem('fh_intro'); }catch(e){} });
+})();
+</script>
 </body>
 </html>
