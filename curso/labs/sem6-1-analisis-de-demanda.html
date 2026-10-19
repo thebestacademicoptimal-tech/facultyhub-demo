@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio: Análisis de Demanda - IM // TERMINAL</title>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7; --accent2:#38bdf8;
+  --green:#059669; --red:#dc2626; --purple:#7c3aed; --orange:#d97706;
+}
+.dark-mode{--bg:#0f172a;--card:#1e293b;--text:#e0f2fe;--sub:#93c5fd;--border:#1e40af;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;padding:24px;transition:background 0.3s,color 0.3s;}
+.dark-mode{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);}
+.container{max-width:960px;margin:0 auto;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0284c7 0%,#0ea5e9 100%);
+  border-radius:18px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 6px 24px rgba(2,132,199,0.35);position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header-left h1{font-size:19px;color:#fff;font-weight:800;margin-bottom:3px;}
+.header-left p{font-size:11px;color:rgba(255,255,255,0.8);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;font-weight:700;
+  padding:7px 16px;border-radius:20px;text-align:center;line-height:1.6;
+  border:1px solid rgba(255,255,255,0.35);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+.toggle-dark{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
+  color:#fff;border-radius:20px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:inherit;}
+
+/* Progress */
+.prog-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:0.85rem 1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.prog-top{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+.prog-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.prog-fill{height:10px;border-radius:99px;background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+.prog-steps{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pstep{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.pdot{width:10px;height:10px;border-radius:50%;border:2px solid #bfdbfe;transition:all 0.3s;}
+.pdot.on{border-color:currentColor;background:currentColor;}
+
+/* Instructions */
+.instr{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  margin-bottom:1rem;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.instr-hdr{display:flex;justify-content:space-between;align-items:center;
+  padding:0.8rem 1rem;cursor:pointer;background:var(--bg);}
+.instr-hdr p{font-size:13px;font-weight:600;color:var(--sub);}
+.instr-body{max-height:0;overflow:hidden;transition:max-height 0.35s,padding 0.35s;padding:0 1rem;}
+.instr-body.open{max-height:500px;padding:0.5rem 1rem 1rem;}
+.instr-body ol{font-size:12px;color:var(--text);padding-left:1.2rem;line-height:2.1;}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  position:relative;z-index:1;transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* Inputs */
+input[type="text"],input[type="number"],select,textarea{
+  width:100%;font-family:inherit;border:1px solid var(--border);border-radius:8px;
+  padding:9px 11px;font-size:13px;background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#0284c7;box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+textarea{resize:vertical;}
+label{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
+
+/* Students */
+.st-row{display:flex;gap:8px;margin-bottom:8px;}
+.st-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:var(--card);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.rm-st:hover{border-color:#dc2626;color:#dc2626;}
+#add-st{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;color:#075985;
+  border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit;}
+#add-st:hover{background:#bae6fd;}
+
+/* Concept box */
+.concept-box{background:var(--bg);border:1px solid var(--border);border-left:5px solid #0284c7;
+  border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px;
+  line-height:1.7;color:var(--text);position:relative;z-index:1;}
+.concept-box strong{color:#0284c7;}
+
+/* Formula box */
+.formula-box{background:var(--bg);border:2px dashed var(--border);border-radius:12px;
+  padding:0.9rem 1.25rem;margin-bottom:1rem;position:relative;z-index:1;text-align:center;}
+.formula-text{font-size:14px;font-weight:700;color:var(--sub);}
+.formula-hint{font-size:11px;color:var(--sub);margin-top:4px;opacity:0.75;}
+
+/* Field grid */
+.field-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.field-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+
+/* Result strip */
+.result-strip{border-radius:10px;padding:10px 16px;text-align:center;margin-top:8px;}
+.result-label{font-size:12px;font-weight:600;opacity:0.8;}
+.result-val{font-size:22px;font-weight:800;}
+.result-unit{font-size:12px;opacity:0.7;margin-left:4px;}
+
+/* Summary cards */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:1rem;position:relative;z-index:1;}
+.sum-box{border-radius:14px;padding:1.1rem;text-align:center;border:2px solid transparent;}
+.sum-icon{font-size:28px;margin-bottom:6px;}
+.sum-label{font-size:11px;font-weight:700;letter-spacing:0.3px;opacity:0.8;}
+.sum-val{font-size:26px;font-weight:900;margin:4px 0;}
+.sum-sub{font-size:10px;opacity:0.7;}
+
+/* Bar chart */
+.bar-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;margin-top:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);position:relative;z-index:1;}
+.bar-panel-title{font-size:14px;font-weight:700;color:var(--sub);margin-bottom:12px;}
+.bar-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.bar-lbl{font-size:12px;font-weight:700;width:160px;flex-shrink:0;color:var(--sub);}
+.bar-track{flex:1;background:#e0f2fe;border-radius:99px;height:24px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:99px;transition:width 0.6s ease;display:flex;align-items:center;padding-left:10px;}
+.bar-fill span{font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
+.bar-val{font-size:12px;font-weight:700;width:90px;flex-shrink:0;color:var(--sub);text-align:right;}
+
+/* Interpretation */
+.interp-box{border-radius:12px;padding:1rem 1.25rem;margin-top:1rem;position:relative;z-index:1;border:2px solid transparent;}
+.interp-icon{font-size:24px;margin-bottom:6px;}
+.interp-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.interp-text{font-size:13px;line-height:1.6;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;padding:12px 28px;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-red{background:var(--card);border:2px solid #fecaca;color:#dc2626;
+  padding:12px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-red:hover{background:#fef2f2;}
+.actions{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;position:relative;z-index:1;}
+.autosave{font-size:10px;color:#059669;margin-top:4px;position:relative;z-index:1;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;color:#93c5fd;position:relative;z-index:1;}
+.footer strong{color:#0284c7;}
+
+@media(max-width:640px){
+  .field-grid,.field-grid-2,.summary-grid{grid-template-columns:1fr;}
+  .header{flex-direction:column;align-items:flex-start;}
+  .bar-lbl{width:100px;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 6 · Análisis de Demanda</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>📊 Laboratorio · Análisis de Demanda</h1>
+    <p>IM // TERMINAL · Investigación de Mercado · Demanda Potencial · DIA · Demanda Insatisfecha</p>
+  </div>
+  <div class="header-right">
+    <button class="toggle-dark" id="toggle-dark">🌙 Modo oscuro</button>
+    <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="prog-wrap">
+  <div class="prog-top"><span>Progreso del laboratorio</span><span id="pct-lbl">0%</span></div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-steps" id="prog-steps"></div>
+</div>
+
+<!-- Instrucciones -->
+<div class="instr">
+  <div class="instr-hdr" id="instr-hdr">
+    <p>📋 ¿Cómo completar este laboratorio?</p>
+    <span id="instr-arr" style="font-size:16px;color:#0284c7;">▼</span>
+  </div>
+  <div class="instr-body" id="instr-body">
+    <ol>
+      <li>Registra los <strong>integrantes del equipo</strong> y el producto analizado.</li>
+      <li>En <strong>Demanda Potencial</strong>: ingresa la cantidad del mercado meta (personas) y el consumo per cápita. El resultado se calcula automáticamente.</li>
+      <li>En <strong>Demanda Interna Aparente (DIA)</strong>: ingresa la producción nacional, importaciones y exportaciones del producto. La DIA = Producción + Importaciones − Exportaciones.</li>
+      <li>La <strong>Demanda Insatisfecha</strong> se calcula automáticamente: Demanda Potencial − DIA.</li>
+      <li>Observa el <strong>gráfico comparativo</strong> y la <strong>interpretación automática</strong> de los resultados.</li>
+      <li>Redacta el <strong>análisis grupal</strong> y descarga el PDF.</li>
+    </ol>
+    <p style="font-size:11px;color:#0284c7;margin:6px 0 0 0;">💾 Tu avance se guarda automáticamente en el navegador.</p>
+  </div>
+</div>
+
+<!-- Concepto -->
+<div class="concept-box">
+  <strong>📌 ¿Qué es el Análisis de Demanda?</strong><br>
+  El análisis de demanda permite a las empresas exportadoras estimar el tamaño real del mercado objetivo.
+  La <strong>Demanda Potencial</strong> representa el máximo de ventas posibles en el mercado. La <strong>Demanda Interna Aparente (DIA)</strong> refleja el consumo real actual (producción + importaciones − exportaciones). La diferencia entre ambas es la <strong>Demanda Insatisfecha</strong>, que representa la oportunidad de mercado real para el exportador.
+</div>
+
+<!-- Integrantes -->
+<div class="card">
+  <p class="card-title">👥 Integrantes del equipo (máx. 5)</p>
+  <div id="students-list"></div>
+  <button id="add-st">+ Agregar integrante</button>
+  <div class="field-grid-2" style="margin-top:14px;">
+    <div>
+      <label>📦 Producto a analizar</label>
+      <input type="text" id="cfg-producto" placeholder="Ej: Quinua orgánica, Pota congelada, Arándanos...">
+    </div>
+    <div>
+      <label>📐 Unidad de medida</label>
+      <select id="cfg-unidad">
+        <option value="TN">TN (Toneladas)</option>
+        <option value="KG">KG (Kilogramos)</option>
+        <option value="Und">Und (Unidades)</option>
+        <option value="L">L (Litros)</option>
+        <option value="USD">USD (Dólares)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 1: Demanda Potencial -->
+<div class="card">
+  <p class="card-title" style="color:#0284c7;">🎯 Sección 1: Demanda Potencial</p>
+  <div class="formula-box">
+    <div class="formula-text">Demanda Potencial = Cantidad del mercado meta (personas) × Consumo per cápita</div>
+    <div class="formula-hint">El resultado representa el máximo teórico de demanda en el mercado objetivo.</div>
+  </div>
+  <div class="field-grid">
+    <div>
+      <label>🌍 Mercado meta</label>
+      <input type="text" id="dp-mercado" placeholder="Ej: Estados Unidos, China, España...">
+    </div>
+    <div>
+      <label>👥 Cantidad mercado meta (personas)</label>
+      <input type="number" id="dp-personas" placeholder="Ej: 50000000" min="0" step="1">
+    </div>
+    <div>
+      <label>🍽️ Consumo per cápita (<span id="dp-unidad-lbl">TN</span>/persona/año)</label>
+      <input type="number" id="dp-consumo" placeholder="Ej: 0.005" min="0" step="0.0001">
+    </div>
+  </div>
+  <div>
+    <label>📝 Fuente de datos de la Demanda Potencial</label>
+    <input type="text" id="dp-fuente" placeholder="Ej: SIICEX, TradeMap, FAO, INEI...">
+  </div>
+  <div class="result-strip" style="background:#dbeafe;margin-top:12px;">
+    <div class="result-label" style="color:#0284c7;">DEMANDA POTENCIAL</div>
+    <div class="result-val" style="color:#0284c7;">
+      <span id="dp-result">0.00</span>
+      <span class="result-unit" id="dp-result-unit">TN</span>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN 2: DIA -->
+<div class="card">
+  <p class="card-title" style="color:#059669;">🏭 Sección 2: Demanda Interna Aparente (DIA)</p>
+  <div class="formula-box" style="border-color:#a7f3d0;">
+    <div class="formula-text" style="color:#059669;">DIA = Producción Nacional + Importaciones − Exportaciones</div>
+    <div class="formula-hint">Refleja el consumo real actual del producto en el mercado objetivo.</div>
+  </div>
+  <div class="field-grid">
+    <div>
+      <label>🏗️ Producción Nacional (<span class="dia-unit">TN</span>)</label>
+      <input type="number" id="dia-produccion" placeholder="Ej: 110376.59" min="0" step="0.01">
+      <input type="text" id="dia-prod-fuente" placeholder="Fuente..." style="margin-top:6px;font-size:11px;">
+    </div>
+    <div>
+      <label>📥 Importaciones (<span class="dia-unit">TN</span>)</label>
+      <input type="number" id="dia-importaciones" placeholder="Ej: 39305.10" min="0" step="0.01">
+      <input type="text" id="dia-imp-fuente" placeholder="Fuente..." style="margin-top:6px;font-size:11px;">
+    </div>
+    <div>
+      <label>📤 Exportaciones (<span class="dia-unit">TN</span>)</label>
+      <input type="number" id="dia-exportaciones" placeholder="Ej: 0.58" min="0" step="0.01">
+      <input type="text" id="dia-exp-fuente" placeholder="Fuente..." style="margin-top:6px;font-size:11px;">
+    </div>
+  </div>
+  <div class="result-strip" style="background:#d1fae5;">
+    <div class="result-label" style="color:#059669;">DEMANDA INTERNA APARENTE (DIA)</div>
+    <div class="result-val" style="color:#059669;">
+      <span id="dia-result">0.00</span>
+      <span class="result-unit" id="dia-result-unit">TN</span>
+    </div>
+    <div style="font-size:11px;color:#059669;margin-top:4px;" id="dia-formula-display">0 + 0 − 0 = 0</div>
+  </div>
+</div>
+
+<!-- SECCIÓN 3: Demanda Insatisfecha -->
+<div class="card" style="border:2px solid #0284c7;">
+  <p class="card-title" style="color:#7c3aed;">🎯 Sección 3: Demanda Insatisfecha</p>
+  <div class="formula-box" style="border-color:#c4b5fd;">
+    <div class="formula-text" style="color:#7c3aed;">Demanda Insatisfecha = Demanda Potencial − Demanda Interna Aparente (DIA)</div>
+    <div class="formula-hint">Representa la oportunidad real de mercado para el exportador.</div>
+  </div>
+  <div class="result-strip" style="background:#0284c7;">
+    <div class="result-label" style="color:#bae6fd;">DEMANDA INSATISFECHA</div>
+    <div class="result-val" style="color:#fff;font-size:32px;">
+      <span id="di-result">0.00</span>
+      <span class="result-unit" style="color:#bae6fd;" id="di-result-unit">TN</span>
+    </div>
+    <div style="font-size:11px;color:#bae6fd;margin-top:4px;" id="di-formula-display">0 − 0 = 0</div>
+  </div>
+</div>
+
+<!-- Resumen visual -->
+<div class="summary-grid">
+  <div class="sum-box" style="background:#dbeafe;border-color:#0284c7;">
+    <div class="sum-icon">🎯</div>
+    <div class="sum-label" style="color:#0284c7;">DEMANDA POTENCIAL</div>
+    <div class="sum-val" style="color:#0284c7;" id="s-dp">0.00</div>
+    <div class="sum-sub" style="color:#0284c7;" id="s-dp-u">TN</div>
+  </div>
+  <div class="sum-box" style="background:#d1fae5;border-color:#059669;">
+    <div class="sum-icon">🏭</div>
+    <div class="sum-label" style="color:#059669;">DIA</div>
+    <div class="sum-val" style="color:#059669;" id="s-dia">0.00</div>
+    <div class="sum-sub" style="color:#059669;" id="s-dia-u">TN</div>
+  </div>
+  <div class="sum-box" style="background:#ede9fe;border-color:#7c3aed;">
+    <div class="sum-icon">💡</div>
+    <div class="sum-label" style="color:#7c3aed;">DEM. INSATISFECHA</div>
+    <div class="sum-val" style="color:#7c3aed;" id="s-di">0.00</div>
+    <div class="sum-sub" style="color:#7c3aed;" id="s-di-u">TN</div>
+  </div>
+</div>
+
+<!-- Gráfico -->
+<div class="bar-panel">
+  <p class="bar-panel-title">📈 Comparativo visual de demanda</p>
+  <div id="bar-chart"></div>
+</div>
+
+<!-- Interpretación automática -->
+<div id="interp-box" class="interp-box" style="background:#f0f9ff;border-color:#bfdbfe;display:none;">
+  <div class="interp-icon" id="interp-icon">💡</div>
+  <div class="interp-title" id="interp-title" style="color:#0284c7;">Interpretación</div>
+  <div class="interp-text" id="interp-text" style="color:var(--sub);"></div>
+</div>
+
+<!-- Análisis grupal -->
+<div class="card" style="margin-top:1rem;">
+  <p class="card-title">💬 Análisis grupal</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:8px;">¿Qué representa la demanda insatisfecha para su producto? ¿Es una oportunidad viable de exportación? ¿Qué factores podrían limitar o ampliar esta demanda insatisfecha?</p>
+  <textarea id="analysis" rows="5" placeholder="Escriban aquí el análisis y conclusiones del equipo..."></textarea>
+</div>
+
+<!-- Botones -->
+<div class="actions">
+  <button class="btn-red" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-primary" id="pdf-btn">⬇ Descargar PDF</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave-lbl"></p>
+
+<div class="footer">
+  IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong><br>
+  <span style="font-size:10px;color:#bae6fd;">Desarrollado por Daniel Solar</span>
+</div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ── Dark mode ─────────────────────────────────────────────────────────
+document.getElementById('toggle-dark').addEventListener('click',function(){
+  document.body.classList.toggle('dark-mode');
+  this.textContent=document.body.classList.contains('dark-mode')?'☀️ Modo claro':'🌙 Modo oscuro';
+  save();
+});
+
+// ── Progress ──────────────────────────────────────────────────────────
+const stepDefs=[
+  {lbl:'Integrantes',clr:'#0284c7'},
+  {lbl:'Producto',clr:'#0284c7'},
+  {lbl:'Dem. Potencial',clr:'#0284c7'},
+  {lbl:'DIA',clr:'#059669'},
+  {lbl:'Análisis',clr:'#7c3aed'}
+];
+const stepsWrap=document.getElementById('prog-steps');
+stepDefs.forEach(function(s,i){
+  const el=document.createElement('div');el.className='pstep';
+  el.innerHTML='<div class="pdot" id="pd-'+i+'" style="color:'+s.clr+'"></div><span>'+s.lbl+'</span>';
+  stepsWrap.appendChild(el);
+});
+function setDot(i,on){const d=document.getElementById('pd-'+i);if(d)d.className='pdot'+(on?' on':'');}
+
+function updateProgress(){
+  let done=0;
+  const hasSt=Array.from(document.querySelectorAll('.st-name')).some(function(i){return i.value.trim();});
+  if(hasSt){done++;setDot(0,true);}else setDot(0,false);
+  const hasProd=(document.getElementById('cfg-producto')?.value||'').trim().length>1;
+  if(hasProd){done++;setDot(1,true);}else setDot(1,false);
+  const hasDP=parseFloat(document.getElementById('dp-personas')?.value)>0&&parseFloat(document.getElementById('dp-consumo')?.value)>0;
+  if(hasDP){done++;setDot(2,true);}else setDot(2,false);
+  const hasDIA=parseFloat(document.getElementById('dia-produccion')?.value)>0;
+  if(hasDIA){done++;setDot(3,true);}else setDot(3,false);
+  const hasA=(document.getElementById('analysis')?.value||'').trim().length>15;
+  if(hasA){done++;setDot(4,true);}else setDot(4,false);
+  const pct=Math.round((done/5)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('pct-lbl').textContent=pct+'%';
+}
+
+// ── Instructions ──────────────────────────────────────────────────────
+document.getElementById('instr-hdr').addEventListener('click',function(){
+  const b=document.getElementById('instr-body'),a=document.getElementById('instr-arr');
+  b.classList.toggle('open');a.textContent=b.classList.contains('open')?'▲':'▼';
+});
+
+// ── Students ──────────────────────────────────────────────────────────
+const MAX_ST=5;let stCount=1;
+const stList=document.getElementById('students-list');
+function addStudentRow(idx){
+  const row=document.createElement('div');row.className='st-row';row.id='str-'+idx;
+  row.innerHTML='<input type="text" class="st-name" placeholder="Nombre"><input type="text" class="st-last" placeholder="Apellido"><button class="rm-st" aria-label="Eliminar">✕</button>';
+  stList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){i.addEventListener('input',function(){updateProgress();save();});});
+}
+function updateAddBtn(){const btn=document.getElementById('add-st');btn.disabled=stCount>=MAX_ST;btn.style.opacity=stCount>=MAX_ST?'0.5':'1';}
+stList.addEventListener('click',function(e){
+  const btn=e.target.closest('.rm-st');
+  if(!btn||stList.children.length<=1)return;
+  btn.closest('.st-row').remove();stCount--;updateAddBtn();updateProgress();save();
+});
+document.getElementById('add-st').addEventListener('click',function(){if(stCount>=MAX_ST)return;addStudentRow(stCount);stCount++;updateAddBtn();});
+addStudentRow(0);
+
+// ── Format numbers ────────────────────────────────────────────────────
+function fmtN(n){
+  if(isNaN(n))return'0.00';
+  return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function getU(){return document.getElementById('cfg-unidad')?.value||'TN';}
+
+// ── Calculations ──────────────────────────────────────────────────────
+let lastDP=0,lastDIA=0,lastDI=0;
+
+function calcAll(){
+  const U=getU();
+  // Update unit labels
+  document.getElementById('dp-unidad-lbl').textContent=U;
+  document.querySelectorAll('.dia-unit').forEach(function(el){el.textContent=U;});
+  ['dp-result-unit','dia-result-unit','di-result-unit','s-dp-u','s-dia-u','s-di-u'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el.textContent=U;
+  });
+
+  // Demanda Potencial
+  const personas=parseFloat(document.getElementById('dp-personas')?.value)||0;
+  const consumo=parseFloat(document.getElementById('dp-consumo')?.value)||0;
+  const dp=personas*consumo;
+  lastDP=dp;
+  document.getElementById('dp-result').textContent=fmtN(dp);
+  document.getElementById('s-dp').textContent=fmtN(dp);
+
+  // DIA
+  const prod=parseFloat(document.getElementById('dia-produccion')?.value)||0;
+  const imp=parseFloat(document.getElementById('dia-importaciones')?.value)||0;
+  const exp=parseFloat(document.getElementById('dia-exportaciones')?.value)||0;
+  const dia=prod+imp-exp;
+  lastDIA=dia;
+  document.getElementById('dia-result').textContent=fmtN(dia);
+  document.getElementById('dia-formula-display').textContent=fmtN(prod)+' + '+fmtN(imp)+' − '+fmtN(exp)+' = '+fmtN(dia);
+  document.getElementById('s-dia').textContent=fmtN(dia);
+
+  // Demanda Insatisfecha
+  const di=dp-dia;
+  lastDI=di;
+  document.getElementById('di-result').textContent=fmtN(di);
+  document.getElementById('di-formula-display').textContent=fmtN(dp)+' − '+fmtN(dia)+' = '+fmtN(di);
+  document.getElementById('s-di').textContent=fmtN(di);
+
+  drawBarChart(dp,dia,di,U);
+  updateInterpretation(dp,dia,di);
+  updateProgress();save();
+}
+
+// ── Bar chart ─────────────────────────────────────────────────────────
+function drawBarChart(dp,dia,di,U){
+  const container=document.getElementById('bar-chart');
+  const items=[
+    {lbl:'Demanda Potencial',val:dp,color:'#0284c7',bg:'linear-gradient(90deg,#0284c7,#38bdf8)'},
+    {lbl:'DIA',val:dia,color:'#059669',bg:'linear-gradient(90deg,#059669,#34d399)'},
+    {lbl:'Dem. Insatisfecha',val:di>0?di:0,color:'#7c3aed',bg:'linear-gradient(90deg,#7c3aed,#a78bfa)'}
+  ];
+  const max=Math.max(dp,dia,di,0.01);
+  let html='';
+  items.forEach(function(item){
+    const pct=Math.round((Math.max(item.val,0)/max)*100);
+    const display=item.val>=1000000?(item.val/1000000).toFixed(2)+'M '+U:fmtN(item.val)+' '+U;
+    html+=`<div class="bar-row">
+      <div class="bar-lbl" style="color:${item.color};">${item.lbl}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pct}%;background:${item.bg};">
+          <span>${pct>15?display:''}</span>
+        </div>
+      </div>
+      <div class="bar-val" style="color:${item.color};">${display}</div>
+    </div>`;
+  });
+  container.innerHTML=html;
+}
+
+// ── Interpretation ────────────────────────────────────────────────────
+function updateInterpretation(dp,dia,di){
+  const box=document.getElementById('interp-box');
+  if(dp===0&&dia===0){box.style.display='none';return;}
+  box.style.display='block';
+  let icon,title,text,bg,bc;
+  if(di>0&&di/dp>0.3){
+    icon='🌟';title='¡Gran oportunidad de mercado!';
+    text='La demanda insatisfecha representa el <strong>'+Math.round(di/dp*100)+'%</strong> de la demanda potencial. Esto indica una oportunidad de exportación significativa. El mercado no está siendo abastecido completamente, lo que abre una ventana estratégica para su producto.';
+    bg='#d1fae5';bc='#059669';
+  }else if(di>0){
+    icon='✅';title='Oportunidad moderada de mercado';
+    text='La demanda insatisfecha representa el <strong>'+Math.round(di/dp*100)+'%</strong> de la demanda potencial. Existe una oportunidad de exportación, aunque el mercado ya cuenta con una oferta importante. Se recomienda una estrategia de diferenciación.';
+    bg='#dbeafe';bc='#0284c7';
+  }else if(di===0){
+    icon='⚖️';title='Mercado en equilibrio';
+    text='La demanda potencial es igual a la Demanda Interna Aparente. El mercado está en equilibrio. Se requiere una estrategia diferenciada para ingresar con éxito.';
+    bg='#fef3c7';bc='#d97706';
+  }else{
+    icon='⚠️';title='Mercado sobreabastecido';
+    text='La Demanda Interna Aparente supera la demanda potencial estimada. El mercado podría estar sobreabastecido o la demanda potencial está subestimada. Se recomienda revisar los datos o buscar segmentos específicos.';
+    bg='#fee2e2';bc='#dc2626';
+  }
+  box.style.background=bg;box.style.borderColor=bc;
+  document.getElementById('interp-icon').textContent=icon;
+  document.getElementById('interp-title').textContent=title;document.getElementById('interp-title').style.color=bc;
+  document.getElementById('interp-text').innerHTML=text;document.getElementById('interp-text').style.color=bc;
+}
+
+// ── Attach events ─────────────────────────────────────────────────────
+['dp-personas','dp-consumo','dia-produccion','dia-importaciones','dia-exportaciones','cfg-unidad'].forEach(function(id){
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('input',calcAll);
+});
+['dp-mercado','dp-fuente','dia-prod-fuente','dia-imp-fuente','dia-exp-fuente','cfg-producto','analysis'].forEach(function(id){
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('input',function(){updateProgress();save();});
+});
+
+// ── Autosave ──────────────────────────────────────────────────────────
+function save(){
+  try{
+    const d={
+      producto:document.getElementById('cfg-producto').value,
+      unidad:document.getElementById('cfg-unidad').value,
+      analysis:document.getElementById('analysis').value,
+      darkMode:document.body.classList.contains('dark-mode'),
+      students:[],
+      fields:{}
+    };
+    stList.querySelectorAll('.st-row').forEach(function(r){
+      d.students.push({n:r.querySelector('.st-name').value,a:r.querySelector('.st-last').value});
+    });
+    ['dp-mercado','dp-personas','dp-consumo','dp-fuente',
+     'dia-produccion','dia-importaciones','dia-exportaciones',
+     'dia-prod-fuente','dia-imp-fuente','dia-exp-fuente'].forEach(function(id){
+      const el=document.getElementById(id);if(el)d.fields[id]=el.value;
+    });
+    localStorage.setItem('demanda_lab_v3',JSON.stringify(d));
+    const lbl=document.getElementById('autosave-lbl');
+    lbl.textContent='💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){lbl.textContent='';},2500);
+  }catch(e){}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('demanda_lab_v3');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.getElementById('cfg-producto').value=d.producto||'';
+    document.getElementById('cfg-unidad').value=d.unidad||'TN';
+    document.getElementById('analysis').value=d.analysis||'';
+    if(d.darkMode){document.body.classList.add('dark-mode');document.getElementById('toggle-dark').textContent='☀️ Modo claro';}
+    if(d.students&&d.students.length>0){
+      stList.innerHTML='';stCount=0;
+      d.students.forEach(function(s,i){
+        addStudentRow(i);
+        const row=document.getElementById('str-'+i);
+        row.querySelector('.st-name').value=s.n||'';
+        row.querySelector('.st-last').value=s.a||'';
+        stCount++;
+      });
+      updateAddBtn();
+    }
+    if(d.fields){Object.keys(d.fields).forEach(function(id){const el=document.getElementById(id);if(el)el.value=d.fields[id]||'';});}
+    calcAll();
+  }catch(e){}
+}
+loadSaved();
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('rst-btn').addEventListener('click',function(){
+  if(!confirm('¿Reiniciar todo el laboratorio?'))return;
+  ['cfg-producto','analysis','dp-mercado','dp-personas','dp-consumo','dp-fuente',
+   'dia-produccion','dia-importaciones','dia-exportaciones',
+   'dia-prod-fuente','dia-imp-fuente','dia-exp-fuente'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('cfg-unidad').value='TN';
+  stList.innerHTML='';stCount=0;addStudentRow(0);stCount=1;updateAddBtn();
+  document.body.classList.remove('dark-mode');document.getElementById('toggle-dark').textContent='🌙 Modo oscuro';
+  try{localStorage.removeItem('demanda_lab_v3');}catch(e){}
+  document.getElementById('pdf-status').textContent='';
+  calcAll();
+});
+
+// ── PDF ───────────────────────────────────────────────────────────────
+function hexToRgb(hex){const v=hex.replace('#','');return[parseInt(v.substring(0,2),16),parseInt(v.substring(2,4),16),parseInt(v.substring(4,6),16)];}
+
+document.getElementById('pdf-btn').addEventListener('click',function(){
+  const statusEl=document.getElementById('pdf-status');
+  const students=[];
+  stList.querySelectorAll('.st-row').forEach(function(r){
+    const n=r.querySelector('.st-name').value.trim();
+    const a=r.querySelector('.st-last').value.trim();
+    if(n||a)students.push((n+' '+a).trim());
+  });
+  if(students.length===0){statusEl.textContent='Por favor ingresa al menos un integrante.';statusEl.style.color='#dc2626';return;}
+  if(typeof window.jspdf==='undefined'){statusEl.textContent='Cargando librería...';return;}
+  statusEl.style.color='#0284c7';statusEl.textContent='Generando PDF...';
+
+  const producto=(document.getElementById('cfg-producto')?.value||'Sin especificar').trim();
+  const U=getU();
+  const mercado=(document.getElementById('dp-mercado')?.value||'Sin especificar').trim();
+  const analysis=(document.getElementById('analysis')?.value||'').trim();
+  const dpFuente=(document.getElementById('dp-fuente')?.value||'—').trim();
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  function decor(){
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34);doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8);doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar · Desarrollado por Daniel Solar',W/2,H-8,{align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  decor();
+  // Banner
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,110,'F');
+  doc.setFontSize(19);doc.setTextColor(255,255,255);
+  doc.text('Laboratorio · Análisis de Demanda',W/2,44,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('Producto: '+producto+' | Mercado: '+mercado,W/2,68,{align:'center'});
+  doc.setFontSize(9);
+  doc.text('IM // TERMINAL · Investigación de Mercado',W/2,88,{align:'center'});
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=128;
+  const intLine='Integrantes: '+students.join(' · ');
+  const wInt=doc.splitTextToSize(intLine,515);
+  doc.setFontSize(10);doc.text(wInt,40,y);
+  y+=wInt.length*12+2;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(),40,y);
+  doc.setTextColor(0,0,0);y+=18;
+
+  // Tabla general
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Resumen del Análisis de Demanda',40,y);y+=8;
+
+  const personas=parseFloat(document.getElementById('dp-personas')?.value)||0;
+  const consumo=parseFloat(document.getElementById('dp-consumo')?.value)||0;
+  const prod=parseFloat(document.getElementById('dia-produccion')?.value)||0;
+  const imp=parseFloat(document.getElementById('dia-importaciones')?.value)||0;
+  const exp=parseFloat(document.getElementById('dia-exportaciones')?.value)||0;
+  const dpF=dpFuente;
+  const prodFuente=(document.getElementById('dia-prod-fuente')?.value||'—').trim();
+  const impFuente=(document.getElementById('dia-imp-fuente')?.value||'—').trim();
+  const expFuente=(document.getElementById('dia-exp-fuente')?.value||'—').trim();
+
+  const tableBody=[
+    [{content:'DEMANDA POTENCIAL',colSpan:2,styles:{fillColor:[2,132,199],textColor:[255,255,255],fontStyle:'bold'}}],
+    ['Mercado meta',mercado],
+    ['Cantidad del mercado meta (personas)',personas.toLocaleString('en-US')],
+    ['Consumo per cápita ('+U+'/persona/año)',consumo.toFixed(4)],
+    ['Demanda Potencial',fmtN(lastDP)+' '+U],
+    ['Fuente',dpF],
+    [{content:'DEMANDA INTERNA APARENTE (DIA)',colSpan:2,styles:{fillColor:[5,150,105],textColor:[255,255,255],fontStyle:'bold'}}],
+    ['Producción Nacional ('+U+')',fmtN(prod)+' ('+prodFuente+')'],
+    ['Importaciones ('+U+')',fmtN(imp)+' ('+impFuente+')'],
+    ['Exportaciones ('+U+')',fmtN(exp)+' ('+expFuente+')'],
+    ['DIA = Prod. + Import. − Export.',fmtN(lastDIA)+' '+U],
+    [{content:'DEMANDA INSATISFECHA',colSpan:2,styles:{fillColor:[124,58,237],textColor:[255,255,255],fontStyle:'bold'}}],
+    ['Dem. Potencial − DIA',fmtN(lastDP)+' − '+fmtN(lastDIA)+' = '+fmtN(lastDI)+' '+U],
+    ['Representación sobre la demanda potencial',Math.round(lastDI/Math.max(lastDP,0.01)*100)+'%']
+  ];
+
+  doc.autoTable({
+    body:tableBody,startY:y,
+    styles:{fontSize:9,cellPadding:6},
+    columnStyles:{0:{cellWidth:200,fontStyle:'bold'}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+16;
+
+  // Gráfico en PDF
+  if(y>H-160){doc.addPage();decor();y=30;}
+  doc.setFontSize(11);doc.setTextColor(7,89,133);
+  doc.text('Comparativo visual de demanda',40,y);y+=10;
+
+  const barItems=[
+    {lbl:'Demanda Potencial',val:lastDP,rgb:hexToRgb('#0284c7')},
+    {lbl:'DIA',val:lastDIA,rgb:hexToRgb('#059669')},
+    {lbl:'Dem. Insatisfecha',val:lastDI>0?lastDI:0,rgb:hexToRgb('#7c3aed')}
+  ];
+  const maxVal=Math.max(lastDP,lastDIA,lastDI,0.01);
+  const trackW=380,trackH=22,startX=145;
+
+  barItems.forEach(function(item){
+    const bw=Math.round((Math.max(item.val,0)/maxVal)*trackW);
+    const display=fmtN(item.val)+' '+U;
+    // Label
+    doc.setFontSize(9);doc.setTextColor(item.rgb[0],item.rgb[1],item.rgb[2]);
+    doc.text(item.lbl,40,y+14);
+    // Track bg
+    doc.setFillColor(224,242,254);
+    doc.roundedRect(startX,y,trackW,trackH,4,4,'F');
+    // Bar fill
+    if(bw>0){
+      doc.setFillColor(item.rgb[0],item.rgb[1],item.rgb[2]);
+      doc.roundedRect(startX,y,bw,trackH,4,4,'F');
+    }
+    // Value label
+    doc.setFontSize(8);doc.setTextColor(7,89,133);
+    doc.text(display,startX+trackW+6,y+14);
+    y+=trackH+8;
+  });
+  doc.setTextColor(0,0,0);y+=10;
+
+  // Interpretación en PDF
+  const interpText=document.getElementById('interp-text')?.innerHTML?.replace(/<[^>]+>/g,'')||'';
+  if(interpText){
+    if(y>H-80){doc.addPage();decor();y=30;}
+    doc.setFontSize(11);doc.setTextColor(7,89,133);
+    doc.text('Interpretación de resultados',40,y);y+=12;
+    doc.setFontSize(9);doc.setTextColor(0,0,0);
+    const iw=doc.splitTextToSize(interpText,515);
+    doc.text(iw,40,y);y+=iw.length*11+10;
+  }
+
+  // Análisis grupal
+  if(analysis){
+    if(y>H-80){doc.addPage();decor();y=30;}
+    doc.setFontSize(12);doc.setTextColor(7,89,133);
+    doc.text('Análisis grupal',40,y);y+=12;
+    doc.setFontSize(9);doc.setTextColor(0,0,0);
+    const aw=doc.splitTextToSize(analysis,515);
+    doc.text(aw,40,y);
+  }
+
+  const fn='Demanda_'+(producto.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')||'IM')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent='✅ PDF descargado correctamente.';
+  statusEl.style.color='#16a34a';
+});
+
+updateAddBtn();
+calcAll();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

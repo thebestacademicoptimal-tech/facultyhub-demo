@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio: Perfil del Consumidor - IM // TERMINAL</title>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7; --accent2:#38bdf8;
+  --green:#059669; --red:#dc2626; --purple:#7c3aed; --orange:#d97706;
+}
+.dark-mode{--bg:#0f172a;--card:#1e293b;--text:#e0f2fe;--sub:#93c5fd;--border:#1e40af;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;padding:24px;transition:background 0.3s,color 0.3s;}
+.dark-mode{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);}
+.container{max-width:1020px;margin:0 auto;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);
+  white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0284c7 0%,#0ea5e9 100%);
+  border-radius:18px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 6px 24px rgba(2,132,199,0.35);position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header-left h1{font-size:19px;color:#fff;font-weight:800;margin-bottom:3px;}
+.header-left p{font-size:11px;color:rgba(255,255,255,0.8);}
+.header-right{display:flex;align-items:center;gap:10px;}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;
+  font-weight:700;padding:7px 16px;border-radius:20px;text-align:center;
+  line-height:1.6;border:1px solid rgba(255,255,255,0.35);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+.toggle-dark{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
+  color:#fff;border-radius:20px;padding:5px 12px;font-size:11px;cursor:pointer;
+  font-family:inherit;transition:all 0.2s;}
+
+/* Progress */
+.prog-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:0.85rem 1rem;margin-bottom:1rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.prog-top{display:flex;justify-content:space-between;
+  font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+.prog-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.prog-fill{height:10px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+.prog-steps{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pstep{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.pdot{width:10px;height:10px;border-radius:50%;border:2px solid #bfdbfe;transition:all 0.3s;}
+.pdot.on{border-color:currentColor;background:currentColor;}
+
+/* Instructions */
+.instr{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:1rem;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.instr-hdr{display:flex;justify-content:space-between;align-items:center;
+  padding:0.8rem 1rem;cursor:pointer;background:var(--bg);}
+.instr-hdr p{font-size:13px;font-weight:600;color:var(--sub);}
+.instr-body{max-height:0;overflow:hidden;transition:max-height 0.35s,padding 0.35s;padding:0 1rem;}
+.instr-body.open{max-height:400px;padding:0.5rem 1rem 1rem;}
+.instr-body ol{font-size:12px;color:var(--text);padding-left:1.2rem;line-height:2.1;}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  position:relative;z-index:1;transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* Inputs */
+input[type="text"],textarea,select{
+  width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:8px;padding:9px 11px;font-size:13px;
+  background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,textarea:focus,select:focus{
+  outline:none;border-color:#0284c7;box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+textarea{resize:vertical;}
+label{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
+
+/* Students */
+.st-row{display:flex;gap:8px;margin-bottom:8px;}
+.st-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:var(--card);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.rm-st:hover{border-color:#dc2626;color:#dc2626;}
+#add-st{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;
+  color:#075985;border-radius:8px;padding:8px 16px;
+  font-size:13px;cursor:pointer;font-family:inherit;}
+#add-st:hover{background:#bae6fd;}
+
+/* Concept box */
+.concept-box{background:var(--bg);border:1px solid var(--border);
+  border-left:5px solid #0284c7;border-radius:10px;
+  padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px;
+  line-height:1.7;color:var(--text);position:relative;z-index:1;}
+.concept-box strong{color:#0284c7;}
+
+/* Variables grid */
+.vars-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.var-card{border-radius:12px;padding:1rem;border:2px solid transparent;
+  transition:box-shadow 0.2s;}
+.var-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);}
+.var-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.var-icon{width:38px;height:38px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;}
+.var-title{font-size:13px;font-weight:700;color:inherit;}
+.var-desc{font-size:11px;opacity:0.75;margin-top:1px;}
+.var-card textarea{font-size:12px;min-height:70px;}
+
+/* Resumen visual */
+.resumen-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;
+  margin-top:1rem;}
+.res-box{border-radius:12px;padding:1rem;text-align:center;
+  border:2px solid transparent;}
+.res-icon{font-size:24px;margin-bottom:4px;}
+.res-label{font-size:11px;font-weight:700;opacity:0.8;letter-spacing:0.3px;}
+.res-val{font-size:13px;font-weight:600;margin-top:4px;line-height:1.5;}
+
+/* Profile card visual */
+.profile-preview{background:linear-gradient(135deg,#0284c7,#0ea5e9);
+  border-radius:16px;padding:1.5rem;margin-top:1rem;color:#fff;
+  position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(2,132,199,0.3);}
+.profile-preview::after{content:'👤';position:absolute;right:20px;top:50%;
+  transform:translateY(-50%);font-size:80px;opacity:0.15;}
+.prof-name{font-size:16px;font-weight:800;margin-bottom:4px;}
+.prof-sub{font-size:11px;opacity:0.8;margin-bottom:16px;}
+.prof-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;padding:12px 28px;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-red{background:var(--card);border:2px solid #fecaca;color:#dc2626;
+  padding:12px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-red:hover{background:#fef2f2;}
+.actions{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;position:relative;z-index:1;}
+.autosave{font-size:10px;color:#059669;margin-top:4px;position:relative;z-index:1;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;color:#93c5fd;position:relative;z-index:1;}
+.footer strong{color:#0284c7;}
+
+@media(max-width:640px){
+  .vars-grid{grid-template-columns:1fr;}
+  .resumen-grid{grid-template-columns:1fr 1fr;}
+  .header{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 6 · Perfil del Consumidor</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>🧑‍🤝‍🧑 Laboratorio · Perfil del Consumidor</h1>
+    <p>IM // TERMINAL · Investigación de Mercado · Variables del perfil de cliente/consumidor</p>
+  </div>
+  <div class="header-right">
+    <button class="toggle-dark" id="toggle-dark">🌙 Modo oscuro</button>
+    <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="prog-wrap">
+  <div class="prog-top">
+    <span>Progreso del laboratorio</span>
+    <span id="pct-lbl">0%</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-steps" id="prog-steps"></div>
+</div>
+
+<!-- Instrucciones -->
+<div class="instr">
+  <div class="instr-hdr" id="instr-hdr">
+    <p>📋 ¿Cómo completar este laboratorio?</p>
+    <span id="instr-arr" style="font-size:16px;color:#0284c7;">▼</span>
+  </div>
+  <div class="instr-body" id="instr-body">
+    <ol>
+      <li>Registra los <strong>integrantes del equipo</strong> (máximo 5).</li>
+      <li>Escribe el <strong>nombre del perfil de cliente</strong> que construirán (ej. "Joven profesional urbano").</li>
+      <li>Completa las <strong>10 variables del perfil</strong>: Ubicación, Edad, Género, Profesión, Personalidad, Poder adquisitivo, Ciclo de vida familiar, Frecuencia de compra, Forma de marketing y Lugar de compra.</li>
+      <li>Observa el <strong>resumen visual del perfil</strong> que se genera automáticamente.</li>
+      <li>Redacta el <strong>análisis grupal</strong> y descarga el PDF.</li>
+    </ol>
+    <p style="font-size:11px;color:#0284c7;margin:6px 0 0 0;">💾 Tu avance se guarda automáticamente en el navegador.</p>
+  </div>
+</div>
+
+<!-- Concepto -->
+<div class="concept-box">
+  <strong>📌 ¿Qué es el Perfil del Consumidor?</strong><br>
+  El perfil del consumidor describe las características del cliente/consumidor objetivo al que va dirigido un producto o servicio. Para su planteamiento se analizan variables demográficas, psicográficas y conductuales que permiten comprender quién compra, por qué compra, cuándo y dónde compra. Un perfil bien definido es la base de toda estrategia de marketing y exportación.
+</div>
+
+<!-- Integrantes -->
+<div class="card">
+  <p class="card-title">👥 Integrantes del equipo (máx. 5)</p>
+  <div id="students-list"></div>
+  <button id="add-st">+ Agregar integrante</button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+    <div>
+      <label>🏷️ Nombre del perfil de cliente</label>
+      <input type="text" id="profile-name" placeholder="Ej: Joven profesional urbano, Madre de familia 35-45 años...">
+    </div>
+    <div>
+      <label>📦 Producto / servicio analizado</label>
+      <input type="text" id="cfg-producto" placeholder="Ej: Quinua orgánica, Café especial, Prendas de alpaca...">
+    </div>
+  </div>
+</div>
+
+<!-- Variables del perfil -->
+<div class="card">
+  <p class="card-title">🧩 Variables del Perfil del Consumidor</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:14px;">Completa cada variable describiendo las características del consumidor objetivo para el producto seleccionado.</p>
+  <div class="vars-grid" id="vars-grid"></div>
+</div>
+
+<!-- Resumen visual del perfil -->
+<div class="card">
+  <p class="card-title">✨ Vista previa del perfil del consumidor</p>
+
+  <!-- Perfil visual compacto -->
+  <div class="profile-preview" id="profile-preview">
+    <div class="prof-name" id="prev-name">[ Nombre del perfil ]</div>
+    <div class="prof-sub" id="prev-producto">Producto: —</div>
+    <div class="prof-chips" id="prev-chips"></div>
+  </div>
+
+  <!-- Resumen en cajas -->
+  <div class="resumen-grid" id="resumen-grid"></div>
+</div>
+
+<!-- Análisis grupal -->
+<div class="card">
+  <p class="card-title">💬 Análisis grupal</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:8px;">¿Este perfil representa a un cliente real del mercado objetivo? ¿Qué variable es la más relevante para la estrategia de marketing del producto? ¿Cómo impacta este perfil en la toma de decisiones de exportación?</p>
+  <textarea id="analysis" rows="5" placeholder="Escriban aquí el análisis y conclusiones del equipo..."></textarea>
+</div>
+
+<!-- Botones -->
+<div class="actions">
+  <button class="btn-red" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-primary" id="pdf-btn">⬇ Descargar PDF</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave-lbl"></p>
+
+<div class="footer">
+  IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong><br>
+  <span style="font-size:10px;color:#bae6fd;">Desarrollado por Daniel Solar</span>
+</div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ── Variables ─────────────────────────────────────────────────────────
+const variables=[
+  {key:'ubicacion', label:'Ubicación', icon:'📍', color:'#0284c7', light:'#dbeafe',
+   desc:'Ciudad, región o país donde vive el consumidor.',
+   ph:'Ej: Lima Metropolitana, zonas urbanas con acceso a supermercados'},
+  {key:'edad', label:'Edad', icon:'🎂', color:'#059669', light:'#d1fae5',
+   desc:'Rango de edad del consumidor objetivo.',
+   ph:'Ej: 25 a 45 años, adultos jóvenes con capacidad de compra'},
+  {key:'genero', label:'Género', icon:'👤', color:'#7c3aed', light:'#ede9fe',
+   desc:'Género o géneros a los que se dirige el producto.',
+   ph:'Ej: Mujeres y hombres por igual, con ligero enfoque en mujeres'},
+  {key:'profesion', label:'Profesión', icon:'💼', color:'#d97706', light:'#fef3c7',
+   desc:'Ocupación o sector laboral del consumidor.',
+   ph:'Ej: Profesionales independientes, ejecutivos, docentes'},
+  {key:'personalidad', label:'Personalidad', icon:'🧠', color:'#0284c7', light:'#e0f2fe',
+   desc:'Rasgos de personalidad y estilo de vida relevantes.',
+   ph:'Ej: Orientados a la salud, conscientes del medio ambiente, activos'},
+  {key:'poder_adquisitivo', label:'Poder adquisitivo', icon:'💰', color:'#059669', light:'#d1fae5',
+   desc:'Nivel socioeconómico o capacidad de gasto del consumidor.',
+   ph:'Ej: Clase media-alta, ingresos mensuales entre S/. 3,000 – 8,000'},
+  {key:'ciclo_vida', label:'Ciclo de vida familiar', icon:'👨‍👩‍👧', color:'#7c3aed', light:'#ede9fe',
+   desc:'Etapa del ciclo de vida familiar en la que se encuentra.',
+   ph:'Ej: Parejas jóvenes sin hijos, familias con hijos pequeños'},
+  {key:'frecuencia_compra', label:'Frecuencia de compra', icon:'🛒', color:'#d97706', light:'#fef3c7',
+   desc:'Con qué frecuencia adquiere productos similares.',
+   ph:'Ej: Semanal en supermercados, mensual en tiendas especializadas'},
+  {key:'forma_marketing', label:'Forma de marketing', icon:'📣', color:'#0284c7', light:'#dbeafe',
+   desc:'Canales de comunicación y publicidad más efectivos para este perfil.',
+   ph:'Ej: Redes sociales (Instagram, TikTok), influencers de salud y bienestar'},
+  {key:'lugar_compra', label:'Lugar de compra', icon:'🏪', color:'#059669', light:'#d1fae5',
+   desc:'Dónde acostumbra comprar productos de este tipo.',
+   ph:'Ej: Supermercados, tiendas naturistas, e-commerce (Amazon, Rappi)'}
+];
+
+// ── Dark mode ─────────────────────────────────────────────────────────
+document.getElementById('toggle-dark').addEventListener('click',function(){
+  document.body.classList.toggle('dark-mode');
+  this.textContent=document.body.classList.contains('dark-mode')?'☀️ Modo claro':'🌙 Modo oscuro';
+  save();
+});
+
+// ── Progress ──────────────────────────────────────────────────────────
+const stepDefs=[
+  {lbl:'Integrantes',clr:'#0284c7'},
+  {lbl:'Perfil / Producto',clr:'#0284c7'},
+  {lbl:'Variables (5+)',clr:'#059669'},
+  {lbl:'Todas las variables',clr:'#7c3aed'},
+  {lbl:'Análisis',clr:'#d97706'}
+];
+const stepsWrap=document.getElementById('prog-steps');
+stepDefs.forEach(function(s,i){
+  const el=document.createElement('div');el.className='pstep';
+  el.innerHTML='<div class="pdot" id="pd-'+i+'" style="color:'+s.clr+'"></div><span>'+s.lbl+'</span>';
+  stepsWrap.appendChild(el);
+});
+function setDot(i,on){const d=document.getElementById('pd-'+i);if(d)d.className='pdot'+(on?' on':'');}
+
+function gv(id){return(document.getElementById(id)?.value||'').trim();}
+
+function updateProgress(){
+  let done=0;
+  const hasSt=Array.from(document.querySelectorAll('.st-name')).some(function(i){return i.value.trim();});
+  if(hasSt){done++;setDot(0,true);}else setDot(0,false);
+  const hasPerfil=gv('profile-name').length>1||gv('cfg-producto').length>1;
+  if(hasPerfil){done++;setDot(1,true);}else setDot(1,false);
+  const filledVars=variables.filter(function(v){return gv('var-'+v.key).length>3;}).length;
+  if(filledVars>=5){done++;setDot(2,true);}else setDot(2,false);
+  if(filledVars===10){done++;setDot(3,true);}else setDot(3,false);
+  const hasA=gv('analysis').length>15;
+  if(hasA){done++;setDot(4,true);}else setDot(4,false);
+  const pct=Math.round((done/5)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('pct-lbl').textContent=pct+'%';
+  updatePreview();
+}
+
+// ── Instructions ──────────────────────────────────────────────────────
+document.getElementById('instr-hdr').addEventListener('click',function(){
+  const b=document.getElementById('instr-body');
+  const a=document.getElementById('instr-arr');
+  b.classList.toggle('open');
+  a.textContent=b.classList.contains('open')?'▲':'▼';
+});
+
+// ── Students ──────────────────────────────────────────────────────────
+const MAX_ST=5;let stCount=1;
+const stList=document.getElementById('students-list');
+function addStudentRow(idx){
+  const row=document.createElement('div');row.className='st-row';row.id='str-'+idx;
+  row.innerHTML='<input type="text" class="st-name" placeholder="Nombre"><input type="text" class="st-last" placeholder="Apellido"><button class="rm-st" aria-label="Eliminar">✕</button>';
+  stList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){i.addEventListener('input',function(){updateProgress();save();});});
+}
+function updateAddBtn(){const btn=document.getElementById('add-st');btn.disabled=stCount>=MAX_ST;btn.style.opacity=stCount>=MAX_ST?'0.5':'1';}
+stList.addEventListener('click',function(e){
+  const btn=e.target.closest('.rm-st');
+  if(!btn||stList.children.length<=1)return;
+  btn.closest('.st-row').remove();stCount--;updateAddBtn();updateProgress();save();
+});
+document.getElementById('add-st').addEventListener('click',function(){if(stCount>=MAX_ST)return;addStudentRow(stCount);stCount++;updateAddBtn();});
+addStudentRow(0);
+
+// ── Build variable cards ──────────────────────────────────────────────
+const varsGrid=document.getElementById('vars-grid');
+variables.forEach(function(v){
+  const div=document.createElement('div');
+  div.className='var-card';
+  div.style.background=v.light;
+  div.style.borderColor=v.color;
+  div.innerHTML=
+    '<div class="var-header">'+
+      '<div class="var-icon" style="background:'+v.color+'20;">'+v.icon+'</div>'+
+      '<div><div class="var-title" style="color:'+v.color+';">'+v.label+'</div>'+
+      '<div class="var-desc" style="color:'+v.color+';">'+v.desc+'</div></div>'+
+    '</div>'+
+    '<textarea id="var-'+v.key+'" rows="2" placeholder="'+v.ph+'"></textarea>';
+  varsGrid.appendChild(div);
+  div.querySelector('textarea').addEventListener('input',function(){updateProgress();save();});
+});
+
+// ── Resumen cajas ─────────────────────────────────────────────────────
+const resGrid=document.getElementById('resumen-grid');
+const resBoxes=[
+  {key:'ubicacion',icon:'📍',label:'Ubicación',color:'#0284c7',light:'#dbeafe'},
+  {key:'edad',icon:'🎂',label:'Edad',color:'#059669',light:'#d1fae5'},
+  {key:'genero',icon:'👤',label:'Género',color:'#7c3aed',light:'#ede9fe'},
+  {key:'profesion',icon:'💼',label:'Profesión',color:'#d97706',light:'#fef3c7'},
+  {key:'poder_adquisitivo',icon:'💰',label:'Poder Adq.',color:'#059669',light:'#d1fae5'},
+  {key:'lugar_compra',icon:'🏪',label:'Lugar Compra',color:'#0284c7',light:'#dbeafe'}
+];
+resBoxes.forEach(function(rb){
+  const div=document.createElement('div');
+  div.className='res-box';
+  div.id='res-'+rb.key;
+  div.style.background=rb.light;
+  div.style.borderColor=rb.color;
+  div.innerHTML='<div class="res-icon">'+rb.icon+'</div>'+
+    '<div class="res-label" style="color:'+rb.color+';">'+rb.label+'</div>'+
+    '<div class="res-val" id="resval-'+rb.key+'" style="color:'+rb.color+';">—</div>';
+  resGrid.appendChild(div);
+});
+
+// ── Preview ───────────────────────────────────────────────────────────
+function updatePreview(){
+  const pName=gv('profile-name')||'[ Nombre del perfil ]';
+  const prod=gv('cfg-producto')||'—';
+  document.getElementById('prev-name').textContent=pName;
+  document.getElementById('prev-producto').textContent='Producto: '+prod;
+
+  // Chips con primeras 4 variables completadas
+  const chips=[];
+  variables.forEach(function(v){
+    const val=gv('var-'+v.key);
+    if(val&&chips.length<5)chips.push(v.icon+' '+val.substring(0,28)+(val.length>28?'…':''));
+  });
+  document.getElementById('prev-chips').innerHTML=chips.map(function(c){
+    return '<span class="chip">'+c+'</span>';
+  }).join('');
+
+  // Resumen cajas
+  resBoxes.forEach(function(rb){
+    const val=gv('var-'+rb.key);
+    const el=document.getElementById('resval-'+rb.key);
+    if(el)el.textContent=val?val.substring(0,50)+(val.length>50?'…':''):'—';
+  });
+}
+
+// ── Attach events ─────────────────────────────────────────────────────
+['profile-name','cfg-producto','analysis'].forEach(function(id){
+  document.getElementById(id)?.addEventListener('input',function(){updateProgress();save();});
+});
+
+// ── Autosave ──────────────────────────────────────────────────────────
+function save(){
+  try{
+    const d={
+      profileName:gv('profile-name'),
+      producto:gv('cfg-producto'),
+      analysis:gv('analysis'),
+      darkMode:document.body.classList.contains('dark-mode'),
+      students:[],vars:{}
+    };
+    stList.querySelectorAll('.st-row').forEach(function(r){
+      d.students.push({n:r.querySelector('.st-name').value,a:r.querySelector('.st-last').value});
+    });
+    variables.forEach(function(v){d.vars[v.key]=gv('var-'+v.key);});
+    localStorage.setItem('perfil_cons_v3',JSON.stringify(d));
+    const lbl=document.getElementById('autosave-lbl');
+    lbl.textContent='💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){lbl.textContent='';},2500);
+  }catch(e){}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('perfil_cons_v3');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.getElementById('profile-name').value=d.profileName||'';
+    document.getElementById('cfg-producto').value=d.producto||'';
+    document.getElementById('analysis').value=d.analysis||'';
+    if(d.darkMode){document.body.classList.add('dark-mode');document.getElementById('toggle-dark').textContent='☀️ Modo claro';}
+    if(d.students&&d.students.length>0){
+      stList.innerHTML='';stCount=0;
+      d.students.forEach(function(s,i){
+        addStudentRow(i);
+        const row=document.getElementById('str-'+i);
+        row.querySelector('.st-name').value=s.n||'';
+        row.querySelector('.st-last').value=s.a||'';
+        stCount++;
+      });
+      updateAddBtn();
+    }
+    if(d.vars){
+      variables.forEach(function(v){
+        const el=document.getElementById('var-'+v.key);
+        if(el)el.value=d.vars[v.key]||'';
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+loadSaved();
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('rst-btn').addEventListener('click',function(){
+  if(!confirm('¿Reiniciar todo el laboratorio?'))return;
+  ['profile-name','cfg-producto','analysis'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  variables.forEach(function(v){const el=document.getElementById('var-'+v.key);if(el)el.value='';});
+  stList.innerHTML='';stCount=0;addStudentRow(0);stCount=1;updateAddBtn();
+  document.body.classList.remove('dark-mode');
+  document.getElementById('toggle-dark').textContent='🌙 Modo oscuro';
+  try{localStorage.removeItem('perfil_cons_v3');}catch(e){}
+  document.getElementById('pdf-status').textContent='';
+  updateProgress();
+});
+
+// ── PDF ───────────────────────────────────────────────────────────────
+document.getElementById('pdf-btn').addEventListener('click',function(){
+  const statusEl=document.getElementById('pdf-status');
+  const students=[];
+  stList.querySelectorAll('.st-row').forEach(function(r){
+    const n=r.querySelector('.st-name').value.trim();
+    const a=r.querySelector('.st-last').value.trim();
+    if(n||a)students.push((n+' '+a).trim());
+  });
+  if(students.length===0){
+    statusEl.textContent='Por favor ingresa al menos un integrante.';
+    statusEl.style.color='#dc2626';return;
+  }
+  if(typeof window.jspdf==='undefined'){statusEl.textContent='Cargando librería...';return;}
+  statusEl.style.color='#0284c7';statusEl.textContent='Generando PDF...';
+
+  const profileName=gv('profile-name')||'Sin especificar';
+  const producto=gv('cfg-producto')||'Sin especificar';
+  const analysis=gv('analysis');
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  function decor(){
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34);doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8);doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar · Desarrollado por Daniel Solar',W/2,H-8,{align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  decor();
+  // Banner
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,110,'F');
+  doc.setFontSize(20);doc.setTextColor(255,255,255);
+  doc.text('Laboratorio · Perfil del Consumidor',W/2,46,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('Perfil: '+profileName,W/2,70,{align:'center'});
+  doc.setFontSize(10);
+  doc.text('Producto: '+producto,W/2,90,{align:'center'});
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=130;
+  const intLine='Integrantes: '+students.join(' · ');
+  const wInt=doc.splitTextToSize(intLine,515);
+  doc.setFontSize(10);doc.text(wInt,40,y);
+  y+=wInt.length*12+2;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(),40,y);
+  doc.setTextColor(0,0,0);y+=18;
+
+  // Variables table
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Variables del Perfil del Consumidor',40,y);y+=8;
+
+  const tableBody=variables.map(function(v){
+    return[v.icon+' '+v.label,gv('var-'+v.key)||'—'];
+  });
+
+  const sectionColors={
+    0:[2,132,199],1:[5,150,105],2:[124,58,237],3:[217,119,6],
+    4:[2,132,199],5:[5,150,105],6:[124,58,237],7:[217,119,6],
+    8:[2,132,199],9:[5,150,105]
+  };
+
+  doc.autoTable({
+    head:[['Variable del Perfil','Descripción']],
+    body:tableBody,startY:y,
+    styles:{fontSize:10,cellPadding:7},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:150,fontStyle:'bold'}},
+    didParseCell:function(d){
+      if(d.section==='body'&&d.column.index===0){
+        const c=sectionColors[d.row.index]||[2,132,199];
+        d.cell.styles.textColor=c;
+      }
+    },
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+20;
+
+  // Resumen visual en PDF (cajas)
+  if(y>H-120){doc.addPage();decor();y=30;}
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Resumen del perfil',40,y);y+=10;
+
+  const boxColors=[[2,132,199],[5,150,105],[124,58,237],[217,119,6],[5,150,105],[2,132,199]];
+  const boxW=(W-80)/3;const boxH=55;
+  resBoxes.forEach(function(rb,i){
+    const col=i%3,row=Math.floor(i/3);
+    const bx=40+col*boxW,by=y+row*(boxH+8);
+    const c=boxColors[i];
+    doc.setFillColor(c[0],c[1],c[2],0.1);
+    doc.setFillColor(Math.min(c[0]+180,255),Math.min(c[1]+180,255),Math.min(c[2]+180,255));
+    doc.roundedRect(bx,by,boxW-6,boxH,4,4,'F');
+    doc.setDrawColor(c[0],c[1],c[2]);
+    doc.setLineWidth(1.5);
+    doc.roundedRect(bx,by,boxW-6,boxH,4,4,'S');
+    doc.setFontSize(9);doc.setTextColor(c[0],c[1],c[2]);
+    doc.text(rb.icon+' '+rb.label,bx+8,by+14);
+    doc.setFontSize(8);doc.setTextColor(0,0,0);
+    const val=gv('var-'+rb.key)||'—';
+    const vw=doc.splitTextToSize(val,boxW-20);
+    doc.text(vw[0]+(vw.length>1?'…':''),bx+8,by+28);
+    if(vw[1])doc.text(vw[1],bx+8,by+40);
+  });
+  y+=2*(boxH+8)+14;
+
+  // Análisis grupal
+  if(analysis){
+    if(y>H-80){doc.addPage();decor();y=30;}
+    doc.setFontSize(12);doc.setTextColor(7,89,133);
+    doc.text('Análisis grupal',40,y);y+=12;
+    doc.setFontSize(9);doc.setTextColor(0,0,0);
+    const aw=doc.splitTextToSize(analysis,515);
+    doc.text(aw,40,y);
+  }
+
+  const fn='Perfil_Consumidor_'+(students[0]||'equipo').replace(/\s+/g,'_')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent='✅ PDF descargado correctamente.';
+  statusEl.style.color='#16a34a';
+});
+
+updateAddBtn();
+updateProgress();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

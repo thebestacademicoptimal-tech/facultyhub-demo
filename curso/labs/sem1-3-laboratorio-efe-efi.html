@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Práctica de Laboratorio EFE / EFI - IM // TERMINAL</title>
+<style>
+:root {
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7; --accent2:#38bdf8;
+  --green:#059669; --red:#dc2626; --yellow:#d97706;
+}
+*{box-sizing:border-box;}
+body{margin:0;padding:24px;background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text);}
+.container{max-width:960px;margin:0 auto;}
+
+/* Watermark */
+.wm-wrap{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.wm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);white-space:nowrap;user-select:none;letter-spacing:2px;}
+
+/* Header */
+.top-bar{display:flex;justify-content:space-between;align-items:center;
+  background:#0284c7;border-radius:16px;padding:1rem 1.5rem;margin-bottom:1.25rem;
+  box-shadow:0 4px 16px rgba(2,132,199,0.3);}
+.top-bar h1{font-size:17px;color:#fff;margin:0;font-weight:700;}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;font-weight:700;
+  padding:6px 14px;border-radius:20px;text-align:center;line-height:1.5;border:1px solid rgba(255,255,255,0.3);}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+
+/* Progress */
+.progress-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:0.75rem 1rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.progress-label{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;
+  display:flex;justify-content:space-between;}
+.progress-bar-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.progress-bar-fill{height:10px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s ease;}
+.progress-steps{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.step-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.step-dot{width:10px;height:10px;border-radius:50%;border:2px solid #bfdbfe;transition:all 0.3s;}
+.step-dot.done{border-color:currentColor;background:currentColor;}
+
+/* Instructions */
+.instr-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;
+  margin-bottom:1rem;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.instr-header{display:flex;justify-content:space-between;align-items:center;
+  padding:0.75rem 1rem;cursor:pointer;background:#f0f9ff;}
+.instr-header p{font-size:13px;font-weight:600;color:var(--sub);margin:0;}
+.instr-body{padding:0 1rem;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s;}
+.instr-body.open{max-height:400px;padding:0.5rem 1rem 1rem;}
+.instr-body ol{font-size:12px;color:var(--text);margin:0;padding-left:1.2rem;line-height:1.9;}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  position:relative;z-index:1;transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.card-title{font-size:14px;font-weight:700;color:var(--sub);margin:0 0 12px 0;}
+
+/* Students */
+.student-row{display:flex;gap:8px;margin-bottom:6px;}
+.student-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:#fff;border:1px solid var(--border);
+  color:var(--text);border-radius:6px;font-size:14px;cursor:pointer;}
+#add-st-btn{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;
+  color:#075985;border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* Inputs */
+input[type="text"],input[type="number"],select{
+  width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:6px;padding:7px 8px;font-size:13px;
+  background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,select:focus{outline:none;border-color:#0284c7;box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+
+/* Section badges */
+.sec-badge{display:inline-block;color:#fff;font-size:12px;font-weight:700;
+  padding:4px 14px;border-radius:20px;margin-bottom:10px;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:#0284c7;color:#fff;padding:8px 10px;font-weight:600;font-size:12px;text-align:center;}
+thead th:first-child{text-align:left;}
+tbody tr{border-bottom:1px solid #e0f2fe;transition:background 0.15s;}
+tbody tr:hover{background:#f0f9ff;}
+tbody td{padding:5px 6px;vertical-align:middle;text-align:center;}
+tbody td:first-child{text-align:left;font-size:12px;font-weight:500;color:#075985;padding:5px 10px;}
+tbody td input[type="number"]{width:70px;height:30px;text-align:center;font-size:12px;}
+td.puntaje{font-weight:600;color:#0284c7;}
+tr.total-row{background:#e0f2fe;font-weight:700;}
+tr.total-row td{color:#075985;font-size:13px;padding:8px 10px;}
+
+/* Scale */
+.scale-box{background:#f0f9ff;border:1px solid #bfdbfe;border-left:5px solid #0284c7;
+  border-radius:10px;padding:1rem;margin-bottom:1rem;font-size:13px;color:var(--text);}
+.scale-box strong{color:#0284c7;}
+.scale-item{display:flex;align-items:flex-start;gap:8px;margin:8px 0;}
+.scale-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+
+/* Results */
+.results-card{background:var(--card);border:2px solid #0284c7;border-radius:14px;
+  padding:1.25rem;margin-top:1rem;box-shadow:0 4px 20px rgba(2,132,199,0.15);display:none;}
+.results-card.visible{display:block;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1rem;}
+.result-item{border-radius:10px;padding:1rem;text-align:center;}
+.result-item .score{font-size:32px;font-weight:800;margin:4px 0;}
+.result-item .label{font-size:11px;font-weight:600;opacity:0.8;}
+.feedback-item{border-radius:10px;padding:0.75rem 1rem;margin-bottom:8px;font-size:13px;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;padding:11px 24px;
+  border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 12px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);box-shadow:0 6px 16px rgba(2,132,199,0.4);}
+.btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text);
+  padding:11px 24px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.btn-secondary:hover{border-color:#0284c7;color:#0284c7;}
+.actions-row{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;}
+.autosave{font-size:10px;color:#059669;margin-top:4px;}
+.footer-lab{margin-top:1.5rem;text-align:center;font-size:11px;color:#93c5fd;}
+.footer-lab strong{color:#0284c7;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+
+@media(max-width:560px){.result-grid{grid-template-columns:1fr;}.top-bar{flex-direction:column;gap:8px;align-items:flex-start;}}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 1 · Laboratorio EFE / EFI</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+
+<div class="wm-wrap"><div class="wm">Docente: Daniel Solar</div></div>
+
+<div class="container">
+
+<!-- Header -->
+<div class="top-bar">
+  <h1>🎯 Práctica de Laboratorio · Matrices EFE y EFI</h1>
+  <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+</div>
+
+<!-- Progreso -->
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Progreso del laboratorio</span>
+    <span id="pct-label">0%</span>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="progress-steps" id="prog-steps"></div>
+</div>
+
+<!-- Instrucciones -->
+<div class="instr-wrap">
+  <div class="instr-header" id="instr-toggle">
+    <p>📋 ¿Cómo completar esta práctica?</p>
+    <span id="instr-arrow" style="font-size:16px;color:#0284c7;">▼</span>
+  </div>
+  <div class="instr-body" id="instr-body">
+    <ol>
+      <li>Registra los <strong>integrantes del equipo</strong> (máximo 5) y el nombre del producto.</li>
+      <li>Completa los <strong>factores estratégicos</strong> en cada sección (Fortalezas, Debilidades, Oportunidades, Amenazas).</li>
+      <li>Asigna un <strong>peso</strong> a cada factor (el total por sección no puede superar <strong>0.50</strong>).</li>
+      <li>Asigna una <strong>calificación</strong> del 1 al 4 (1=mayor debilidad/amenaza, 4=mayor fortaleza/oportunidad).</li>
+      <li>El <strong>puntaje ponderado</strong> se calcula automáticamente (peso × calificación).</li>
+      <li>Haz clic en <strong>"Finalizar y Analizar"</strong> para ver los resultados y descargar el PDF.</li>
+    </ol>
+    <p style="font-size:11px;color:#0284c7;margin:6px 0 0 0;">💾 Tu avance se guarda automáticamente en el navegador.</p>
+  </div>
+</div>
+
+<!-- Identificación -->
+<div class="card">
+  <p class="card-title">👥 Identificación del equipo</p>
+  <div id="students-list"></div>
+  <button id="add-st-btn">+ Agregar integrante</button>
+  <div style="margin-top:12px;">
+    <label style="font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;">📦 Producto a analizar</label>
+    <input type="text" id="prodName" placeholder="Ej: Pota Congelada, Arándanos, Café Especial...">
+  </div>
+</div>
+
+<!-- Matrices -->
+<div id="matrices-container"></div>
+
+<!-- Escala de referencia -->
+<div class="scale-box">
+  <strong>📊 Escala de Referencia para el Análisis:</strong>
+  <div class="scale-item">
+    <div class="scale-dot" style="background:#059669;"></div>
+    <span><strong style="color:#059669;">Mayor a 2.5:</strong> La empresa responde adecuadamente a las oportunidades/amenazas y cuenta con fortalezas internas sólidas.</span>
+  </div>
+  <div class="scale-item">
+    <div class="scale-dot" style="background:#d97706;"></div>
+    <span><strong style="color:#d97706;">Igual a 2.5:</strong> Las estrategias son apenas suficientes. Las fortalezas y debilidades están compensadas — se requiere revisión urgente para no perder competitividad.</span>
+  </div>
+  <div class="scale-item">
+    <div class="scale-dot" style="background:#dc2626;"></div>
+    <span><strong style="color:#dc2626;">Menor a 2.5:</strong> La empresa es vulnerable. Sus debilidades superan a las fortalezas y no está aprovechando el entorno externo.</span>
+  </div>
+</div>
+
+<!-- Análisis grupal -->
+<div class="card">
+  <p class="card-title">💬 Análisis grupal</p>
+  <p style="font-size:12px;color:var(--sub);margin:0 0 8px 0;">¿Qué conclusiones obtiene el equipo de los resultados EFI y EFE? ¿Qué estrategias recomendarían?</p>
+  <textarea id="analysis" rows="4" placeholder="Escriban aquí el análisis y conclusiones del equipo..."></textarea>
+</div>
+
+<!-- Botones -->
+<div class="actions-row">
+  <button class="btn-secondary" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-primary" id="fin-btn">✅ Finalizar y Analizar</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave"></p>
+
+<!-- Resultados -->
+<div class="results-card" id="results-card">
+  <p style="font-size:16px;font-weight:700;color:#0284c7;margin:0 0 12px 0;">📈 Resultados del Análisis</p>
+  <div class="result-grid" id="result-grid"></div>
+  <div id="feedback-container"></div>
+  <div class="actions-row" style="margin-top:1rem;">
+    <button class="btn-primary" id="pdf-btn">⬇ Descargar PDF</button>
+  </div>
+</div>
+
+<div class="footer-lab">IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong></div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+const sections = [
+  { id:'F', label:'Fortalezas', badge:'EFI', color:'#059669', light:'#d1fae5' },
+  { id:'D', label:'Debilidades', badge:'EFI', color:'#dc2626', light:'#fee2e2' },
+  { id:'O', label:'Oportunidades', badge:'EFE', color:'#0284c7', light:'#dbeafe' },
+  { id:'A', label:'Amenazas', badge:'EFE', color:'#d97706', light:'#fef3c7' }
+];
+
+const MAX_ST = 5;
+let studentCount = 1;
+const studentsList = document.getElementById('students-list');
+
+// Progress steps
+const stepLabels = ['Integrantes','Producto','Fortalezas','Debilidades','Oportunidades','Amenazas','Análisis'];
+const stepColors = ['#0284c7','#0284c7','#059669','#dc2626','#0284c7','#d97706','#0284c7'];
+const stepsContainer = document.getElementById('prog-steps');
+stepLabels.forEach(function(s,i){
+  const el = document.createElement('div');
+  el.className = 'step-item';
+  el.innerHTML = '<div class="step-dot" id="step-'+i+'" style="color:'+stepColors[i]+'"></div><span>'+s+'</span>';
+  stepsContainer.appendChild(el);
+});
+
+// Instructions toggle
+document.getElementById('instr-toggle').addEventListener('click', function(){
+  const body = document.getElementById('instr-body');
+  const arrow = document.getElementById('instr-arrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+});
+
+// Students
+function renderStudentRow(idx){
+  const row = document.createElement('div');
+  row.className = 'student-row';
+  row.id = 'str-'+idx;
+  row.innerHTML =
+    '<input type="text" class="st-name" placeholder="Nombre">' +
+    '<input type="text" class="st-last" placeholder="Apellido">' +
+    '<button class="rm-st" aria-label="Eliminar">✕</button>';
+  studentsList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){ i.addEventListener('input', function(){ updateProgress(); saveData(); }); });
+}
+
+function updateAddBtn(){
+  const btn = document.getElementById('add-st-btn');
+  btn.disabled = studentCount >= MAX_ST;
+  btn.style.opacity = studentCount >= MAX_ST ? '0.5' : '1';
+}
+
+studentsList.addEventListener('click', function(e){
+  const btn = e.target.closest('.rm-st');
+  if (!btn || studentsList.children.length <= 1) return;
+  btn.closest('.student-row').remove();
+  studentCount--;
+  updateAddBtn();
+  updateProgress();
+  saveData();
+});
+
+document.getElementById('add-st-btn').addEventListener('click', function(){
+  if (studentCount >= MAX_ST) return;
+  renderStudentRow(studentCount);
+  studentCount++;
+  updateAddBtn();
+});
+
+renderStudentRow(0);
+
+// Build matrices
+const matrixContainer = document.getElementById('matrices-container');
+sections.forEach(function(sec){
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.id = 'sec-'+sec.id;
+
+  let html = '<div class="sec-badge" style="background:'+sec.color+';">'+sec.badge+' · '+sec.label+'</div>';
+  html += '<div class="table-wrap"><table>';
+  html += '<thead><tr><th style="text-align:left;min-width:200px;">Factor Estratégico</th><th>Peso <small>(máx 0.50)</small></th><th>Calif <small>(1-4)</small></th><th>Puntaje</th></tr></thead>';
+  html += '<tbody>';
+  for (let i = 0; i < 5; i++) {
+    html += '<tr>' +
+      '<td><input type="text" class="fact-'+sec.id+'" placeholder="Factor '+(i+1)+'..." style="width:100%;"></td>' +
+      '<td><input type="number" class="peso-'+sec.id+'" step="0.01" min="0" max="0.5" placeholder="0.00"></td>' +
+      '<td><input type="number" class="calif-'+sec.id+'" step="1" min="1" max="4" placeholder="1-4"></td>' +
+      '<td class="puntaje" style="color:'+sec.color+';">0.00</td>' +
+    '</tr>';
+  }
+  html += '<tr class="total-row">' +
+    '<td style="text-align:left;font-weight:700;color:'+sec.color+';">TOTAL</td>' +
+    '<td class="total-peso-'+sec.id+'" style="color:'+sec.color+';">0.00</td>' +
+    '<td style="color:#93c5fd;">—</td>' +
+    '<td class="total-puntaje-'+sec.id+'" style="color:'+sec.color+';font-size:15px;">0.00</td>' +
+  '</tr>';
+  html += '</tbody></table></div>';
+
+  div.innerHTML = html;
+  matrixContainer.appendChild(div);
+
+  // Events
+  const secEl = document.getElementById('sec-'+sec.id);
+  secEl.querySelectorAll('.peso-'+sec.id+', .calif-'+sec.id).forEach(function(inp){
+    inp.addEventListener('input', function(){ calcSection(sec.id); });
+  });
+  secEl.querySelectorAll('.fact-'+sec.id).forEach(function(inp){
+    inp.addEventListener('input', function(){ updateProgress(); saveData(); });
+  });
+});
+
+function calcSection(id){
+  const sec = document.getElementById('sec-'+id);
+  const pesos = sec.querySelectorAll('.peso-'+id);
+  const califs = sec.querySelectorAll('.calif-'+id);
+  const puntajes = sec.querySelectorAll('.puntaje');
+  let totalP = 0, totalS = 0;
+  pesos.forEach(function(p, i){
+    const peso = parseFloat(p.value) || 0;
+    const calif = parseFloat(califs[i].value) || 0;
+    const punt = peso * calif;
+    puntajes[i].textContent = punt.toFixed(2);
+    totalP += peso;
+    totalS += punt;
+  });
+  if (totalP > 0.50001) {
+    alert('⚠️ El peso total de "'+id+'" supera 0.50. Por favor ajusta los valores.');
+  }
+  sec.querySelector('.total-peso-'+id).textContent = totalP.toFixed(2);
+  sec.querySelector('.total-puntaje-'+id).textContent = totalS.toFixed(2);
+  updateProgress();
+  saveData();
+}
+
+function getSectionTotal(id){
+  const el = document.querySelector('.total-puntaje-'+id);
+  return el ? parseFloat(el.textContent) || 0 : 0;
+}
+
+function getFeedback(score){
+  if (score > 2.5) return { text:'La empresa responde adecuadamente a las oportunidades/amenazas y cuenta con fortalezas internas sólidas.', color:'#059669', label:'Mayor a 2.5 ✅' };
+  if (score === 2.5) return { text:'Las estrategias actuales son apenas suficientes. Se requiere una revisión urgente para no perder competitividad.', color:'#d97706', label:'Igual a 2.5 ⚠️' };
+  return { text:'La empresa es vulnerable. Sus debilidades superan a las fortalezas y no está aprovechando el entorno externo.', color:'#dc2626', label:'Menor a 2.5 ❌' };
+}
+
+function isSectionFilled(id){
+  const sec = document.getElementById('sec-'+id);
+  if (!sec) return false;
+  const facts = sec.querySelectorAll('.fact-'+id);
+  const pesos = sec.querySelectorAll('.peso-'+id);
+  return Array.from(facts).some(function(f){ return f.value.trim(); }) &&
+         Array.from(pesos).some(function(p){ return parseFloat(p.value) > 0; });
+}
+
+function updateProgress(){
+  let done = 0; const total = 7;
+  const hasStudent = Array.from(studentsList.querySelectorAll('.st-name')).some(function(i){ return i.value.trim(); });
+  if (hasStudent){ done++; setStep(0,true,'#0284c7'); } else setStep(0,false,'#0284c7');
+  const hasProd = document.getElementById('prodName').value.trim().length > 0;
+  if (hasProd){ done++; setStep(1,true,'#0284c7'); } else setStep(1,false,'#0284c7');
+  ['F','D','O','A'].forEach(function(id,idx){
+    const ok = isSectionFilled(id);
+    if (ok) done++;
+    setStep(idx+2, ok, stepColors[idx+2]);
+  });
+  const hasAnalysis = document.getElementById('analysis').value.trim().length > 20;
+  if (hasAnalysis){ done++; setStep(6,true,'#0284c7'); } else setStep(6,false,'#0284c7');
+  const pct = Math.round((done/total)*100);
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('pct-label').textContent = pct+'%';
+}
+
+function setStep(idx, done, color){
+  const dot = document.getElementById('step-'+idx);
+  if (!dot) return;
+  dot.style.color = color;
+  dot.className = 'step-dot'+(done ? ' done' : '');
+}
+
+document.getElementById('prodName').addEventListener('input', function(){ updateProgress(); saveData(); });
+document.getElementById('analysis').addEventListener('input', function(){ updateProgress(); saveData(); });
+
+// Autosave
+function saveData(){
+  try {
+    const d = {
+      prod: document.getElementById('prodName').value,
+      analysis: document.getElementById('analysis').value,
+      students: [],
+      matrices: {}
+    };
+    studentsList.querySelectorAll('.student-row').forEach(function(r){
+      d.students.push({ n: r.querySelector('.st-name').value, a: r.querySelector('.st-last').value });
+    });
+    sections.forEach(function(sec){
+      const secEl = document.getElementById('sec-'+sec.id);
+      const facts = Array.from(secEl.querySelectorAll('.fact-'+sec.id)).map(function(e){ return e.value; });
+      const pesos = Array.from(secEl.querySelectorAll('.peso-'+sec.id)).map(function(e){ return e.value; });
+      const califs = Array.from(secEl.querySelectorAll('.calif-'+sec.id)).map(function(e){ return e.value; });
+      d.matrices[sec.id] = { facts, pesos, califs };
+    });
+    localStorage.setItem('efe_efi_lab_v2', JSON.stringify(d));
+    const badge = document.getElementById('autosave');
+    badge.textContent = '💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){ badge.textContent = ''; }, 2500);
+  } catch(e){}
+}
+
+function loadData(){
+  try {
+    const raw = localStorage.getItem('efe_efi_lab_v2');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    document.getElementById('prodName').value = d.prod || '';
+    document.getElementById('analysis').value = d.analysis || '';
+    if (d.students && d.students.length > 0){
+      studentsList.innerHTML = '';
+      studentCount = 0;
+      d.students.forEach(function(s,i){
+        renderStudentRow(i);
+        const row = document.getElementById('str-'+i);
+        row.querySelector('.st-name').value = s.n || '';
+        row.querySelector('.st-last').value = s.a || '';
+        studentCount++;
+      });
+      updateAddBtn();
+    }
+    if (d.matrices){
+      sections.forEach(function(sec){
+        const m = d.matrices[sec.id];
+        if (!m) return;
+        const secEl = document.getElementById('sec-'+sec.id);
+        const facts = secEl.querySelectorAll('.fact-'+sec.id);
+        const pesos = secEl.querySelectorAll('.peso-'+sec.id);
+        const califs = secEl.querySelectorAll('.calif-'+sec.id);
+        m.facts.forEach(function(v,i){ if(facts[i]) facts[i].value = v; });
+        m.pesos.forEach(function(v,i){ if(pesos[i]) pesos[i].value = v; });
+        m.califs.forEach(function(v,i){ if(califs[i]) califs[i].value = v; });
+        calcSection(sec.id);
+      });
+    }
+    updateProgress();
+  } catch(e){}
+}
+
+loadData();
+
+// Finalizar
+document.getElementById('fin-btn').addEventListener('click', function(){
+  const efi = getSectionTotal('F') + getSectionTotal('D');
+  const efe = getSectionTotal('O') + getSectionTotal('A');
+  const fbEFI = getFeedback(efi);
+  const fbEFE = getFeedback(efe);
+
+  const grid = document.getElementById('result-grid');
+  grid.innerHTML =
+    '<div class="result-item" style="background:'+fbEFI.color+'22;border:2px solid '+fbEFI.color+';">' +
+      '<div class="label" style="color:'+fbEFI.color+';">TOTAL EFI</div>' +
+      '<div class="score" style="color:'+fbEFI.color+';">'+efi.toFixed(2)+'</div>' +
+      '<div style="font-size:11px;font-weight:700;color:'+fbEFI.color+';">'+fbEFI.label+'</div>' +
+    '</div>' +
+    '<div class="result-item" style="background:'+fbEFE.color+'22;border:2px solid '+fbEFE.color+';">' +
+      '<div class="label" style="color:'+fbEFE.color+';">TOTAL EFE</div>' +
+      '<div class="score" style="color:'+fbEFE.color+';">'+efe.toFixed(2)+'</div>' +
+      '<div style="font-size:11px;font-weight:700;color:'+fbEFE.color+';">'+fbEFE.label+'</div>' +
+    '</div>';
+
+  const fc = document.getElementById('feedback-container');
+  fc.innerHTML =
+    '<div class="feedback-item" style="background:'+fbEFI.color+'15;border-left:4px solid '+fbEFI.color+';">' +
+      '<strong style="color:'+fbEFI.color+';">EFI ('+efi.toFixed(2)+'):</strong> '+fbEFI.text +
+    '</div>' +
+    '<div class="feedback-item" style="background:'+fbEFE.color+'15;border-left:4px solid '+fbEFE.color+';">' +
+      '<strong style="color:'+fbEFE.color+';">EFE ('+efe.toFixed(2)+'):</strong> '+fbEFE.text +
+    '</div>';
+
+  document.getElementById('results-card').classList.add('visible');
+  document.getElementById('results-card').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+// Reset
+document.getElementById('rst-btn').addEventListener('click', function(){
+  if (!confirm('¿Seguro que deseas reiniciar? Se perderán todos los datos.')) return;
+  document.getElementById('prodName').value = '';
+  document.getElementById('analysis').value = '';
+  sections.forEach(function(sec){
+    const secEl = document.getElementById('sec-'+sec.id);
+    secEl.querySelectorAll('.fact-'+sec.id+', .peso-'+sec.id+', .calif-'+sec.id).forEach(function(i){ i.value = ''; });
+    secEl.querySelectorAll('.puntaje').forEach(function(t){ t.textContent = '0.00'; });
+    secEl.querySelector('.total-peso-'+sec.id).textContent = '0.00';
+    secEl.querySelector('.total-puntaje-'+sec.id).textContent = '0.00';
+  });
+  studentsList.innerHTML = '';
+  studentCount = 0;
+  renderStudentRow(0);
+  studentCount = 1;
+  updateAddBtn();
+  document.getElementById('results-card').classList.remove('visible');
+  document.getElementById('pdf-status').textContent = '';
+  try { localStorage.removeItem('efe_efi_lab_v2'); } catch(e){}
+  updateProgress();
+});
+
+// PDF
+document.getElementById('pdf-btn').addEventListener('click', function(){
+  const statusEl = document.getElementById('pdf-status');
+  if (typeof window.jspdf === 'undefined'){
+    statusEl.textContent = 'Cargando librería...'; return;
+  }
+  statusEl.style.color = '#0284c7';
+  statusEl.textContent = 'Generando PDF...';
+
+  const prod = document.getElementById('prodName').value.trim() || 'Sin especificar';
+  const analysis = document.getElementById('analysis').value.trim();
+  const students = [];
+  studentsList.querySelectorAll('.student-row').forEach(function(r){
+    const n = r.querySelector('.st-name').value.trim();
+    const a = r.querySelector('.st-last').value.trim();
+    if (n||a) students.push(n+' '+a);
+  });
+
+  const efi = getSectionTotal('F') + getSectionTotal('D');
+  const efe = getSectionTotal('O') + getSectionTotal('A');
+  const fbEFI = getFeedback(efi);
+  const fbEFE = getFeedback(efe);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+
+  function decor(){
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34); doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar', W/2, H/2, {align:'center',angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199); doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199); doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8); doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar', W/2, H-8, {align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  decor();
+  doc.setFillColor(2,132,199); doc.rect(0,7,W,95,'F');
+  doc.setFontSize(18); doc.setTextColor(255,255,255);
+  doc.text('Práctica de Laboratorio · EFE / EFI', W/2, 40, {align:'center'});
+  doc.setFontSize(13);
+  doc.text('Producto: '+prod, W/2, 65, {align:'center'});
+  doc.setFontSize(9);
+  doc.text('IM // TERMINAL · Investigación de Mercado', W/2, 85, {align:'center'});
+  doc.setFillColor(255,255,255); doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8); doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar', W-97.5,26, {align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y = 120;
+  const intLine = 'Integrantes: '+(students.length ? students.join(' · ') : 'Sin registrar');
+  const wInt = doc.splitTextToSize(intLine, 515);
+  doc.setFontSize(10); doc.text(wInt, 40, y);
+  y += wInt.length*12+2;
+  doc.setFontSize(9); doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(), 40, y);
+  doc.setTextColor(0,0,0); y += 18;
+
+  const secColors = { F:[5,150,105], D:[220,38,38], O:[2,132,199], A:[217,119,6] };
+  const secTitles = { F:'Fortalezas (EFI)', D:'Debilidades (EFI)', O:'Oportunidades (EFE)', A:'Amenazas (EFE)' };
+
+  sections.forEach(function(sec){
+    const c = secColors[sec.id];
+    doc.setFontSize(12); doc.setTextColor(c[0],c[1],c[2]);
+    doc.text(secTitles[sec.id], 40, y); y += 6;
+    const secEl = document.getElementById('sec-'+sec.id);
+    const facts = Array.from(secEl.querySelectorAll('.fact-'+sec.id)).map(function(e){ return e.value||'—'; });
+    const pesos = Array.from(secEl.querySelectorAll('.peso-'+sec.id)).map(function(e){ return e.value||'0.00'; });
+    const califs = Array.from(secEl.querySelectorAll('.calif-'+sec.id)).map(function(e){ return e.value||'—'; });
+    const punts = Array.from(secEl.querySelectorAll('.puntaje')).map(function(e){ return e.textContent; });
+    const body = facts.map(function(f,i){ return [f, pesos[i], califs[i], punts[i]]; });
+    body.push(['TOTAL', secEl.querySelector('.total-peso-'+sec.id).textContent, '—', secEl.querySelector('.total-puntaje-'+sec.id).textContent]);
+    doc.autoTable({
+      head:[['Factor Estratégico','Peso','Calificación','Puntaje']],
+      body: body,
+      startY: y,
+      styles:{fontSize:9,cellPadding:4},
+      headStyles:{fillColor:c},
+      columnStyles:{0:{cellWidth:220,halign:'left'},1:{cellWidth:55,halign:'center'},2:{cellWidth:70,halign:'center'},3:{cellWidth:60,halign:'center'}},
+      didParseCell:function(d){ if(d.row.index===body.length-1&&d.section==='body'){d.cell.styles.fillColor=[235,245,255];d.cell.styles.fontStyle='bold';} },
+      margin:{left:40,right:40},
+      didDrawPage:decor
+    });
+    y = doc.lastAutoTable.finalY+14;
+  });
+
+  // Results summary
+  if (y > H-120){ doc.addPage(); decor(); y=30; }
+  doc.setFontSize(13); doc.setTextColor(7,89,133);
+  doc.text('Resultados del Análisis', 40, y); y+=12;
+
+  const resBody = [
+    ['EFI (Fortalezas + Debilidades)', efi.toFixed(2), fbEFI.label.replace(/[✅⚠️❌]/g,'').trim()],
+    ['EFE (Oportunidades + Amenazas)', efe.toFixed(2), fbEFE.label.replace(/[✅⚠️❌]/g,'').trim()]
+  ];
+  doc.autoTable({
+    head:[['Matriz','Total','Interpretación']],
+    body:resBody,
+    startY:y,
+    styles:{fontSize:10,cellPadding:6},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:160},1:{cellWidth:60,halign:'center'}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y = doc.lastAutoTable.finalY+14;
+
+  doc.setFontSize(10); doc.setTextColor(0,0,0);
+  const fbLines = [
+    'EFI: '+fbEFI.text,
+    'EFE: '+fbEFE.text
+  ];
+  fbLines.forEach(function(line){
+    const w = doc.splitTextToSize(line, 515);
+    doc.text(w, 40, y); y += w.length*12+6;
+  });
+
+  if (analysis){
+    if (y > H-80){ doc.addPage(); decor(); y=30; }
+    doc.setFontSize(12); doc.setTextColor(7,89,133);
+    doc.text('Análisis grupal', 40, y); y+=12;
+    doc.setFontSize(9); doc.setTextColor(0,0,0);
+    const aw = doc.splitTextToSize(analysis, 515);
+    doc.text(aw, 40, y);
+  }
+
+  const fn = 'EFE_EFI_'+prod.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent = '✅ PDF descargado correctamente.';
+  statusEl.style.color = '#16a34a';
+});
+
+updateProgress();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

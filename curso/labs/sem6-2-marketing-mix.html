@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Semana 6 · Propuesta de Marketing Mix - IM // TERMINAL</title>
+<style>
+  body{margin:0;background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);min-height:100vh;padding:24px;}
+  #lab-wrap{max-width:1020px;margin:0 auto;}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 6 · Propuesta de Marketing Mix</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+<div id="lab-wrap">
+<style>
+:root {
+  --prod:#0284c7; --prod-l:#e0f2fe;
+  --prec:#059669; --prec-l:#d1fae5;
+  --plaz:#7c3aed; --plaz-l:#ede9fe;
+  --prom:#ea580c; --prom-l:#ffedd5;
+  --bg:#f0f9ff; --card:#ffffff;
+  --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe;
+}
+.dark-mode {
+  --bg:#0f172a; --card:#1e293b;
+  --text:#e0f2fe; --sub:#93c5fd;
+  --border:#1e40af;
+}
+*{box-sizing:border-box;}
+#lab-root {
+  background: linear-gradient(135deg, var(--bg) 0%, #ffffff 100%);
+  border-radius:18px; padding:1.5rem;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text); transition:background 0.3s, color 0.3s;
+  position:relative; overflow:hidden;
+}
+.dark-mode#lab-root { background: linear-gradient(135deg,#0f172a 0%,#1e293b 100%); }
+.wm {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:48px; font-weight:800;
+  color:rgba(2,132,199,0.05);
+  white-space:nowrap; pointer-events:none; z-index:0;
+  user-select:none; letter-spacing:2px;
+}
+.top-bar {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:1rem; position:relative; z-index:1; flex-wrap:wrap; gap:8px;
+}
+.top-bar h1 { font-size:16px; color:var(--sub); margin:0; }
+.top-right { display:flex; align-items:center; gap:8px; }
+.badge-doc {
+  background:#0284c7; color:#fff; font-size:10px; font-weight:700;
+  padding:5px 12px; border-radius:20px; text-align:center; line-height:1.5;
+}
+.badge-doc small { font-size:8px; opacity:0.8; display:block; }
+.toggle-dark {
+  background:var(--card); border:1px solid var(--border);
+  color:var(--text); border-radius:20px; padding:5px 12px;
+  font-size:11px; cursor:pointer; font-family:inherit;
+}
+
+/* Progress bar */
+.progress-wrap { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:0.75rem 1rem; margin-bottom:1rem; position:relative; z-index:1; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+.progress-label { font-size:12px; color:var(--sub); font-weight:600; margin-bottom:6px; display:flex; justify-content:space-between; }
+.progress-bar-bg { background:#e0f2fe; border-radius:99px; height:10px; overflow:hidden; }
+.progress-bar-fill { height:10px; border-radius:99px; background:linear-gradient(90deg,#0284c7,#38bdf8); transition:width 0.5s ease; }
+.progress-steps { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+.progress-step { display:flex; align-items:center; gap:4px; font-size:11px; }
+.step-dot { width:10px; height:10px; border-radius:50%; border:2px solid #bfdbfe; transition:all 0.3s; }
+.step-dot.done { border-color:currentColor; background:currentColor; }
+
+/* Instructions */
+.instructions { background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:1rem; position:relative; z-index:1; box-shadow:0 2px 8px rgba(0,0,0,0.05); overflow:hidden; }
+.instructions-header { display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; cursor:pointer; }
+.instructions-header p { font-size:13px; font-weight:600; color:var(--sub); margin:0; }
+.instructions-body { padding:0 1rem 0.75rem; display:none; }
+.instructions-body.open { display:block; }
+.instructions-body ol { font-size:12px; color:var(--text); margin:0; padding-left:1.2rem; line-height:1.8; }
+
+input[type="text"], input[type="number"], textarea, select {
+  width:100%; font-family:inherit; border:1px solid var(--border);
+  border-radius:6px; padding:8px; font-size:13px;
+  background:var(--card); color:var(--text);
+  transition:border-color 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline:none; border-color:#0284c7;
+  box-shadow:0 0 0 3px rgba(2,132,199,0.15);
+}
+textarea { resize:vertical; }
+button { cursor:pointer; border-radius:8px; padding:8px 14px; font-size:13px; font-family:inherit; transition:all 0.2s; }
+
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1rem; margin-bottom:1rem; position:relative; z-index:1; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+.card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+
+.students-section { position:relative; z-index:1; margin-bottom:1rem; }
+.student-row { display:flex; gap:8px; margin-bottom:6px; }
+.student-row input { flex:1; }
+.remove-student-btn { width:36px; padding:0; background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:6px; font-size:14px; }
+#add-student-btn { margin-top:6px; background:#e0f2fe; border:1px solid #93c5fd; color:#075985; }
+.dark-mode #add-student-btn { background:#1e3a5f; color:#93c5fd; }
+
+.p-card {
+  background:var(--card); border-radius:14px; padding:1rem;
+  margin-bottom:1rem; position:relative; z-index:1;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  border-left:5px solid var(--border);
+  transition:all 0.3s;
+}
+.p-card.complete { border-left-color:currentColor; }
+.p-header { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.p-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.p-title-group h3 { font-size:14px; font-weight:700; margin:0; }
+.p-title-group small { font-size:11px; color:var(--sub); }
+.p-check { margin-left:auto; font-size:20px; opacity:0; transition:opacity 0.3s; }
+.p-check.visible { opacity:1; }
+
+.strat-block { border-radius:10px; padding:0.75rem; margin-bottom:10px; }
+.strat-label { font-size:12px; font-weight:700; margin:0 0 8px 0; }
+.strat-fields { display:flex; flex-direction:column; gap:8px; }
+.strat-fields label { font-size:11px; font-weight:600; display:block; margin-bottom:3px; color:var(--sub); }
+.strat-fields input, .strat-fields select, .strat-fields textarea { font-size:12px; }
+
+.word-count { font-size:11px; color:var(--sub); margin-top:4px; text-align:right; }
+.word-count.ok { color:#059669; font-weight:600; }
+
+/* Summary card */
+.summary-card { background:var(--card); border:2px solid #0284c7; border-radius:14px; padding:1rem; margin-bottom:1rem; position:relative; z-index:1; box-shadow:0 4px 20px rgba(2,132,199,0.15); display:none; }
+.summary-card.visible { display:block; }
+.summary-title { font-size:14px; font-weight:700; color:#0284c7; margin:0 0 10px 0; }
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.summary-p { border-radius:10px; padding:8px 10px; }
+.summary-p-title { font-size:11px; font-weight:700; margin:0 0 4px 0; }
+.summary-p-item { font-size:10px; margin:2px 0; }
+
+.actions-row { display:flex; gap:10px; margin-top:1rem; flex-wrap:wrap; position:relative; z-index:1; }
+#reset-btn { background:var(--card); border:1px solid var(--border); color:var(--text); white-space:nowrap; }
+#pdf-btn { background:#0284c7; border:none; color:#fff; white-space:nowrap; font-weight:600; box-shadow:0 4px 12px rgba(2,132,199,0.35); }
+#pdf-btn:hover { background:#0369a1; transform:translateY(-1px); box-shadow:0 6px 16px rgba(2,132,199,0.4); }
+#pdf-status { font-size:12px; color:#0284c7; margin-top:6px; position:relative; z-index:1; }
+
+.autosave-badge { font-size:10px; color:#059669; margin-top:4px; position:relative; z-index:1; }
+
+.footer-lab { margin-top:1rem; text-align:center; font-size:11px; color:#93c5fd; position:relative; z-index:1; }
+.footer-lab strong { color:#0284c7; }
+
+@media(max-width:520px){ .summary-grid{ grid-template-columns:1fr; } .top-bar{ flex-direction:column; align-items:flex-start; } }
+</style>
+
+<div id="lab-root">
+<div class="wm">Docente: Daniel Solar</div>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <h1>🎯 Laboratorio · Propuesta de Marketing Mix</h1>
+  <div class="top-right">
+    <button class="toggle-dark" id="toggle-dark">🌙 Modo oscuro</button>
+    <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+  </div>
+</div>
+
+<!-- Progreso -->
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span>Progreso del laboratorio</span>
+    <span id="progress-pct">0%</span>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="progress-steps" id="progress-steps"></div>
+</div>
+
+<!-- Instrucciones colapsables -->
+<div class="instructions">
+  <div class="instructions-header" id="instr-toggle">
+    <p>📋 ¿Cómo usar este laboratorio?</p>
+    <span id="instr-arrow" style="font-size:16px; color:#0284c7;">▼</span>
+  </div>
+  <div class="instructions-body" id="instr-body">
+    <ol>
+      <li>Registra los <strong>integrantes del equipo</strong> (máximo 5).</li>
+      <li>Escribe el <strong>nombre del producto</strong> que analizarán.</li>
+      <li>Para cada <strong>P del Marketing Mix</strong> ingresa 2 estrategias con su tema, característica y desarrollo.</li>
+      <li>Redacta el <strong>análisis grupal</strong> (mínimo 80 palabras).</li>
+      <li>Revisa el <strong>resumen visual</strong> que se genera automáticamente.</li>
+      <li>Descarga el <strong>PDF</strong> con toda la información del equipo.</li>
+    </ol>
+    <p style="font-size:11px; color:#0284c7; margin:6px 0 0 0;">💾 Tu avance se guarda automáticamente en el navegador.</p>
+  </div>
+</div>
+
+<!-- Integrantes -->
+<div class="students-section">
+  <label style="font-size:13px; color:var(--sub); font-weight:600; display:block; margin-bottom:6px;">👥 Integrantes del equipo (máx. 5)</label>
+  <div id="students-list"></div>
+  <button id="add-student-btn">+ Agregar integrante</button>
+</div>
+
+<!-- Producto -->
+<div class="card">
+  <label for="producto" style="font-size:14px; font-weight:700; margin-bottom:6px;">📦 Producto a analizar</label>
+  <input type="text" id="producto" placeholder="Ej: Pota Congelada, Barras de Quinua...">
+</div>
+
+<!-- 4P -->
+<div id="ps-container"></div>
+
+<!-- Resumen visual -->
+<div class="summary-card" id="summary-card">
+  <p class="summary-title">✨ Resumen de tu propuesta de Marketing Mix</p>
+  <div class="summary-grid" id="summary-grid"></div>
+</div>
+
+<!-- Botones -->
+<div class="actions-row">
+  <button id="reset-btn">↺ Reiniciar</button>
+  <button id="pdf-btn">⬇ Descargar PDF</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave-badge" id="autosave-badge"></p>
+
+<!-- Análisis grupal -->
+<div class="card">
+  <label for="group-analysis" style="font-size:14px; font-weight:700; margin-bottom:6px;">💬 Análisis grupal</label>
+  <p style="font-size:12px; color:var(--sub); margin:0 0 8px 0;">¿Cómo se articulan las 4P para posicionar el producto en el mercado internacional? ¿Cuál es la estrategia más relevante y por qué?</p>
+  <textarea id="group-analysis" rows="5" placeholder="Escriban aquí el análisis del equipo... (mínimo 80 palabras)"></textarea>
+  <p class="word-count" id="word-count">0 palabras (mínimo 80)</p>
+</div>
+
+<div class="footer-lab">IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong></div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+const ps = [
+  { key:'producto', label:'Producto', icon:'⚙️', color:'#0284c7', light:'#e0f2fe', textc:'#075985',
+    temas:['Tipo de Producto','Marca','Especialización','Empaque y Envase'],
+    desc:'Estrategias sobre el bien o servicio ofrecido.' },
+  { key:'precio', label:'Precio', icon:'💰', color:'#059669', light:'#d1fae5', textc:'#065f46',
+    temas:['Descremado (Segmentación)','Penetración','Productos acompañantes','Términos de venta'],
+    desc:'Propuesta de valor económico y condiciones.' },
+  { key:'plaza', label:'Plaza', icon:'🗺️', color:'#7c3aed', light:'#ede9fe', textc:'#4c1d95',
+    temas:['Características de Producto','Punto de Venta','Cadena de valor','Gestión de Inventarios'],
+    desc:'Canales y puntos de distribución.' },
+  { key:'promocion', label:'Promoción', icon:'📣', color:'#ea580c', light:'#ffedd5', textc:'#7c2d12',
+    temas:['Dirección de arte','Texto','Accesibilidad al medio','Consideraciones culturales'],
+    desc:'Comunicación y estrategias de difusión.' }
+];
+
+const MAX_STUDENTS = 5;
+let studentCount = 1;
+const studentsList = document.getElementById('students-list');
+
+// Dark mode
+document.getElementById('toggle-dark').addEventListener('click', function() {
+  const root = document.getElementById('lab-root');
+  root.classList.toggle('dark-mode');
+  this.textContent = root.classList.contains('dark-mode') ? '☀️ Modo claro' : '🌙 Modo oscuro';
+  saveToStorage();
+});
+
+// Instructions toggle
+document.getElementById('instr-toggle').addEventListener('click', function() {
+  const body = document.getElementById('instr-body');
+  const arrow = document.getElementById('instr-arrow');
+  body.classList.toggle('open');
+  arrow.textContent = body.classList.contains('open') ? '▲' : '▼';
+});
+
+// Students
+function renderStudentRow(idx) {
+  const row = document.createElement('div');
+  row.className = 'student-row';
+  row.id = 'student-row-' + idx;
+  row.innerHTML =
+    '<input type="text" class="student-name" placeholder="Nombre">' +
+    '<input type="text" class="student-lastname" placeholder="Apellido">' +
+    '<button class="remove-student-btn" aria-label="Eliminar">✕</button>';
+  studentsList.appendChild(row);
+  row.querySelectorAll('input').forEach(i => i.addEventListener('input', () => { updateProgress(); saveToStorage(); }));
+}
+
+function updateAddBtn() {
+  const btn = document.getElementById('add-student-btn');
+  btn.disabled = studentCount >= MAX_STUDENTS;
+  btn.style.opacity = studentCount >= MAX_STUDENTS ? '0.5' : '1';
+}
+
+studentsList.addEventListener('click', function(e) {
+  const btn = e.target.closest('.remove-student-btn');
+  if (!btn || studentsList.children.length <= 1) return;
+  btn.closest('.student-row').remove();
+  studentCount--;
+  updateAddBtn();
+  updateProgress();
+  saveToStorage();
+});
+
+document.getElementById('add-student-btn').addEventListener('click', function() {
+  if (studentCount >= MAX_STUDENTS) return;
+  renderStudentRow(studentCount);
+  studentCount++;
+  updateAddBtn();
+});
+
+renderStudentRow(0);
+
+// Progress steps
+const stepsContainer = document.getElementById('progress-steps');
+const allSections = ['Integrantes', 'Producto', 'Producto (P)', 'Precio (P)', 'Plaza (P)', 'Promoción (P)', 'Análisis'];
+const stepColors = ['#0284c7','#0284c7','#0284c7','#059669','#7c3aed','#ea580c','#0284c7'];
+allSections.forEach((s,i) => {
+  const el = document.createElement('div');
+  el.className = 'progress-step';
+  el.innerHTML = `<div class="step-dot" id="step-${i}" style="color:${stepColors[i]};"></div><span style="font-size:10px; color:var(--sub);">${s}</span>`;
+  stepsContainer.appendChild(el);
+});
+
+// Build 4P sections
+const container = document.getElementById('ps-container');
+ps.forEach(function(p) {
+  const section = document.createElement('div');
+  section.className = 'p-card';
+  section.id = 'p-card-' + p.key;
+  section.style.borderLeftColor = p.color;
+
+  let html = `<div class="p-header">
+    <div class="p-icon" style="background:${p.light};">${p.icon}</div>
+    <div class="p-title-group">
+      <h3 style="color:${p.color};">P de ${p.label}</h3>
+      <small>${p.desc}</small>
+    </div>
+    <div class="p-check" id="check-${p.key}" style="color:${p.color};">✅</div>
+  </div>`;
+
+  for (let i = 1; i <= 2; i++) {
+    html += `<div class="strat-block" style="background:${p.light};">
+      <p class="strat-label" style="color:${p.color};">Estrategia ${i}</p>
+      <div class="strat-fields">
+        <div>
+          <label>Tema de estrategia</label>
+          <select id="${p.key}-tema${i}">
+            <option value="">-- Seleccionar tema --</option>
+            ${p.temas.map(t=>`<option value="${t}">${t}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label>Característica</label>
+          <input type="text" id="${p.key}-caract${i}" placeholder="Describe la característica del producto/mercado...">
+        </div>
+        <div>
+          <label>Estrategia</label>
+          <textarea id="${p.key}-estrat${i}" rows="2" placeholder="Desarrolla la estrategia a aplicar..."></textarea>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  section.innerHTML = html;
+  container.appendChild(section);
+
+  // Events
+  for (let i = 1; i <= 2; i++) {
+    ['tema','caract','estrat'].forEach(f => {
+      const el = document.getElementById(`${p.key}-${f}${i}`);
+      el.addEventListener('input', () => { updateProgress(); updateSummary(); saveToStorage(); });
+      el.addEventListener('change', () => { updateProgress(); updateSummary(); saveToStorage(); });
+    });
+  }
+});
+
+// Word count
+document.getElementById('group-analysis').addEventListener('input', function() {
+  const words = this.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const wc = document.getElementById('word-count');
+  wc.textContent = words + ' palabras' + (words < 80 ? ' (mínimo 80)' : ' ✓');
+  wc.className = 'word-count' + (words >= 80 ? ' ok' : '');
+  updateProgress();
+  saveToStorage();
+});
+
+// producto
+document.getElementById('producto').addEventListener('input', function() {
+  updateProgress(); updateSummary(); saveToStorage();
+});
+
+function isPComplete(key) {
+  for (let i = 1; i <= 2; i++) {
+    const t = document.getElementById(`${key}-tema${i}`).value;
+    const c = document.getElementById(`${key}-caract${i}`).value.trim();
+    const e = document.getElementById(`${key}-estrat${i}`).value.trim();
+    if (!t || !c || !e) return false;
+  }
+  return true;
+}
+
+function updateProgress() {
+  let done = 0; const total = 7;
+  const hasStudent = studentsList.querySelectorAll('.student-name').length > 0 &&
+    Array.from(studentsList.querySelectorAll('.student-name')).some(i => i.value.trim());
+  if (hasStudent) { done++; setStep(0,true,'#0284c7'); } else setStep(0,false,'#0284c7');
+
+  const hasProd = document.getElementById('producto').value.trim().length > 0;
+  if (hasProd) { done++; setStep(1,true,'#0284c7'); } else setStep(1,false,'#0284c7');
+
+  const stepColors2 = ['#0284c7','#059669','#7c3aed','#ea580c'];
+  ps.forEach(function(p, idx) {
+    const ok = isPComplete(p.key);
+    if (ok) done++;
+    setStep(idx+2, ok, stepColors2[idx]);
+    const check = document.getElementById('check-'+p.key);
+    if (check) check.className = 'p-check' + (ok ? ' visible' : '');
+  });
+
+  const words = document.getElementById('group-analysis').value.trim().split(/\s+/).filter(w=>w.length>0).length;
+  if (words >= 80) { done++; setStep(6,true,'#0284c7'); } else setStep(6,false,'#0284c7');
+
+  const pct = Math.round((done/total)*100);
+  document.getElementById('progress-fill').style.width = pct+'%';
+  document.getElementById('progress-pct').textContent = pct+'%';
+}
+
+function setStep(idx, done, color) {
+  const dot = document.getElementById('step-'+idx);
+  if (!dot) return;
+  dot.style.color = color;
+  dot.className = 'step-dot' + (done ? ' done' : '');
+}
+
+function updateSummary() {
+  const card = document.getElementById('summary-card');
+  const grid = document.getElementById('summary-grid');
+  const hasAny = ps.some(p => isPComplete(p.key));
+  if (!hasAny) { card.classList.remove('visible'); return; }
+  card.classList.add('visible');
+  grid.innerHTML = '';
+  ps.forEach(function(p) {
+    const div = document.createElement('div');
+    div.className = 'summary-p';
+    div.style.background = p.light;
+    let items = '';
+    for (let i = 1; i <= 2; i++) {
+      const t = document.getElementById(`${p.key}-tema${i}`).value;
+      const c = document.getElementById(`${p.key}-caract${i}`).value.trim();
+      if (t || c) items += `<p class="summary-p-item" style="color:${p.textc};">• <strong>${t||'—'}</strong>${c ? ': '+c.substring(0,40)+(c.length>40?'…':'') : ''}</p>`;
+    }
+    div.innerHTML = `<p class="summary-p-title" style="color:${p.color};">${p.icon} ${p.label}</p>${items||'<p class="summary-p-item" style="opacity:0.5;">Sin completar</p>'}`;
+    grid.appendChild(div);
+  });
+}
+
+// Autosave
+function saveToStorage() {
+  try {
+    const d = {
+      producto: document.getElementById('producto').value,
+      analysis: document.getElementById('group-analysis').value,
+      darkMode: document.getElementById('lab-root').classList.contains('dark-mode'),
+      students: [],
+      ps: {}
+    };
+    studentsList.querySelectorAll('.student-row').forEach(r => {
+      d.students.push({
+        nombre: r.querySelector('.student-name').value,
+        apellido: r.querySelector('.student-lastname').value
+      });
+    });
+    ps.forEach(p => {
+      d.ps[p.key] = [];
+      for (let i = 1; i <= 2; i++) {
+        d.ps[p.key].push({
+          tema: document.getElementById(`${p.key}-tema${i}`).value,
+          caract: document.getElementById(`${p.key}-caract${i}`).value,
+          estrat: document.getElementById(`${p.key}-estrat${i}`).value
+        });
+      }
+    });
+    localStorage.setItem('mmix_lab_v2', JSON.stringify(d));
+    const badge = document.getElementById('autosave-badge');
+    badge.textContent = '💾 Guardado automáticamente a las ' + new Date().toLocaleTimeString();
+    setTimeout(() => badge.textContent = '', 3000);
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('mmix_lab_v2');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d.darkMode) {
+      document.getElementById('lab-root').classList.add('dark-mode');
+      document.getElementById('toggle-dark').textContent = '☀️ Modo claro';
+    }
+    document.getElementById('producto').value = d.producto || '';
+    document.getElementById('group-analysis').value = d.analysis || '';
+    if (d.students && d.students.length > 0) {
+      studentsList.innerHTML = '';
+      studentCount = 0;
+      d.students.forEach((s, idx) => {
+        renderStudentRow(idx);
+        const row = document.getElementById('student-row-'+idx);
+        row.querySelector('.student-name').value = s.nombre || '';
+        row.querySelector('.student-lastname').value = s.apellido || '';
+        studentCount++;
+      });
+      updateAddBtn();
+    }
+    if (d.ps) {
+      ps.forEach(p => {
+        if (!d.ps[p.key]) return;
+        for (let i = 1; i <= 2; i++) {
+          const entry = d.ps[p.key][i-1];
+          if (!entry) continue;
+          document.getElementById(`${p.key}-tema${i}`).value = entry.tema || '';
+          document.getElementById(`${p.key}-caract${i}`).value = entry.caract || '';
+          document.getElementById(`${p.key}-estrat${i}`).value = entry.estrat || '';
+        }
+      });
+    }
+    const words = (d.analysis||'').trim().split(/\s+/).filter(w=>w.length>0).length;
+    if (words > 0) {
+      const wc = document.getElementById('word-count');
+      wc.textContent = words + ' palabras' + (words < 80 ? ' (mínimo 80)' : ' ✓');
+      wc.className = 'word-count' + (words >= 80 ? ' ok' : '');
+    }
+    updateProgress(); updateSummary();
+  } catch(e) {}
+}
+
+loadFromStorage();
+
+// Reset
+document.getElementById('reset-btn').addEventListener('click', function() {
+  if (!confirm('¿Seguro que deseas reiniciar? Se perderán todos los datos.')) return;
+  document.getElementById('producto').value = '';
+  document.getElementById('group-analysis').value = '';
+  document.getElementById('word-count').textContent = '0 palabras (mínimo 80)';
+  document.getElementById('word-count').className = 'word-count';
+  ps.forEach(p => {
+    for (let i = 1; i <= 2; i++) {
+      document.getElementById(`${p.key}-tema${i}`).value = '';
+      document.getElementById(`${p.key}-caract${i}`).value = '';
+      document.getElementById(`${p.key}-estrat${i}`).value = '';
+    }
+  });
+  studentsList.innerHTML = '';
+  studentCount = 0;
+  renderStudentRow(0);
+  studentCount = 1;
+  updateAddBtn();
+  document.getElementById('pdf-status').textContent = '';
+  document.getElementById('summary-card').classList.remove('visible');
+  try { localStorage.removeItem('mmix_lab_v2'); } catch(e) {}
+  updateProgress();
+});
+
+// PDF
+const pdfColors = {
+  producto:[2,132,199], precio:[5,150,105], plaza:[124,58,237], promocion:[234,88,12]
+};
+
+document.getElementById('pdf-btn').addEventListener('click', function() {
+  const statusEl = document.getElementById('pdf-status');
+  const students = [];
+  studentsList.querySelectorAll('.student-row').forEach(r => {
+    const n = r.querySelector('.student-name').value.trim();
+    const a = r.querySelector('.student-lastname').value.trim();
+    if (n || a) students.push({nombre:n, apellido:a});
+  });
+  if (students.length === 0) {
+    statusEl.textContent = '⚠️ Por favor ingresa al menos un integrante antes de descargar.';
+    statusEl.style.color = '#dc2626'; return;
+  }
+  if (typeof window.jspdf === 'undefined') {
+    statusEl.textContent = 'Cargando librería PDF...'; return;
+  }
+  statusEl.style.color = '#0284c7';
+  statusEl.textContent = 'Generando PDF...';
+
+  const producto = document.getElementById('producto').value.trim() || 'Sin especificar';
+  const analysisText = document.getElementById('group-analysis').value.trim();
+  const data = {};
+  ps.forEach(p => {
+    data[p.key] = [];
+    for (let i = 1; i <= 2; i++) {
+      data[p.key].push({
+        tema: document.getElementById(`${p.key}-tema${i}`).value,
+        caract: document.getElementById(`${p.key}-caract${i}`).value,
+        estrat: document.getElementById(`${p.key}-estrat${i}`).value
+      });
+    }
+  });
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
+
+  function addPageDecor() {
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(36); doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar', W/2, H/2, {align:'center', angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199); doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199); doc.rect(0,H-24,W,24,'F');
+    doc.setFontSize(8); doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar', W/2, H-9, {align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  // Portada
+  addPageDecor();
+  doc.setFillColor(2,132,199);
+  doc.rect(0, 7, W, 120, 'F');
+  doc.setFontSize(20); doc.setTextColor(255,255,255);
+  doc.text('Propuesta de Marketing Mix', W/2, 50, {align:'center'});
+  doc.setFontSize(13);
+  doc.text(producto, W/2, 75, {align:'center'});
+  doc.setFontSize(10);
+  doc.text('IM // TERMINAL · Investigación de Mercado', W/2, 98, {align:'center'});
+  doc.setFillColor(255,255,255); doc.roundedRect(W-155,14,115,20,5,5,'F');
+  doc.setFontSize(9); doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar', W-97.5, 27, {align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y = 150;
+  const integrantesLine = 'Integrantes: ' + students.map(s=>(s.nombre+' '+s.apellido).trim()).join(' · ');
+  const wrapped = doc.splitTextToSize(integrantesLine, 515);
+  doc.setFontSize(10); doc.text(wrapped, 40, y);
+  y += wrapped.length * 13 + 2;
+  doc.setFontSize(9); doc.setTextColor(100,100,100);
+  doc.text('Fecha: ' + new Date().toLocaleDateString(), 40, y);
+  doc.setTextColor(0,0,0);
+  y += 20;
+
+  // Resumen ejecutivo
+  doc.setFontSize(12); doc.setTextColor(7,89,133);
+  doc.text('Resumen ejecutivo de estrategias', 40, y); y += 8;
+  const sumBody = [];
+  ps.forEach(p => {
+    for (let i = 1; i <= 2; i++) {
+      const d = data[p.key][i-1];
+      sumBody.push([`${p.label} - E${i}`, d.tema||'-', d.caract||'-']);
+    }
+  });
+  doc.autoTable({
+    head:[['P / Estrategia','Tema','Característica']],
+    body: sumBody,
+    startY: y,
+    styles:{fontSize:8, cellPadding:4},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:90,fontStyle:'bold'},1:{cellWidth:110}},
+    margin:{left:40,right:40},
+    didDrawPage: addPageDecor
+  });
+  y = doc.lastAutoTable.finalY + 20;
+
+  // Detalle por P
+  ps.forEach(p => {
+    const c = pdfColors[p.key];
+    doc.setFontSize(12); doc.setTextColor(c[0],c[1],c[2]);
+    doc.text(`${p.label}`, 40, y); y += 6;
+    const body = [];
+    for (let i = 1; i <= 2; i++) {
+      const d = data[p.key][i-1];
+      body.push(['Estrategia '+i, d.tema||'-', d.caract||'-', d.estrat||'-']);
+    }
+    doc.autoTable({
+      head:[['','Tema','Característica','Estrategia']],
+      body, startY:y,
+      styles:{fontSize:9,cellPadding:5},
+      headStyles:{fillColor:c},
+      columnStyles:{0:{cellWidth:60,fontStyle:'bold'},1:{cellWidth:95}},
+      margin:{left:40,right:40},
+      didDrawPage: addPageDecor
+    });
+    y = doc.lastAutoTable.finalY + 16;
+  });
+
+  // Análisis grupal
+  doc.setFontSize(12); doc.setTextColor(7,89,133);
+  doc.text('Análisis grupal', 40, y);
+  doc.setFontSize(9); doc.setTextColor(0,0,0);
+  const aw = doc.splitTextToSize(analysisText||'(Sin análisis ingresado)', 515);
+  doc.text(aw, 40, y+14);
+
+  const fn = 'marketing_mix_' + (students[0].apellido||students[0].nombre||'equipo').replace(/\s+/g,'_') + '.pdf';
+  doc.save(fn);
+  statusEl.textContent = '✅ PDF descargado correctamente.';
+  statusEl.style.color = '#16a34a';
+});
+
+updateProgress();
+</script>
+
+</div>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

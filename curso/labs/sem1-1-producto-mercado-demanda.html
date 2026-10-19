@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio de Inteligencia Comercial - IM // TERMINAL</title>
+    <link rel="stylesheet" href="../assets/vendor/tailwind-lab11.css">
+    <script src="../assets/vendor/chart.umd.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 550px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 280px;
+            max-height: 320px;
+        }
+        .tab-active {
+            background-color: #f1e7d0;
+            border-left: 4px solid #ca8a04;
+            font-weight: bold;
+        }
+        .tab-inactive {
+            background-color: #ffffff;
+            border-left: 4px solid transparent;
+        }
+        .tab-inactive:hover {
+            background-color: #fafaf9;
+        }
+        .screen-transition {
+            transition: all 0.4s ease-in-out;
+        }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            #main-nav, #screen-auth, .flex-wrap, button, input[type=range], #lock-modal, #lock-notice {
+                display: none !important;
+            }
+            .chart-container {
+                max-width: 100%;
+                page-break-inside: avoid;
+            }
+            #quiz-results-panel {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#faf9f6] text-slate-800 font-sans antialiased">
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 1 · Producto, Mercado y Demanda</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+
+<!-- Chosen Palette: Warm Neutrals with Corporate FacultyHub Blue and Gold Accents -->
+<!-- Application Structure Plan: Single-Page Application with 4 core views: Product, Market, Demand Simulator, and Evaluation Quiz. Shuffled questions and dynamic choices prevent information leakage among students while validating data. -->
+<!-- Visualization & Content Choices: Product Layers -> Radar Chart (Chart.js), Market Funnel -> Doughnut Chart (Chart.js), Demand -> Bar Chart (Chart.js) with responsive canvas. -->
+
+<div id="screen-auth" class="min-height-screen fixed inset-0 z-50 bg-[#002D62] flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 border-t-8 border-[#C5A059]">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-[#002D62] tracking-tight">LABORATORIO DE INTELIGENCIA COMERCIAL</h1>
+            <p class="text-xs text-slate-500 font-medium tracking-widest mt-1 uppercase">FacultyHub · Escuela demo</p>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Apellidos Completos</label>
+                <input type="text" id="student-lastname" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62]" placeholder="Ej: Solar Giraldo">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombres Completos</label>
+                <input type="text" id="student-firstname" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#002D62]" placeholder="Ej: Daniel Alfredo">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Código de Estudiante</label>
+                <input type="text" id="student-code" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#002D62]" placeholder="Ej: FH2026094">
+            </div>
+            
+            <p id="auth-error-msg" class="text-rose-600 text-xs font-bold hidden">⚠️ Por favor, complete todos los campos obligatorios.</p>
+
+            <button onclick="validateAndStart()" class="w-full bg-[#002D62] text-white font-bold py-3 rounded-lg hover:bg-[#001a3a] transition-colors mt-2 uppercase text-xs tracking-wider">
+                Iniciar Sesión Práctica
+            </button>
+        </div>
+    </div>
+</div>
+
+<nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-40 hidden" id="main-nav">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center space-x-3">
+                <span class="text-lg font-black text-[#002D62] tracking-tight">FacultyHub</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-xs font-bold text-slate-600 uppercase tracking-widest">Unidad 1: Investigación de Mercados</span>
+            </div>
+            <div id="user-badge" class="flex items-center text-xs font-mono bg-slate-100 px-3 py-1 my-3 rounded border border-slate-200 text-slate-700">
+                ESTUDIANTE: CARGANDO...
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden" id="main-content">
+    
+    <div class="flex flex-wrap gap-2 mb-8 bg-white p-2 rounded-xl shadow-sm border border-slate-200">
+        <button id="nav-btn-0" onclick="switchSection(0)" class="flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-[#002D62] text-white">1. Producto</button>
+        <button id="nav-btn-1" onclick="switchSection(1)" class="flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-slate-100 text-slate-600">2. Mercado</button>
+        <button id="nav-btn-2" onclick="switchSection(2)" class="flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-slate-100 text-slate-600">3. Simulador de Demanda</button>
+        <button id="nav-btn-3" onclick="switchSection(3)" class="flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-slate-100 text-slate-600">4. Autoevaluación</button>
+    </div>
+
+    <div id="lock-notice" class="hidden mb-6 p-4 rounded-lg bg-amber-50 border-l-4 border-[#C5A059] text-xs text-[#002D62] font-semibold flex items-start gap-2">
+        <span class="text-base leading-none">🔒</span>
+        <span>Los módulos de estudio (Producto, Mercado y Simulador) han quedado bloqueados al iniciar la Autoevaluación. Responde las preguntas con la información que ya analizaste.</span>
+    </div>
+
+    <div id="section-0" class="screen-transition">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+            <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50">
+                <span class="text-xs font-bold text-[#C5A059] tracking-widest uppercase block mb-1">Módulo de Análisis Estructural</span>
+                <h2 class="text-2xl font-bold text-[#002D62]">Deconstrucción del Producto: Tangible e Intangible</h2>
+                <p class="text-sm text-slate-600 mt-2">La oferta exportable de FacultyHub combina elements físicos and relacionales. Analiza las 4 capas de valor del producto e identifica cómo cada elemento contribuye a su potencial de diferenciación internacional.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+                <div class="bg-slate-50 border-r border-slate-200 flex flex-col">
+                    <button onclick="updateProductLayer(0)" id="prod-tab-0" class="tab-active text-left p-6 w-full focus:outline-none transition-all">
+                        <h3 class="text-base font-bold text-[#002D62]">1. Nivel Central</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">El beneficio principal y necesidad de consumo</p>
+                    </button>
+                    <button onclick="updateProductLayer(1)" id="prod-tab-1" class="tab-inactive text-left p-6 w-full focus:outline-none transition-all border-t border-slate-100">
+                        <h3 class="text-base font-bold text-slate-800">2. Nivel Tangible</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Atributos físicos, técnicos y comerciales directos</p>
+                    </button>
+                    <button onclick="updateProductLayer(2)" id="prod-tab-2" class="tab-inactive text-left p-6 w-full focus:outline-none transition-all border-t border-slate-100">
+                        <h3 class="text-base font-bold text-slate-800">3. Nivel Intangible</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Garantías comerciales, reputación corporativa y certificaciones</p>
+                    </button>
+                    <button onclick="updateProductLayer(3)" id="prod-tab-3" class="tab-inactive text-left p-6 w-full focus:outline-none transition-all border-t border-slate-100">
+                        <h3 class="text-base font-bold text-slate-800">4. Nivel Aumentado</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Servicios complementarios y canales de interacción digital</p>
+                    </button>
+                </div>
+                <div class="p-6 md:p-8 flex flex-col justify-between">
+                    <div id="product-meta-content" class="min-h-[160px] bg-slate-50 p-6 rounded-lg border border-slate-200 shadow-inner">
+                        <h4 id="layer-title" class="text-lg font-bold text-[#002D62] mb-2">Nivel Central</h4>
+                        <p id="layer-definition" class="text-sm text-slate-700 leading-relaxed mb-3"></p>
+                        <p id="layer-example" class="text-xs text-slate-600 bg-white p-3 rounded border border-slate-200 italic"></p>
+                    </div>
+                    <div class="chart-container mt-4">
+                        <canvas id="productLayerChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-1" class="screen-transition hidden">
+        <div class="bg-white rounded-xl shadow-md p-6 md:p-8 border border-slate-200">
+            <div class="mb-6">
+                <span class="text-xs font-bold text-[#C5A059] tracking-widest uppercase block mb-1">Módulo de Segmentación Internacional</span>
+                <h2 class="text-2xl font-bold text-[#002D62]">El Embudo de Segmentación del Mercado</h2>
+                <p class="text-sm text-slate-600 mt-1">Acorde al marco de Czinkota, los mercados se filtran sistemáticamente según interés, capacidad económica y accesibilidad logística. Haz clic en las zonas del gráfico para inspeccionar la estructura operativa.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 shadow-inner">
+                    <div class="chart-container">
+                        <canvas id="marketFunnelChart"></canvas>
+                    </div>
+                    <p class="text-[11px] text-center text-slate-400 font-mono mt-3">Interactividad habilitada: Clic en sectores para alternar datos</p>
+                </div>
+                <div id="market-meta-box" class="bg-white border-2 border-slate-100 shadow-sm rounded-xl p-6 min-h-[300px] flex flex-col justify-center">
+                    <span id="mkt-tier-badge" class="text-[10px] font-bold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-full w-max uppercase tracking-wider mb-3">Filtro Nivel 1</span>
+                    <h3 id="mkt-tier-title" class="text-xl font-bold text-[#002D62] mb-3">Mercado Potencial</h3>
+                    <p id="mkt-tier-desc" class="text-sm text-slate-700 leading-relaxed mb-4"></p>
+                    <div class="bg-[#f1e7d0]/40 p-4 rounded-lg border border-[#C5A059]/30 text-xs">
+                        <span class="font-bold text-[#002D62] uppercase tracking-wider block mb-1">Aplicación Comercial FacultyHub:</span>
+                        <p id="mkt-tier-case" class="text-slate-700 italic"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-2" class="screen-transition hidden">
+        <div class="bg-white rounded-xl shadow-md p-6 md:p-8 border border-slate-200">
+            <div class="mb-6">
+                <span class="text-xs font-bold text-[#C5A059] tracking-widest uppercase block mb-1">Módulo Analítico Cuantitativo</span>
+                <h2 class="text-2xl font-bold text-[#002D62]">Simulador de Demanda: Potencial, DIA e Insatisfecha</h2>
+                <p class="text-sm text-slate-600 mt-1">Usa los controles del simulador para modelar escenarios comerciales basados en el caso técnico de la Pitahaya fresca. Modifica las variables de oferta y consumo para proyectar brechas de oportunidad.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div class="lg:col-span-2 bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-5 shadow-inner">
+                    <h3 class="text-xs font-bold text-slate-700 tracking-wider uppercase border-b border-slate-300 pb-2">Variables de Entrada</h3>
+                    
+                    <div>
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                            <span>N° Consumidores Objetivo</span>
+                            <input type="number" id="num-consumers" min="1000" max="1000000" step="1" value="150000" oninput="syncDemandInputs('num', 'consumers')" class="font-mono bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 text-right w-28 focus:outline-none focus:ring-1 focus:ring-[#002D62]">
+                        </div>
+                        <input type="range" id="input-consumers" min="1000" max="1000000" step="1" value="150000" oninput="syncDemandInputs('range', 'consumers')" class="w-full accent-[#002D62]">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                            <span>Consumo Per Cápita Anual (kg)</span>
+                            <input type="number" id="num-capita" min="0.10" max="20.00" step="0.01" value="4.30" oninput="syncDemandInputs('num', 'capita')" class="font-mono bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 text-right w-20 focus:outline-none focus:ring-1 focus:ring-[#002D62]">
+                        </div>
+                        <input type="range" id="input-capita" min="0.10" max="20.00" step="0.01" value="4.30" oninput="syncDemandInputs('range', 'capita')" class="w-full accent-[#002D62]">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                            <span>Producción Nacional (tn)</span>
+                            <input type="number" id="num-prod" min="0" max="2000" step="1" value="320" oninput="syncDemandInputs('num', 'prod')" class="font-mono bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 text-right w-20 focus:outline-none focus:ring-1 focus:ring-[#002D62]">
+                        </div>
+                        <input type="range" id="input-prod" min="0" max="2000" step="1" value="320" oninput="syncDemandInputs('range', 'prod')" class="w-full accent-[#002D62]">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                            <span>Importación Sectorial (tn)</span>
+                            <input type="number" id="num-imp" min="0" max="1000" step="1" value="25" oninput="syncDemandInputs('num', 'imp')" class="font-mono bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 text-right w-20 focus:outline-none focus:ring-1 focus:ring-[#002D62]">
+                        </div>
+                        <input type="range" id="input-imp" min="0" max="1000" step="1" value="25" oninput="syncDemandInputs('range', 'imp')" class="w-full accent-[#002D62]">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-1">
+                            <span>Exportación Sectorial (tn)</span>
+                            <input type="number" id="num-exp" min="0" max="1000" step="1" value="225" oninput="syncDemandInputs('num', 'exp')" class="font-mono bg-white px-2 py-0.5 rounded shadow-sm border border-slate-200 text-right w-20 focus:outline-none focus:ring-1 focus:ring-[#002D62]">
+                        </div>
+                        <input type="range" id="input-exp" min="0" max="1000" step="1" value="225" oninput="syncDemandInputs('range', 'exp')" class="w-full accent-[#002D62]">
+                    </div>
+                </div>
+
+                <div class="lg:col-span-3 flex flex-col justify-between">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                        
+                        <div class="group relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center cursor-help transition-all hover:border-[#002D62] hover:shadow-md">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Demanda Potencial</span>
+                            <span class="text-xl font-mono font-black text-[#002D62] block mt-1" id="calc-pot">645.00 tn</span>
+                            
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2.5 w-60 p-3 bg-[#002D62] text-white text-[11px] rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-50">
+                                <span class="font-bold text-[#C5A059] block mb-1 uppercase tracking-wider">Fórmula Demanda Potencial</span>
+                                <code class="font-mono text-amber-100 block mb-1">(N° Consumidores × Consumo Cápita) / 1000</code>
+                                <p class="text-[9px] text-slate-300 leading-tight">Multiplica los consumidores por la ingesta anual y convierte los kilos a toneladas métricas.</p>
+                            </div>
+                        </div>
+
+                        <div class="group relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-center cursor-help transition-all hover:border-[#C5A059] hover:shadow-md">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Consumo Real (DIA)</span>
+                            <span class="text-xl font-mono font-black text-[#002D62] block mt-1" id="calc-dia">120.00 tn</span>
+                            
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2.5 w-60 p-3 bg-[#002D62] text-white text-[11px] rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-50">
+                                <span class="font-bold text-[#C5A059] block mb-1 uppercase tracking-wider">Fórmula Consumo Real (DIA)</span>
+                                <code class="font-mono text-amber-100 block mb-1">Producción + Importación - Exportación</code>
+                                <p class="text-[9px] text-slate-300 leading-tight">Suma el total de la producción local más lo comprado afuera, y resta lo que se despacha al extranjero.</p>
+                            </div>
+                        </div>
+
+                        <div id="box-insatisfecha" class="group relative p-4 rounded-xl border border-slate-200 shadow-sm text-center cursor-help transition-all hover:shadow-md">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Brecha Insatisfecha</span>
+                            <span class="text-xl font-mono font-black text-[#047857] block mt-1" id="calc-insat">525.00 tn</span>
+                            
+                            <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2.5 w-60 p-3 bg-[#002D62] text-white text-[11px] rounded-lg shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 z-50">
+                                <span class="font-bold text-[#C5A059] block mb-1 uppercase tracking-wider">Fórmula Brecha Insatisfecha</span>
+                                <code class="font-mono text-amber-100 block mb-1">Demanda Potencial - Consumo Real (DIA)</code>
+                                <p class="text-[9px] text-slate-300 leading-tight">Evalúa el potencial de mercado restándole el abastecimiento real para hallar la oportunidad insatisfecha.</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="demandMatrixChart"></canvas>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-lg text-xs font-semibold bg-slate-50 border border-slate-200" id="sim-status-message">
+                        Cargando diagnóstico...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODULE 4: RETO QUIZ EVALUATION -->
+    <div id="section-3" class="screen-transition hidden">
+        <div class="bg-white rounded-xl shadow-md p-6 md:p-8 border border-slate-200">
+            <div class="mb-6 border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                <div>
+                    <span class="text-xs font-bold text-[#C5A059] tracking-widest uppercase block mb-1">Evaluación de Desempeño Escolar</span>
+                    <h2 class="text-2xl font-bold text-[#002D62]">Quiz de Autoevaluación Práctica</h2>
+                    <p class="text-sm text-slate-600 mt-1">Responde las siguientes interrogantes basadas en el syllabus y las lecturas analizadas en la Sesión 1.</p>
+                </div>
+                <div class="mt-2 sm:mt-0 text-right">
+                    <span class="text-xs font-bold text-slate-500 uppercase block">Valoración</span>
+                    <span class="text-xs font-mono font-bold bg-yellow-100 text-yellow-800 px-2.5 py-1 rounded">10% de la Calificación EC1</span>
+                </div>
+            </div>
+
+            <!-- El formulario se renderiza dinámicamente -->
+            <div id="quiz-form" class="space-y-6"></div>
+
+            <div id="quiz-results-panel" class="mt-8 border-2 border-dashed border-[#C5A059] rounded-xl p-6 bg-amber-50/40 hidden">
+                <div class="text-center max-w-2xl mx-auto">
+                    <span class="text-[10px] font-bold text-[#ca8a04] uppercase tracking-widest block mb-1">Resultados Consolidados</span>
+                    <h3 class="text-2xl font-bold text-[#002D62]">¡Práctica Concluida con Éxito!</h3>
+                    
+                    <div class="my-6 bg-white border border-slate-200 p-4 rounded-xl shadow-inner inline-flex items-center space-x-6 px-10">
+                        <div class="text-left">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase block">Calificación</span>
+                            <span class="text-4xl font-mono font-black text-[#002D62]" id="grade-display">00</span>
+                            <span class="text-sm font-bold text-slate-400">/ 20</span>
+                        </div>
+                        <div class="h-10 w-px bg-slate-200"></div>
+                        <div class="text-left">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase block">Estado</span>
+                            <span class="text-sm font-bold text-emerald-600 uppercase tracking-wider block mt-1" id="status-display">Aprobado</span>
+                        </div>
+                    </div>
+
+                    <!-- NUEVA FICHA OFICIAL DE IDENTIFICACIÓN EXCLUSIVA PARA EL PDF Y PANTALLA -->
+                    <div class="my-6 bg-white border-2 border-[#002D62] p-5 rounded-xl shadow-md max-w-lg mx-auto text-left">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-3">
+                            <h4 class="text-xs font-black text-[#002D62] uppercase tracking-wider">Ficha Oficial del Estudiante - FacultyHub</h4>
+                            <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2.5 py-1 rounded border border-slate-200" id="print-student-timestamp">00/00/0000 00:00:00</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <div>
+                                <span class="text-slate-400 uppercase font-bold block text-[9px] tracking-wider">Apellidos Completos</span>
+                                <span class="text-sm font-bold text-slate-800 block mt-0.5" id="print-student-lastname">CARGANDO...</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 uppercase font-bold block text-[9px] tracking-wider">Nombres Completos</span>
+                                <span class="text-sm font-bold text-slate-800 block mt-0.5" id="print-student-firstname">CARGANDO...</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 uppercase font-bold block text-[9px] tracking-wider">Código de Estudiante</span>
+                                <span class="text-sm font-mono font-bold text-[#002D62] block mt-0.5" id="print-student-code">CARGANDO...</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 uppercase font-bold block text-[9px] tracking-wider">Especialidad Académica</span>
+                                <span class="text-sm font-bold text-slate-800 block mt-0.5">FacultyHub · Escuela demo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECCIÓN DEL AVATAR VIRTUAL DE CUERPO COMPLETO CON LA ALERTA DE PDF -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-6 text-left flex flex-col md:flex-row items-center gap-6">
+                        <!-- Avatar FacultyHub Completo (Ilustración vectorizada limpia) -->
+                        <div class="flex-shrink-0 w-36 h-64 bg-slate-50 rounded-lg p-2 flex items-center justify-center border border-slate-100 shadow-inner">
+                            <svg class="w-full h-full" viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <!-- Background Aura -->
+                                <circle cx="50" cy="50" r="40" fill="#002D62" fill-opacity="0.05"/>
+                                <!-- Cabello/Peinado de Asesor Profesional -->
+                                <path d="M35 30C35 20 65 20 65 30C65 32 63 35 60 35H40C37 35 35 32 35 30Z" fill="#334155"/>
+                                <!-- Rostro -->
+                                <circle cx="50" cy="38" r="10" fill="#FDBA74"/>
+                                <path d="M47 38H53" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/> <!-- Lentes corporativos -->
+                                <circle cx="45" cy="37" r="1.5" fill="#334155"/>
+                                <circle cx="55" cy="37" r="1.5" fill="#334155"/>
+                                <path d="M48 43C48 43 50 45 52 43" stroke="#e11d48" stroke-width="1" stroke-linecap="round"/> <!-- Sonrisa -->
+                                <!-- Cuerpo completo - Saco elegante de FacultyHub (Azul Corporativo) -->
+                                <path d="M30 65C30 55 40 50 50 50C60 50 70 55 70 65V120H30V65Z" fill="#002D62"/>
+                                <!-- Cuello Camisa & Corbata de Oro -->
+                                <path d="M45 50L50 62L55 50H45Z" fill="#FFFFFF"/>
+                                <path d="M48 55L50 80L52 55H48Z" fill="#C5A059"/>
+                                <!-- Brazos y manos gesticulando (indicando arriba y adelante) -->
+                                <path d="M30 60L15 85L20 88L30 68V60Z" fill="#002D62"/> <!-- Brazo izquierdo -->
+                                <path d="M70 60L85 85L80 88L70 68V60Z" fill="#002D62"/> <!-- Brazo derecho apuntando -->
+                                <circle cx="14" cy="87" r="4" fill="#FDBA74"/> <!-- Mano izquierda -->
+                                <circle cx="86" cy="87" r="4" fill="#FDBA74"/> <!-- Mano derecha -->
+                                <!-- Pantalones de vestir color beige neutral -->
+                                <path d="M34 120H48V170H32V120Z" fill="#64748B"/> <!-- Pierna izquierda -->
+                                <path d="M52 120H66V170H50V120Z" fill="#64748B"/> <!-- Pierna derecha -->
+                                <!-- Zapatos formales oscuros -->
+                                <path d="M30 170H48C48 174 30 174 30 170Z" fill="#1E293B"/>
+                                <path d="M52 170H70C70 174 52 174 52 170Z" fill="#1E293B"/>
+                            </svg>
+                        </div>
+                        
+                        <!-- Mensaje Directo de Alerta -->
+                        <div class="flex-1 space-y-3">
+                            <span class="text-xs font-black uppercase tracking-widest text-[#ca8a04] block">📢 INSTRUCCIÓN DEL ASESOR DOCENTE FacultyHub:</span>
+                            <div class="p-4 bg-amber-50 rounded-lg border-l-4 border-[#C5A059] text-xs leading-relaxed text-[#002D62] font-semibold space-y-3">
+                                <p class="font-bold text-sm">¡Hola! Para asegurar tu nota del laboratorio, por favor realiza los siguientes pasos:</p>
+                                <ol class="list-decimal pl-4 space-y-2 font-medium text-slate-700">
+                                    <li>Haz clic en el botón de abajo para <strong>descargar el archivo en PDF</strong> de tu reporte de resultados de esta práctica (tus datos ya están registrados en la ficha).</li>
+                                    <li>Ingresa a tu <strong>Aula Virtual FacultyHub</strong> y <strong>sube el archivo PDF</strong> en el espacio de entrega habilitado para la sesión de hoy.</li>
+                                </ol>
+                                <p class="text-[11px] text-rose-700 italic font-bold">⚠️ Nota: Este proceso es obligatorio para respaldar oficialmente tu calificación ante cualquier inconveniente de conectividad o red.</p>
+                            </div>
+                            <div class="pt-1">
+                                <button onclick="window.print()" class="bg-[#ca8a04] hover:bg-[#b45309] text-white font-extrabold py-3 px-6 rounded-lg text-xs uppercase tracking-wider transition-all inline-flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                                    <span>📥 Descargar Reporte en PDF (Imprimir)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 text-left text-xs space-y-2 mb-6 shadow-sm">
+                        <span class="font-bold text-[#002D62] uppercase tracking-wider block">Retroalimentación del Sistema Pedagógico:</span>
+                        <p id="system-feedback-text" class="text-slate-700 leading-relaxed italic"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<div id="lock-modal" class="hidden fixed inset-0 z-50 bg-[#002D62]/80 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 border-t-8 border-[#C5A059]">
+        <div class="text-center mb-5">
+            <span class="text-3xl block mb-2">🔒</span>
+            <span class="text-[10px] font-bold text-[#ca8a04] uppercase tracking-widest block mb-1">Acceso de una sola vía</span>
+            <h3 class="text-xl font-bold text-[#002D62]">¿Iniciar la Autoevaluación?</h3>
+        </div>
+        <div class="p-4 bg-amber-50 rounded-lg border-l-4 border-[#C5A059] text-xs leading-relaxed text-slate-700 font-medium mb-6">
+            <p class="font-bold text-[#002D62] mb-1">Importante:</p>
+            <p>Al ingresar al quiz, los módulos <strong>1. Producto</strong>, <strong>2. Mercado</strong> y <strong>3. Simulador de Demanda</strong> quedarán <strong>bloqueados de forma permanente</strong>. No podrás volver a consultar la información durante la evaluación.</p>
+            <p class="mt-2 text-rose-700 italic font-bold">Asegúrate de haber revisado los tres módulos antes de continuar.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="cancelQuizLock()" class="flex-1 bg-slate-100 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-200 transition-colors uppercase text-xs tracking-wider">
+                Volver a revisar
+            </button>
+            <button onclick="confirmQuizLock()" class="flex-1 bg-[#002D62] text-white font-bold py-3 rounded-lg hover:bg-[#001a3a] transition-colors uppercase text-xs tracking-wider">
+                Sí, iniciar quiz
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // =========================================================================
+    // CONFIGURACIÓN DE CONEXIÓN A GOOGLE SHEETS (A TRAVÉS DE GOOGLE FORMS)
+    // =========================================================================
+    const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSf00P_Jrt1e_O850hevP5u43hxmDGIfY5ISl9rPBuVLQLFb-A/viewform"; 
+    
+    const ENTRY_APELLIDOS = "entry.969005649";  
+    const ENTRY_NOMBRES = "entry.2037427711";    
+    const ENTRY_CODIGO = "entry.569341635";     
+    const ENTRY_NOTA = "entry.1902932814";       
+    const ENTRY_DIA = "entry.764818227";        
+    const ENTRY_BRECHA = "entry.438194393";     
+    // =========================================================================
+
+    let studentData = { lastname: '', firstname: '', code: '', grade: 0, timestamp: '' };
+    let currentSectionIndex = 0;
+    let quizLocked = false;
+    let quizSubmitted = false;
+    
+    const productLayers = [
+        { title: "Nivel Central", definition: "Constituye el beneficio sustancial que soluciona la problemática fundamental o satisface el requerimiento básico expresado por el cliente final.", example: "Caso de Estudio: Un consumidor internacional no adquiere la fruta exótica únicamente por su composición biológica; adquiere salud preventiva, estatus premium o una experiencia organoléptica diferenciada." },
+        { title: "Nivel Tangible", definition: "Representa la materialización de la propuesta. Está integrado por los elementos físicos y comerciales directos: la marca, el diseño, los estándares de calidad organoléptica y el empaque logístico.", example: "Caso de Estudio: Para la Pitahaya fresca, abarca el calibre homogéneo de la fruta, la firmeza de la corteza, el etiquetado comercial y las cajas de cartón corrugado adaptadas para el transporte aéreo." },
+        { title: "Nivel Intangible", definition: "Abarca aquellos componentes no corpóreos que aportan certidumbre comercial, consistencia legal y respaldo ético a la operación internacional.", example: "Caso de Estudio: Certificaciones internacionales (Global G.A.P., Fair Trade), sellos fitosanitarios de SENASA, reputación del exportador y marcas sectoriales de prestigio (Marca Perú)." },
+        { title: "Nivel Aumentado", definition: "Involucra todo el espectro de servicios post-venta, agregados digitales y canales relacionales que exceden la expectativa del comprador, garantizando su fidelización.", example: "Caso de Estudio: Códigos QR integrados en el empaque que despliegan la trazabilidad satelital del cultivo, plataformas CRM de atención al importador y FanPages interactivas de soporte técnico." }
+    ];
+
+    const marketTiers = [
+        { tier: "Filtro Nivel 1", title: "Mercado Potencial", desc: "Corresponde al universo máximo estimado de individuos, empresas u organizaciones que manifiestan una necesidad compatible y un claro interés genérico por la línea de producto o sector industrial.", case: "Todos los consumidores habituales de súper-frutas y productos frescos saludables dentro de la Unión Europea." },
+        { tier: "Filtro Nivel 2", title: "Mercado Disponible", desc: "Segmento específico del mercado potencial que reúne tres condicionantes restrictivos de forma simultánea: manifiesta la intención de compra, posee la capacidad económica suficiente para adquirir el bien y cuenta con acceso físico/logístico a los canales de distribución habilitados.", case: "Consumidores con poder adquisitivo medio-alto ubicados en ciudades principales de España con acceso a cadenas de retail especializado o supermercados gourmet." },
+        { tier: "Filtro Nivel 3", title: "Mercado Meta", desc: "Representa el segmento focalizado u objetivo específico del mercado disponible calificado que la organización selecciona estratégicamente para concentrar el total de sus esfuerzos comerciales y recursos de marketing.", case: "Nicho de adultos de 25 a 45 años en Madrid con estilo de vida fitness, consumidores recurrentes de dietas detox de alto valor añadido." },
+        { tier: "Filtro Nivel 4", title: "Mercado Cautivo", desc: "Constituye la base sólida de clientes actuales que efectúan compras repetitivas y estables de la marca, ya sea como consecuencia de un alto nivel de fidelización relacional o debido a barreras técnicas y comerciales de salida.", case: "Compradores corporativos y suscriptores recurrentes vinculados a canastas semanales automatizadas de distribución ecológica a domicilio." }
+    ];
+
+    const rawQuizQuestions = [
+        {
+            question: "Según el modelo metodológico de Czinkota expuesto en clase, ¿cómo se diferencia operativamente el Mercado Disponible del Mercado Potencial?",
+            options: [
+                { value: "A", text: "El mercado disponible abarca la totalidad de la población nacional del país de destino sin filtros de renta.", isCorrect: false },
+                { value: "B", text: "El mercado disponible se limita exclusivamente a los consumidores cautivos que ya compran marcas peruanas.", isCorrect: false },
+                { value: "C", text: "El mercado disponible exige que el segmento tenga no solo interés, sino los ingresos suficientes y el acceso logístico real al producto.", isCorrect: true }
+            ]
+        },
+        {
+            question: "Si configuras una FanPage corporativa y un canal de CRM interactivo para la atención internacional de tu marca de indumentaria, ¿en qué nivel técnico de producto te encuentras operando?",
+            options: [
+                { value: "A", text: "Nivel Central", isCorrect: false },
+                { value: "B", text: "Nivel Aumentado", isCorrect: true },
+                { value: "C", text: "Nivel Tangible", isCorrect: false }
+            ]
+        },
+        {
+            question: "¿Cuál es la implicancia metodológica de establecer los límites de la investigación (Costo, Tiempo y Recursos) en el diseño de un proyecto en FacultyHub?",
+            options: [
+                { value: "A", text: "Garantiza la viabilidad operativa y define el alcance real del estudio de mercado para no comprometer el presupuesto.", isCorrect: true },
+                { value: "B", text: "Modifica los flujos de exportación registrados en TradeMap automáticamente.", isCorrect: false },
+                { value: "C", text: "Elimina la necesidad de recolectar fuentes secundarias de datos cuantitativos.", isCorrect: false }
+            ]
+        },
+        {
+            question: "Un exportador evalúa un mercado donde la Producción es alta, pero las Exportaciones locales superan dicho volumen debido a una masiva re-importación. ¿Qué fórmula describe el cálculo técnico de la Demanda Interna Aparente (DIA)?",
+            options: [
+                { value: "A", text: "DIA = Producción + Exportación - Importación", isCorrect: false },
+                { value: "B", text: "DIA = Producción + Importación - Exportación", isCorrect: true },
+                { value: "C", text: "DIA = Demanda Potencial - Consumo Per Cápita", isCorrect: false }
+            ]
+        },
+        {
+            question: "¿Cuál es la regla fundamental para la redacción de objetivos de investigación analizada en los criterios metodológicos del syllabus?",
+            options: [
+                { value: "A", text: "Deben formularse empleando verbos en infinitivo, ser claros, medibles y orientados al alcance real de la investigación.", isCorrect: true },
+                { value: "B", text: "Deben omitir la temporalidad y redactarse como una exclamación de ventas.", isCorrect: false },
+                { value: "C", text: "Solo pueden ser cuantitativos, invalidando la recolección cualitativa de fuentes primarias.", isCorrect: false }
+            ]
+        }
+    ];
+
+    let randomizedQuestions = [];
+    let productChartInstance = null;
+    let marketChartInstance = null;
+    let demandChartInstance = null;
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+        return array;
+    }
+
+    function buildAndShuffleQuiz() {
+        randomizedQuestions = JSON.parse(JSON.stringify(rawQuizQuestions));
+        shuffleArray(randomizedQuestions);
+        randomizedQuestions.forEach(q => {
+            shuffleArray(q.options);
+        });
+
+        const quizForm = document.getElementById('quiz-form');
+        quizForm.innerHTML = '';
+
+        randomizedQuestions.forEach((q, qIndex) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = "p-5 rounded-xl border border-slate-200 bg-slate-50/50";
+            
+            let optionsHTML = '';
+            q.options.forEach((opt, optIndex) => {
+                optionsHTML += `
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50">
+                        <input type="radio" name="q_${qIndex}" value="${optIndex}" class="accent-[#002D62]">
+                        <span>${opt.text}</span>
+                    </label>
+                `;
+            });
+
+            qDiv.innerHTML = `
+                <p class="text-sm font-bold text-slate-800 mb-3"><span class="text-[#ca8a04]">Q${qIndex + 1}.</span> ${q.question}</p>
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    ${optionsHTML}
+                </div>
+            `;
+            quizForm.appendChild(qDiv);
+        });
+
+        const submitFooter = document.createElement('div');
+        submitFooter.className = "pt-4 flex flex-col items-end space-y-2";
+        submitFooter.innerHTML = `
+            <p id="quiz-error-msg" class="text-rose-600 text-xs font-bold hidden text-right">⚠️ Por favor, responde todas las preguntas antes de enviar.</p>
+            <button id="btn-submit-quiz" onclick="evaluateQuizAndSync()" class="bg-[#002D62] text-white font-bold py-3 px-8 rounded-lg text-xs uppercase tracking-wider hover:bg-[#001a3a] transition-colors shadow-sm">
+                Finalizar Práctica y Enviar Registro
+            </button>
+        `;
+        quizForm.appendChild(submitFooter);
+    }
+
+    function validateAndStart() {
+        const ln = document.getElementById('student-lastname').value.trim();
+        const fn = document.getElementById('student-firstname').value.trim();
+        const cd = document.getElementById('student-code').value.trim();
+        const errorMsg = document.getElementById('auth-error-msg');
+
+        if(!ln || !fn || !cd) {
+            errorMsg.classList.remove('hidden');
+            return;
+        }
+
+        errorMsg.classList.add('hidden');
+        studentData.lastname = ln.toUpperCase();
+        studentData.firstname = fn.toUpperCase();
+        studentData.code = cd.toUpperCase();
+        studentData.timestamp = new Date().toLocaleString();
+
+        document.getElementById('screen-auth').classList.add('hidden');
+        document.getElementById('main-nav').classList.remove('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+
+        document.getElementById('user-badge').innerText = `ESTUDIANTE: ${studentData.lastname}, ${studentData.firstname} (${studentData.code})`;
+        
+        buildAndShuffleQuiz();
+        initializeAllCharts();
+        updateProductLayer(0);
+        updateMarketTierDetails(0);
+        runDemandSimulation();
+    }
+
+    function switchSection(index) {
+        // Una vez iniciada la autoevaluación, los módulos de estudio quedan bloqueados.
+        if (quizLocked) return;
+
+        // Punto de no retorno: pide confirmación antes de entrar al quiz.
+        if (index === 3) {
+            document.getElementById('lock-modal').classList.remove('hidden');
+            return;
+        }
+
+        renderSection(index);
+    }
+
+    function cancelQuizLock() {
+        document.getElementById('lock-modal').classList.add('hidden');
+    }
+
+    function confirmQuizLock() {
+        document.getElementById('lock-modal').classList.add('hidden');
+        quizLocked = true;
+        renderSection(3);
+        applyNavLock();
+        document.getElementById('lock-notice').classList.remove('hidden');
+    }
+
+    // Advierte si el estudiante intenta recargar o salir con el quiz ya iniciado.
+    window.addEventListener('beforeunload', function (e) {
+        if (quizLocked && !quizSubmitted) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+    });
+
+    function applyNavLock() {
+        [0, 1, 2].forEach(i => {
+            const btn = document.getElementById(`nav-btn-${i}`);
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+            btn.title = "Módulo bloqueado: la autoevaluación ya fue iniciada";
+            btn.className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-slate-100 text-slate-400 cursor-not-allowed opacity-60 line-through decoration-slate-400";
+            if (!btn.dataset.locked) {
+                btn.dataset.locked = "1";
+                btn.innerHTML = `🔒 ${btn.innerHTML}`;
+            }
+        });
+    }
+
+    function renderSection(index) {
+        document.getElementById(`section-${currentSectionIndex}`).classList.add('hidden');
+        document.getElementById(`nav-btn-${currentSectionIndex}`).className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-slate-100 text-slate-600";
+        
+        currentSectionIndex = index;
+        
+        document.getElementById(`section-${currentSectionIndex}`).classList.remove('hidden');
+        document.getElementById(`nav-btn-${currentSectionIndex}`).className = "flex-1 py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-wider text-center transition-all bg-[#002D62] text-white";
+        
+        if(index === 0 && productChartInstance) productChartInstance.resize();
+        if(index === 1 && marketChartInstance) marketChartInstance.resize();
+        if(index === 2 && demandChartInstance) demandChartInstance.resize();
+    }
+
+    function splitStringForLabels(str, maxLen = 16) {
+        const words = str.split(' ');
+        let lines = [];
+        let curLine = '';
+        words.forEach(w => {
+            if((curLine + w).length > maxLen) {
+                if(curLine) lines.push(curLine.trim());
+                curLine = w + ' ';
+            } else {
+                curLine += w + ' ';
+            }
+        });
+        if(curLine) lines.push(curLine.trim());
+        return lines;
+    }
+
+    function getStandardTooltipConfig() {
+        return {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    return Array.isArray(label) ? label.join(' ') : label;
+                }
+            }
+        };
+    }
+
+    function initializeAllCharts() {
+        const ctxProd = document.getElementById('productLayerChart').getContext('2d');
+        const prodLabels = productLayers.map(l => splitStringForLabels(l.title));
+        productChartInstance = new Chart(ctxProd, {
+            type: 'radar',
+            data: {
+                labels: prodLabels,
+                datasets: [{
+                    label: 'Ponderación de Atributos',
+                    data: [80, 50, 50, 50],
+                    backgroundColor: 'rgba(197, 160, 89, 0.2)',
+                    borderColor: '#C5A059',
+                    pointBackgroundColor: '#002D62',
+                    pointBorderColor: '#fff',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: { r: { min: 0, max: 100, ticks: { display: false } } },
+                plugins: { legend: { display: false }, tooltip: getStandardTooltipConfig() }
+            }
+        });
+
+        const ctxMkt = document.getElementById('marketFunnelChart').getContext('2d');
+        const mktLabels = marketTiers.map(t => splitStringForLabels(t.title));
+        marketChartInstance = new Chart(ctxMkt, {
+            type: 'doughnut',
+            data: {
+                labels: mktLabels,
+                datasets: [{
+                    data: [45, 30, 18, 7],
+                    backgroundColor: ['#002D62', '#1e40af', '#C5A059', '#ca8a04'],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '65%',
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        updateMarketTierDetails(elements[0].index);
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+                    tooltip: getStandardTooltipConfig()
+                }
+            }
+        });
+
+        const ctxDemand = document.getElementById('demandMatrixChart').getContext('2d');
+        demandChartInstance = new Chart(ctxDemand, {
+            type: 'bar',
+            data: {
+                labels: [splitStringForLabels('Demanda Potencial'), splitStringForLabels('Consumo Real (DIA)'), splitStringForLabels('Brecha Insatisfecha')],
+                datasets: [{
+                    data: [645, 120, 525],
+                    backgroundColor: ['#002D62', '#C5A059', '#047857'],
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            },
+                            afterLabel: function(context) {
+                                const index = context.dataIndex;
+                                const formulas = [
+                                    "Fórmula: (N° Consumidores × Consumo) / 1000",
+                                    "Fórmula (DIA): Prod + Imp - Exp",
+                                    "Fórmula: Demanda Potencial - Consumo Real (DIA)"
+                                ];
+                                return "\n" + formulas[index];
+                            }
+                        }
+                    }
+                },
+                scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
+    function updateProductLayer(idx) {
+        document.querySelectorAll('[id^="prod-tab-"]').forEach(btn => {
+            btn.className = "tab-inactive text-left p-6 w-full focus:outline-none transition-all border-t border-slate-100";
+            const h3 = btn.querySelector('h3');
+            if(h3) h3.className = "text-base font-bold text-slate-800";
+        });
+        
+        const activeBtn = document.getElementById(`prod-tab-${idx}`);
+        activeBtn.className = "tab-active text-left p-6 w-full focus:outline-none transition-all";
+        const activeH3 = activeBtn.querySelector('h3');
+        if(activeH3) activeH3.className = "text-base font-bold text-[#002D62]";
+
+        document.getElementById('layer-title').innerText = productLayers[idx].title;
+        document.getElementById('layer-definition').innerHTML = `<strong>Definición Técnica:</strong> ${productLayers[idx].definition}`;
+        document.getElementById('layer-example').innerHTML = `<strong>Aplicación FacultyHub:</strong> ${productLayers[idx].example}`;
+
+        if(productChartInstance) {
+            let weights = [40, 40, 40, 40];
+            weights[idx] = 95; 
+            productChartInstance.data.datasets[0].data = weights;
+            productChartInstance.update();
+        }
+    }
+
+    function updateMarketTierDetails(idx) {
+        const tier = marketTiers[idx];
+        document.getElementById('mkt-tier-badge').innerText = tier.tier;
+        document.getElementById('mkt-tier-title').innerText = tier.title;
+        document.getElementById('mkt-tier-desc').innerHTML = `<strong>Modelo Operativo:</strong> ${tier.desc}`;
+        document.getElementById('mkt-tier-case').innerText = tier.case;
+    }
+
+    function syncDemandInputs(type, field) {
+        const slider = document.getElementById(`input-${field}`);
+        const number = document.getElementById(`num-${field}`);
+        
+        if (type === 'range') {
+            number.value = slider.value;
+        } else if (type === 'num') {
+            let val = parseFloat(number.value);
+            const min = parseFloat(number.min);
+            const max = parseFloat(number.max);
+            
+            if (isNaN(val)) val = min;
+            if (val < min) val = min;
+            if (val > max) val = max;
+            
+            number.value = val;
+            slider.value = val;
+        }
+        
+        runDemandSimulation();
+    }
+
+    function runDemandSimulation() {
+        const consumers = parseInt(document.getElementById('input-consumers').value);
+        const perCapita = parseFloat(document.getElementById('input-capita').value);
+        const prod = parseInt(document.getElementById('input-prod').value);
+        const imp = parseInt(document.getElementById('input-imp').value);
+        const exp = parseInt(document.getElementById('input-exp').value);
+
+        document.getElementById('num-consumers').value = consumers;
+        document.getElementById('num-capita').value = perCapita.toFixed(2);
+        document.getElementById('num-prod').value = prod;
+        document.getElementById('num-imp').value = imp;
+        document.getElementById('num-exp').value = exp;
+
+        const potentialDemand = (consumers * perCapita) / 1000; 
+        const diaDemand = prod + imp - exp; 
+        const unsatisfiedDemand = potentialDemand - diaDemand;
+
+        document.getElementById('calc-pot').innerText = `${potentialDemand.toFixed(2)} tn`;
+        document.getElementById('calc-dia').innerText = `${diaDemand.toFixed(2)} tn`;
+        document.getElementById('calc-insat').innerText = `${unsatisfiedDemand.toFixed(2)} tn`;
+
+        const statusBox = document.getElementById('box-insatisfecha');
+        const textMsg = document.getElementById('sim-status-message');
+        
+        if (unsatisfiedDemand > 0) {
+            statusBox.className = "group relative p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-center cursor-help transition-all hover:shadow-md";
+            document.getElementById('calc-insat').className = "text-xl font-mono font-black text-emerald-700 block mt-1";
+            textMsg.innerText = "DIAGNÓSTICO ESTRATÉGICO: Brecha de demanda insatisfecha positiva. El mercado de destino cuenta con capacidad de absorción y es óptimo para el ingreso de nuevas ofertas comerciales.";
+            textMsg.className = "mt-4 p-4 rounded-lg text-xs font-semibold bg-emerald-50 border border-emerald-200 text-emerald-800";
+        } else {
+            statusBox.className = "group relative p-4 rounded-xl border border-rose-200 bg-rose-50 text-center cursor-help transition-all hover:shadow-md";
+            document.getElementById('calc-insat').className = "text-xl font-mono font-black text-rose-700 block mt-1";
+            textMsg.innerText = "DIAGNÓSTICO ESTRATÉGICO: Alerta de saturación. El volumen comercial de la oferta actual (DIA) excede la demanda potencial calculada. Alto riesgo de guerra de precios o stock varado.";
+            textMsg.className = "mt-4 p-4 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-800";
+        }
+
+        if (demandChartInstance) {
+            demandChartInstance.data.datasets[0].data = [
+                potentialDemand.toFixed(2),
+                diaDemand.toFixed(2),
+                Math.max(0, unsatisfiedDemand).toFixed(2)
+            ];
+            demandChartInstance.update();
+        }
+    }
+
+    function evaluateQuizAndSync() {
+        let unanswered = false;
+        let totalScore = 0;
+
+        randomizedQuestions.forEach((q, qIndex) => {
+            const selectedRadio = document.querySelector(`input[name="q_${qIndex}"]:checked`);
+            if(!selectedRadio) {
+                unanswered = true;
+            } else {
+                const optIdx = parseInt(selectedRadio.value);
+                if(q.options[optIdx].isCorrect) {
+                    totalScore += 4;
+                }
+            }
+        });
+
+        const errorMsg = document.getElementById('quiz-error-msg');
+
+        if(unanswered) {
+            errorMsg.classList.remove('hidden');
+            return;
+        }
+
+        errorMsg.classList.add('hidden');
+        studentData.grade = totalScore;
+        quizSubmitted = true;
+
+        document.getElementById('btn-submit-quiz').disabled = true;
+        document.getElementById('btn-submit-quiz').innerText = "Sincronizando con Registro de Notas...";
+
+        const lastDia = document.getElementById('calc-dia').innerText;
+        const lastBrecha = document.getElementById('calc-insat').innerText;
+
+        // Rellenar Ficha Oficial para el Reporte de Impresión / PDF
+        document.getElementById('print-student-lastname').innerText = studentData.lastname;
+        document.getElementById('print-student-firstname').innerText = studentData.firstname;
+        document.getElementById('print-student-code').innerText = studentData.code;
+        document.getElementById('print-student-timestamp').innerText = studentData.timestamp;
+
+        // =========================================================================
+        // MOTOR DE LIMPIEZA DE ENLACES Y ENVÍO SEGURO NATIVO MEDIANTE IFRAME (BACKUP)
+        // =========================================================================
+        let cleanUrl = GOOGLE_FORM_URL.trim();
+        
+        if (cleanUrl.startsWith("http://")) {
+            cleanUrl = cleanUrl.replace("http://", "https://");
+        }
+        
+        cleanUrl = cleanUrl.replace(/\/(viewform|edit|prefill|viewanalytics)(.*)?$/, '/formResponse');
+
+        if (cleanUrl && ENTRY_APELLIDOS && ENTRY_NOMBRES && ENTRY_CODIGO && ENTRY_NOTA) {
+            try {
+                let iframe = document.getElementById('hidden_iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.id = 'hidden_iframe';
+                    iframe.name = 'hidden_iframe';
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                }
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = cleanUrl;
+                form.target = 'hidden_iframe';
+
+                const addField = (name, value) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value;
+                    form.appendChild(input);
+                };
+
+                addField(ENTRY_APELLIDOS, studentData.lastname);
+                addField(ENTRY_NOMBRES, studentData.firstname);
+                addField(ENTRY_CODIGO, studentData.code);
+                addField(ENTRY_NOTA, studentData.grade.toString());
+                if (ENTRY_DIA) addField(ENTRY_DIA, lastDia);
+                if (ENTRY_BRECHA) addField(ENTRY_BRECHA, lastBrecha);
+
+                document.body.appendChild(form);
+                form.submit();
+                
+                setTimeout(() => {
+                    if (document.body.contains(form)) {
+                        document.body.removeChild(form);
+                    }
+                }, 1000);
+
+                console.log("Transmisión enviada al iframe.");
+            } catch (error) {
+                console.error("Fallo menor al intentar enviar datos de respaldo:", error);
+            }
+        }
+
+        setTimeout(() => {
+            document.getElementById('btn-submit-quiz').classList.add('hidden');
+            const panel = document.getElementById('quiz-results-panel');
+            panel.classList.remove('hidden');
+
+            document.getElementById('grade-display').innerText = studentData.grade.toString().padStart(2, '0');
+            
+            const statusDisp = document.getElementById('status-display');
+            const feedbackBox = document.getElementById('system-feedback-text');
+
+            if(studentData.grade >= 12) {
+                statusDisp.innerText = "Aprobado";
+                statusDisp.className = "text-sm font-bold text-emerald-600 uppercase tracking-wider block mt-1";
+                feedbackBox.innerText = `Felicidades ${studentData.firstname}. Has alcanzado las competencias básicas de la Sesión 1. Demuestras un correcto dominio analítico para deconstruir la anatomía del producto y aplicar modelos matemáticos de flujos internacionales para determinar brechas viables de exportación.`;
+            } else {
+                statusDisp.innerText = "Requiere Repaso";
+                statusDisp.className = "text-sm font-bold text-rose-600 uppercase tracking-wider block mt-1";
+                feedbackBox.innerText = `Estimado(a) ${studentData.firstname}, tu calificación actual indica que es crucial volver a revisar las lecturas obligatorias de la Unidad. Concéntrate en la lógica del embudo de Czinkota y recuerda que la DIA representa la absorción real del mercado interno, la cual disminuye si las exportaciones aumentan de forma desmedida.`;
+            }
+
+            console.log("=== FacultyHub REGISTRO ACADÉMICO AUTOMATIZADO ===");
+            console.log(`Código Alumno: ${studentData.code}`);
+            console.log(`Estudiante: ${studentData.lastname}, ${studentData.firstname}`);
+            console.log(`Calificación Registrada: ${studentData.grade}/20`);
+            console.log(`Timestamp Sincronización: ${studentData.timestamp}`);
+            
+            panel.scrollIntoView({ behavior: 'smooth' });
+        }, 1200);
+    }
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

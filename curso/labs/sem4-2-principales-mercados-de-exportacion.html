@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Principales Mercados de Exportación - IM // TERMINAL</title>
+<script src="../assets/vendor/chart.umd.js"></script>
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7;
+  --c1:#0284c7; --c2:#059669; --c3:#d97706;
+  --c1l:#dbeafe; --c2l:#d1fae5; --c3l:#fef3c7;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;padding:24px;}
+.container{max-width:1100px;margin:0 auto;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);
+  white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0284c7 0%,#0ea5e9 100%);
+  border-radius:18px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 6px 24px rgba(2,132,199,0.35);position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header-left h1{font-size:19px;color:#fff;font-weight:800;margin-bottom:3px;}
+.header-left p{font-size:11px;color:rgba(255,255,255,0.8);}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;
+  font-weight:700;padding:7px 16px;border-radius:20px;text-align:center;
+  line-height:1.6;border:1px solid rgba(255,255,255,0.35);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+
+/* Progress */
+.prog-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:0.85rem 1rem;margin-bottom:1rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.prog-top{display:flex;justify-content:space-between;
+  font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+.prog-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.prog-fill{height:10px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+.prog-steps{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pstep{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.pdot{width:10px;height:10px;border-radius:50%;border:2px solid #bfdbfe;transition:all 0.3s;}
+.pdot.on{border-color:currentColor;background:currentColor;}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;margin-bottom:1.25rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  position:relative;z-index:1;transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* Inputs */
+input[type="text"],input[type="number"],select,textarea{
+  width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;font-size:13px;
+  background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,textarea:focus,select:focus{
+  outline:none;border-color:#0284c7;box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+textarea{resize:vertical;}
+label{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
+
+/* Students */
+.st-row{display:flex;gap:8px;margin-bottom:8px;}
+.st-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:#fff;border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.rm-st:hover{border-color:#dc2626;color:#dc2626;}
+#add-st{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;
+  color:#075985;border-radius:8px;padding:8px 16px;
+  font-size:13px;cursor:pointer;font-family:inherit;}
+#add-st:hover{background:#bae6fd;}
+
+/* Config */
+.cfg-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+
+/* Data tables */
+.data-table-wrap{overflow-x:auto;margin-bottom:1rem;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:680px;}
+.data-table thead th{background:#0284c7;color:#fff;padding:10px 12px;
+  font-weight:600;font-size:12px;text-align:center;}
+.data-table thead th:first-child{text-align:left;min-width:160px;}
+.data-table tbody tr{border-bottom:1px solid #e0f2fe;transition:background 0.15s;}
+.data-table tbody tr:nth-child(1) td:first-child .mkt-name{color:var(--c1);}
+.data-table tbody tr:nth-child(2) td:first-child .mkt-name{color:var(--c2);}
+.data-table tbody tr:nth-child(3) td:first-child .mkt-name{color:var(--c3);}
+.data-table tbody tr:hover{background:#f8fdff;}
+.data-table tbody td{padding:5px 8px;vertical-align:middle;text-align:center;}
+.data-table tbody td:first-child{text-align:left;padding:5px 10px;}
+.data-table tbody td input[type="number"]{
+  width:100%;height:32px;text-align:right;font-size:12px;min-width:80px;}
+.data-table tbody td input[type="text"]{height:32px;font-size:12px;}
+.mkt-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0;}
+
+/* Chart container */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:1.25rem;position:relative;z-index:1;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+.chart-card h3{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:8px;text-align:center;}
+.chart-card canvas{max-height:220px;}
+
+/* Section label */
+.tbl-badge{display:inline-flex;align-items:center;gap:6px;
+  color:#fff;font-size:12px;font-weight:700;
+  padding:5px 14px;border-radius:20px;margin-bottom:10px;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;padding:12px 28px;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-red{background:#fff;border:2px solid #fecaca;color:#dc2626;
+  padding:12px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-red:hover{background:#fef2f2;}
+.actions{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;position:relative;z-index:1;}
+.autosave{font-size:10px;color:#059669;margin-top:4px;position:relative;z-index:1;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;color:#93c5fd;position:relative;z-index:1;}
+.footer strong{color:#0284c7;}
+
+@media(max-width:720px){
+  .cfg-row{grid-template-columns:1fr;}
+  .charts-grid{grid-template-columns:1fr;}
+  .header{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 4 · Principales Mercados de Exportación</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>🌍 Laboratorio · Principales Mercados de Exportación</h1>
+    <p>IM // TERMINAL · Investigación de Mercado · Análisis FOB, Peso Neto y Precio Promedio 2021–2025</p>
+  </div>
+  <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+</div>
+
+<!-- Progress -->
+<div class="prog-wrap">
+  <div class="prog-top">
+    <span>Progreso del laboratorio</span>
+    <span id="pct-lbl">0%</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-steps" id="prog-steps"></div>
+</div>
+
+<!-- Integrantes y configuración -->
+<div class="card">
+  <p class="card-title">👥 Integrantes del equipo (máx. 5)</p>
+  <div id="students-list"></div>
+  <button id="add-st">+ Agregar integrante</button>
+  <div class="cfg-row" style="margin-top:14px;">
+    <div>
+      <label>📦 Producto de exportación</label>
+      <input type="text" id="cfg-producto" placeholder="Ej: Quinua orgánica, Café especial...">
+    </div>
+    <div>
+      <label>🔢 Partida arancelaria (opcional)</label>
+      <input type="text" id="cfg-partida" placeholder="Ej: 1008.50.00.00">
+    </div>
+    <div>
+      <label>📅 Período de análisis</label>
+      <input type="text" id="cfg-periodo" value="2021 – 2025" readonly
+        style="background:#f0f9ff;color:var(--sub);font-weight:600;">
+    </div>
+  </div>
+</div>
+
+<!-- Nombres de países -->
+<div class="card">
+  <p class="card-title">🏳️ Nombre de los países / mercados</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:12px;">Ingresa el nombre de cada país. Se reflejará automáticamente en todas las tablas y gráficos.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+    <div>
+      <label style="color:var(--c1);">🔵 País / Mercado 1</label>
+      <input type="text" id="pais1" placeholder="Ej: Estados Unidos">
+    </div>
+    <div>
+      <label style="color:var(--c2);">🟢 País / Mercado 2</label>
+      <input type="text" id="pais2" placeholder="Ej: China">
+    </div>
+    <div>
+      <label style="color:var(--c3);">🟡 País / Mercado 3</label>
+      <input type="text" id="pais3" placeholder="Ej: España">
+    </div>
+  </div>
+</div>
+
+<!-- Tabla 1: Valor FOB -->
+<div class="card">
+  <span class="tbl-badge" style="background:#0284c7;">📊 Tabla 1: Valor FOB (USD)</span>
+  <div class="data-table-wrap">
+  <table class="data-table" id="tbl-fob">
+    <thead>
+      <tr>
+        <th>Mercado</th>
+        <th style="color:#38bdf8;">2021</th>
+        <th style="color:#38bdf8;">2022</th>
+        <th style="color:#38bdf8;">2023</th>
+        <th style="color:#38bdf8;">2024</th>
+        <th style="color:#38bdf8;">2025</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c1);"></span><span class="mkt-name" id="lbl-fob-1">Mercado 1</span></td>
+        <td><input type="number" class="fob-inp" data-m="1" data-y="2021" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="1" data-y="2022" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="1" data-y="2023" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="1" data-y="2024" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="1" data-y="2025" placeholder="0" min="0" step="0.01"></td>
+      </tr>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c2);"></span><span class="mkt-name" id="lbl-fob-2">Mercado 2</span></td>
+        <td><input type="number" class="fob-inp" data-m="2" data-y="2021" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="2" data-y="2022" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="2" data-y="2023" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="2" data-y="2024" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="2" data-y="2025" placeholder="0" min="0" step="0.01"></td>
+      </tr>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c3);"></span><span class="mkt-name" id="lbl-fob-3">Mercado 3</span></td>
+        <td><input type="number" class="fob-inp" data-m="3" data-y="2021" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="3" data-y="2022" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="3" data-y="2023" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="3" data-y="2024" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="fob-inp" data-m="3" data-y="2025" placeholder="0" min="0" step="0.01"></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Tabla 2: Peso Neto -->
+<div class="card">
+  <span class="tbl-badge" style="background:#059669;">⚖️ Tabla 2: Peso Neto (Kg)</span>
+  <div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Mercado</th>
+        <th style="color:#6ee7b7;">2021</th>
+        <th style="color:#6ee7b7;">2022</th>
+        <th style="color:#6ee7b7;">2023</th>
+        <th style="color:#6ee7b7;">2024</th>
+        <th style="color:#6ee7b7;">2025</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c1);"></span><span class="mkt-name" id="lbl-pn-1">Mercado 1</span></td>
+        <td><input type="number" class="pn-inp" data-m="1" data-y="2021" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="1" data-y="2022" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="1" data-y="2023" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="1" data-y="2024" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="1" data-y="2025" placeholder="0" min="0" step="0.01"></td>
+      </tr>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c2);"></span><span class="mkt-name" id="lbl-pn-2">Mercado 2</span></td>
+        <td><input type="number" class="pn-inp" data-m="2" data-y="2021" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="2" data-y="2022" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="2" data-y="2023" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="2" data-y="2024" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="2" data-y="2025" placeholder="0" min="0" step="0.01"></td>
+      </tr>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c3);"></span><span class="mkt-name" id="lbl-pn-3">Mercado 3</span></td>
+        <td><input type="number" class="pn-inp" data-m="3" data-y="2021" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="3" data-y="2022" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="3" data-y="2023" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="3" data-y="2024" placeholder="0" min="0" step="0.01"></td>
+        <td><input type="number" class="pn-inp" data-m="3" data-y="2025" placeholder="0" min="0" step="0.01"></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Tabla 3: Precio Promedio -->
+<div class="card">
+  <span class="tbl-badge" style="background:#d97706;">💰 Tabla 3: Precio Promedio (FOB/Peso)</span>
+  <div class="data-table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Mercado</th>
+        <th style="color:#fcd34d;">2021</th>
+        <th style="color:#fcd34d;">2022</th>
+        <th style="color:#fcd34d;">2023</th>
+        <th style="color:#fcd34d;">2024</th>
+        <th style="color:#fcd34d;">2025</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c1);"></span><span class="mkt-name" id="lbl-pp-1">Mercado 1</span></td>
+        <td><input type="number" class="pp-inp" data-m="1" data-y="2021" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="1" data-y="2022" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="1" data-y="2023" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="1" data-y="2024" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="1" data-y="2025" placeholder="0.00" min="0" step="0.01"></td>
+      </tr>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c2);"></span><span class="mkt-name" id="lbl-pp-2">Mercado 2</span></td>
+        <td><input type="number" class="pp-inp" data-m="2" data-y="2021" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="2" data-y="2022" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="2" data-y="2023" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="2" data-y="2024" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="2" data-y="2025" placeholder="0.00" min="0" step="0.01"></td>
+      </tr>
+      <tr>
+        <td><span class="mkt-dot" style="background:var(--c3);"></span><span class="mkt-name" id="lbl-pp-3">Mercado 3</span></td>
+        <td><input type="number" class="pp-inp" data-m="3" data-y="2021" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="3" data-y="2022" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="3" data-y="2023" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="3" data-y="2024" placeholder="0.00" min="0" step="0.01"></td>
+        <td><input type="number" class="pp-inp" data-m="3" data-y="2025" placeholder="0.00" min="0" step="0.01"></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Gráficos -->
+<div class="charts-grid">
+  <div class="chart-card">
+    <h3 id="chart1-title">📊 Gráfico 1: Valor FOB (USD)</h3>
+    <canvas id="chartFOB"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3 id="chart2-title">⚖️ Gráfico 2: Peso Neto (Kg)</h3>
+    <canvas id="chartPN"></canvas>
+  </div>
+  <div class="chart-card">
+    <h3 id="chart3-title">💰 Gráfico 3: Precio Promedio (FOB/Kg)</h3>
+    <canvas id="chartPP"></canvas>
+  </div>
+</div>
+
+<!-- Análisis Grupal -->
+<div class="card">
+  <p class="card-title">💬 Análisis Cualitativo Grupal</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:10px;">Analicen la evolución de cada mercado durante el período 2021–2025. ¿Qué tendencias observan en el Valor FOB, Peso Neto y Precio Promedio? ¿Cuál es el mercado más prometedor y por qué?</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+    <div>
+      <label>🏆 Mercado con mayor potencial</label>
+      <select id="mkt-ganador">
+        <option value="">-- Seleccionar --</option>
+        <option id="opt-m1" value="Mercado 1">Mercado 1</option>
+        <option id="opt-m2" value="Mercado 2">Mercado 2</option>
+        <option id="opt-m3" value="Mercado 3">Mercado 3</option>
+      </select>
+    </div>
+    <div>
+      <label>📌 Criterio principal de selección</label>
+      <input type="text" id="criterio" placeholder="Ej: Mayor crecimiento en Valor FOB 2021-2025">
+    </div>
+  </div>
+  <label>📝 Análisis cualitativo completo</label>
+  <textarea id="analysis" rows="5" placeholder="Describan las tendencias observadas, los mercados más dinámicos y las recomendaciones estratégicas del equipo..."></textarea>
+</div>
+
+<!-- Botones -->
+<div class="actions">
+  <button class="btn-red" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-primary" id="pdf-btn">⬇ Descargar PDF</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave-lbl"></p>
+
+<div class="footer">
+  IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong><br>
+  <span style="font-size:10px;color:#bae6fd;">Desarrollado por Daniel Solar</span>
+</div>
+</div>
+
+<script>
+const YEARS=[2021,2022,2023,2024,2025];
+const COLORS=['#0284c7','#059669','#d97706'];
+const COLORS_RGBA=['rgba(2,132,199,0.15)','rgba(5,150,105,0.15)','rgba(217,119,6,0.15)'];
+const COLORS_BORDER=['#0284c7','#059669','#d97706'];
+
+// ── Progress ──────────────────────────────────────────────────────────
+const stepDefs=[
+  {lbl:'Integrantes',clr:'#0284c7'},
+  {lbl:'Producto',clr:'#0284c7'},
+  {lbl:'Países',clr:'#0284c7'},
+  {lbl:'Tabla FOB',clr:'#0284c7'},
+  {lbl:'Tabla Peso Neto',clr:'#059669'},
+  {lbl:'Tabla Precio',clr:'#d97706'},
+  {lbl:'Análisis',clr:'#0284c7'}
+];
+const stepsWrap=document.getElementById('prog-steps');
+stepDefs.forEach(function(s,i){
+  const el=document.createElement('div');el.className='pstep';
+  el.innerHTML='<div class="pdot" id="pd-'+i+'" style="color:'+s.clr+'"></div><span>'+s.lbl+'</span>';
+  stepsWrap.appendChild(el);
+});
+function setDot(i,on){const d=document.getElementById('pd-'+i);if(d)d.className='pdot'+(on?' on':'');}
+
+function tableHasData(cls){
+  return Array.from(document.querySelectorAll('.'+cls)).some(function(i){return parseFloat(i.value)>0;});
+}
+function updateProgress(){
+  let done=0;
+  const hasSt=Array.from(document.querySelectorAll('.st-name')).some(function(i){return i.value.trim();});
+  if(hasSt){done++;setDot(0,true);}else setDot(0,false);
+  const hasProd=(document.getElementById('cfg-producto')?.value||'').trim().length>1;
+  if(hasProd){done++;setDot(1,true);}else setDot(1,false);
+  const hasPaises=(document.getElementById('pais1')?.value||'').trim().length>0;
+  if(hasPaises){done++;setDot(2,true);}else setDot(2,false);
+  if(tableHasData('fob-inp')){done++;setDot(3,true);}else setDot(3,false);
+  if(tableHasData('pn-inp')){done++;setDot(4,true);}else setDot(4,false);
+  if(tableHasData('pp-inp')){done++;setDot(5,true);}else setDot(5,false);
+  const hasA=(document.getElementById('analysis')?.value||'').trim().length>15;
+  if(hasA){done++;setDot(6,true);}else setDot(6,false);
+  const pct=Math.round((done/7)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('pct-lbl').textContent=pct+'%';
+}
+
+// ── Students ──────────────────────────────────────────────────────────
+const MAX_ST=5;let stCount=1;
+const stList=document.getElementById('students-list');
+function addStudentRow(idx){
+  const row=document.createElement('div');row.className='st-row';row.id='str-'+idx;
+  row.innerHTML='<input type="text" class="st-name" placeholder="Nombre"><input type="text" class="st-last" placeholder="Apellido"><button class="rm-st" aria-label="Eliminar">✕</button>';
+  stList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){i.addEventListener('input',function(){updateProgress();save();});});
+}
+function updateAddBtn(){const btn=document.getElementById('add-st');btn.disabled=stCount>=MAX_ST;btn.style.opacity=stCount>=MAX_ST?'0.5':'1';}
+stList.addEventListener('click',function(e){
+  const btn=e.target.closest('.rm-st');
+  if(!btn||stList.children.length<=1)return;
+  btn.closest('.st-row').remove();stCount--;updateAddBtn();updateProgress();save();
+});
+document.getElementById('add-st').addEventListener('click',function(){if(stCount>=MAX_ST)return;addStudentRow(stCount);stCount++;updateAddBtn();});
+addStudentRow(0);
+
+// ── Charts ────────────────────────────────────────────────────────────
+function makeChart(canvasId,title,yLabel){
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:YEARS.map(String),
+      datasets:[1,2,3].map(function(m){
+        return{
+          label:'Mercado '+m,
+          data:[0,0,0,0,0],
+          borderColor:COLORS[m-1],
+          backgroundColor:COLORS_RGBA[m-1],
+          borderWidth:2.5,
+          pointBackgroundColor:COLORS[m-1],
+          pointRadius:5,
+          pointHoverRadius:7,
+          tension:0.35,
+          fill:false
+        };
+      })
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:true,
+      plugins:{
+        legend:{position:'top',labels:{color:'#0c4a6e',font:{size:10},boxWidth:12}},
+        tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+Number(ctx.parsed.y).toLocaleString('en-US',{minimumFractionDigits:2});}}}
+      },
+      scales:{
+        x:{ticks:{color:'#0369a1',font:{size:10}},grid:{color:'#e0f2fe'}},
+        y:{ticks:{color:'#0369a1',font:{size:10}},grid:{color:'#e0f2fe'},title:{display:true,text:yLabel,color:'#0369a1',font:{size:10}}}
+      }
+    }
+  });
+}
+
+const chartFOB=makeChart('chartFOB','Valor FOB','USD');
+const chartPN=makeChart('chartPN','Peso Neto','Kg');
+const chartPP=makeChart('chartPP','Precio Promedio','FOB/Kg');
+
+function getTableData(cls){
+  const data={1:[],2:[],3:[]};
+  YEARS.forEach(function(y){
+    [1,2,3].forEach(function(m){
+      const el=document.querySelector('.'+cls+'[data-m="'+m+'"][data-y="'+y+'"]');
+      data[m].push(parseFloat(el?.value)||0);
+    });
+  });
+  return data;
+}
+
+function getPaisNames(){
+  return{
+    1:(document.getElementById('pais1')?.value||'Mercado 1').trim()||'Mercado 1',
+    2:(document.getElementById('pais2')?.value||'Mercado 2').trim()||'Mercado 2',
+    3:(document.getElementById('pais3')?.value||'Mercado 3').trim()||'Mercado 3'
+  };
+}
+
+function updateLabels(){
+  const p=getPaisNames();
+  [1,2,3].forEach(function(m){
+    ['fob','pn','pp'].forEach(function(t){
+      const el=document.getElementById('lbl-'+t+'-'+m);
+      if(el)el.textContent=p[m];
+    });
+    const opt=document.getElementById('opt-m'+m);
+    if(opt)opt.value=p[m],opt.textContent=p[m];
+  });
+}
+
+function updateCharts(){
+  updateLabels();
+  const p=getPaisNames();
+  const fobData=getTableData('fob-inp');
+  const pnData=getTableData('pn-inp');
+  const ppData=getTableData('pp-inp');
+  [1,2,3].forEach(function(m){
+    chartFOB.data.datasets[m-1].label=p[m];
+    chartFOB.data.datasets[m-1].data=fobData[m];
+    chartPN.data.datasets[m-1].label=p[m];
+    chartPN.data.datasets[m-1].data=pnData[m];
+    chartPP.data.datasets[m-1].label=p[m];
+    chartPP.data.datasets[m-1].data=ppData[m];
+  });
+  chartFOB.update();
+  chartPN.update();
+  chartPP.update();
+  updateProgress();
+  save();
+}
+
+// Attach events
+['pais1','pais2','pais3'].forEach(function(id){
+  document.getElementById(id)?.addEventListener('input',function(){updateCharts();});
+});
+document.querySelectorAll('.fob-inp,.pn-inp,.pp-inp').forEach(function(el){
+  el.addEventListener('input',function(){updateCharts();});
+});
+['cfg-producto','cfg-partida','analysis','criterio'].forEach(function(id){
+  document.getElementById(id)?.addEventListener('input',function(){updateProgress();save();});
+});
+document.getElementById('mkt-ganador')?.addEventListener('change',function(){save();});
+
+// ── Autosave ──────────────────────────────────────────────────────────
+function collectTableData(cls){
+  const rows={};
+  document.querySelectorAll('.'+cls).forEach(function(el){
+    const key='m'+el.dataset.m+'y'+el.dataset.y;
+    rows[key]=el.value;
+  });
+  return rows;
+}
+function save(){
+  try{
+    const d={
+      producto:document.getElementById('cfg-producto').value,
+      partida:document.getElementById('cfg-partida').value,
+      pais1:document.getElementById('pais1').value,
+      pais2:document.getElementById('pais2').value,
+      pais3:document.getElementById('pais3').value,
+      analysis:document.getElementById('analysis').value,
+      criterio:document.getElementById('criterio').value,
+      ganador:document.getElementById('mkt-ganador').value,
+      students:[],
+      fob:collectTableData('fob-inp'),
+      pn:collectTableData('pn-inp'),
+      pp:collectTableData('pp-inp')
+    };
+    stList.querySelectorAll('.st-row').forEach(function(r){
+      d.students.push({n:r.querySelector('.st-name').value,a:r.querySelector('.st-last').value});
+    });
+    localStorage.setItem('mkt_series_v2',JSON.stringify(d));
+    const lbl=document.getElementById('autosave-lbl');
+    lbl.textContent='💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){lbl.textContent='';},2500);
+  }catch(e){}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('mkt_series_v2');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.getElementById('cfg-producto').value=d.producto||'';
+    document.getElementById('cfg-partida').value=d.partida||'';
+    document.getElementById('pais1').value=d.pais1||'';
+    document.getElementById('pais2').value=d.pais2||'';
+    document.getElementById('pais3').value=d.pais3||'';
+    document.getElementById('analysis').value=d.analysis||'';
+    document.getElementById('criterio').value=d.criterio||'';
+    document.getElementById('mkt-ganador').value=d.ganador||'';
+    if(d.students&&d.students.length>0){
+      stList.innerHTML='';stCount=0;
+      d.students.forEach(function(s,i){
+        addStudentRow(i);
+        const row=document.getElementById('str-'+i);
+        row.querySelector('.st-name').value=s.n||'';
+        row.querySelector('.st-last').value=s.a||'';
+        stCount++;
+      });
+      updateAddBtn();
+    }
+    function restoreTable(cls,obj){
+      if(!obj)return;
+      document.querySelectorAll('.'+cls).forEach(function(el){
+        const key='m'+el.dataset.m+'y'+el.dataset.y;
+        if(obj[key])el.value=obj[key];
+      });
+    }
+    restoreTable('fob-inp',d.fob);
+    restoreTable('pn-inp',d.pn);
+    restoreTable('pp-inp',d.pp);
+    updateCharts();
+  }catch(e){}
+}
+loadSaved();
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('rst-btn').addEventListener('click',function(){
+  if(!confirm('¿Reiniciar todo el laboratorio?'))return;
+  ['cfg-producto','cfg-partida','pais1','pais2','pais3','analysis','criterio'].forEach(function(id){
+    const el=document.getElementById(id);if(el)el.value='';
+  });
+  document.getElementById('mkt-ganador').value='';
+  document.querySelectorAll('.fob-inp,.pn-inp,.pp-inp').forEach(function(el){el.value='';});
+  stList.innerHTML='';stCount=0;addStudentRow(0);stCount=1;updateAddBtn();
+  try{localStorage.removeItem('mkt_series_v2');}catch(e){}
+  document.getElementById('pdf-status').textContent='';
+  updateCharts();
+});
+
+// ── PDF ───────────────────────────────────────────────────────────────
+document.getElementById('pdf-btn').addEventListener('click',function(){
+  const statusEl=document.getElementById('pdf-status');
+  if(typeof window.jspdf==='undefined'){statusEl.textContent='Cargando librería...';return;}
+  statusEl.style.color='#0284c7';statusEl.textContent='Generando PDF...';
+
+  const students=[];
+  stList.querySelectorAll('.st-row').forEach(function(r){
+    const n=r.querySelector('.st-name').value.trim();
+    const a=r.querySelector('.st-last').value.trim();
+    if(n||a)students.push((n+' '+a).trim());
+  });
+
+  const producto=document.getElementById('cfg-producto').value.trim()||'Sin especificar';
+  const partida=document.getElementById('cfg-partida').value.trim();
+  const p=getPaisNames();
+  const analysis=document.getElementById('analysis').value.trim();
+  const criterio=document.getElementById('criterio').value.trim();
+  const ganador=document.getElementById('mkt-ganador').value;
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  function decor(){
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34);doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8);doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar · Desarrollado por Daniel Solar',W/2,H-8,{align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  decor();
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,100,'F');
+  doc.setFontSize(18);doc.setTextColor(255,255,255);
+  doc.text('Principales Mercados de Exportación',W/2,40,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('Producto: '+producto+(partida?' | Partida: '+partida:''),W/2,62,{align:'center'});
+  doc.setFontSize(9);
+  doc.text('IM // TERMINAL · Investigación de Mercado · Período 2021–2025',W/2,82,{align:'center'});
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=118;
+  const intLine='Integrantes: '+(students.length?students.join(' · '):'Sin registrar');
+  const wInt=doc.splitTextToSize(intLine,760);
+  doc.setFontSize(10);doc.text(wInt,30,y);
+  y+=wInt.length*12+2;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(),30,y);
+  doc.setTextColor(0,0,0);y+=16;
+
+  function makeTableBody(cls){
+    const rows=[];
+    [1,2,3].forEach(function(m){
+      const row=[p[m]];
+      YEARS.forEach(function(yr){
+        const el=document.querySelector('.'+cls+'[data-m="'+m+'"][data-y="'+yr+'"]');
+        const v=parseFloat(el?.value)||0;
+        row.push(v>0?v.toLocaleString('en-US',{minimumFractionDigits:2}):'—');
+      });
+      rows.push(row);
+    });
+    return rows;
+  }
+
+  const tableConfigs=[
+    {title:'Tabla 1: Valor FOB (USD)',cls:'fob-inp',hc:[2,132,199],chartRef:chartFOB,canvasId:'chartFOB',chartTitle:'Gráfico 1: Valor FOB (USD) — Evolución 2021–2025'},
+    {title:'Tabla 2: Peso Neto (Kg)',cls:'pn-inp',hc:[5,150,105],chartRef:chartPN,canvasId:'chartPN',chartTitle:'Gráfico 2: Peso Neto (Kg) — Evolución 2021–2025'},
+    {title:'Tabla 3: Precio Promedio (FOB/Kg)',cls:'pp-inp',hc:[217,119,6],chartRef:chartPP,canvasId:'chartPP',chartTitle:'Gráfico 3: Precio Promedio (FOB/Kg) — Evolución 2021–2025'}
+  ];
+
+  tableConfigs.forEach(function(tc){
+    if(y>H-120){doc.addPage();decor();y=30;}
+    doc.setFontSize(11);doc.setTextColor(tc.hc[0],tc.hc[1],tc.hc[2]);
+    doc.text(tc.title,30,y);y+=7;
+    doc.autoTable({
+      head:[['Mercado','2021','2022','2023','2024','2025']],
+      body:makeTableBody(tc.cls),startY:y,
+      styles:{fontSize:9,cellPadding:6,halign:'center'},
+      headStyles:{fillColor:tc.hc,halign:'center'},
+      columnStyles:{0:{cellWidth:130,halign:'left',fontStyle:'bold'}},
+      margin:{left:30,right:30},
+      didDrawPage:decor
+    });
+    y=doc.lastAutoTable.finalY+16;
+
+    // ── Insertar gráfico como imagen ──
+    try{
+      const canvas=document.getElementById(tc.canvasId);
+      if(canvas){
+        const imgData=canvas.toDataURL('image/png',1.0);
+        const chartW=W-60;
+        const chartH=chartW*0.38;
+        if(y+chartH>H-40){doc.addPage();decor();y=30;}
+        // Título del gráfico
+        doc.setFontSize(10);doc.setTextColor(tc.hc[0],tc.hc[1],tc.hc[2]);
+        doc.text(tc.chartTitle,30,y);y+=8;
+        // Marco decorativo
+        doc.setFillColor(248,253,255);
+        doc.roundedRect(28,y-2,chartW+4,chartH+8,4,4,'F');
+        doc.setDrawColor(tc.hc[0],tc.hc[1],tc.hc[2]);
+        doc.setLineWidth(1);
+        doc.roundedRect(28,y-2,chartW+4,chartH+8,4,4,'S');
+        // Imagen del gráfico
+        doc.addImage(imgData,'PNG',30,y,chartW,chartH);
+        y+=chartH+20;
+      }
+    }catch(err){
+      doc.setFontSize(9);doc.setTextColor(150,150,150);
+      doc.text('[Gráfico no disponible]',30,y);y+=14;
+    }
+  });
+
+  // Análisis
+  if(ganador||analysis){
+    if(y>H-80){doc.addPage();decor();y=30;}
+    if(ganador){
+      doc.setFontSize(12);doc.setTextColor(7,89,133);
+      doc.text('Mercado recomendado: '+ganador,30,y);y+=12;
+      if(criterio){
+        doc.setFontSize(9);doc.setTextColor(0,0,0);
+        const cw=doc.splitTextToSize('Criterio: '+criterio,760);
+        doc.text(cw,30,y);y+=cw.length*11+8;
+      }
+    }
+    if(analysis){
+      if(y>H-80){doc.addPage();decor();y=30;}
+      doc.setFontSize(12);doc.setTextColor(7,89,133);
+      doc.text('Analisis Cualitativo Grupal',30,y);y+=12;
+      doc.setFontSize(9);doc.setTextColor(0,0,0);
+      const aw=doc.splitTextToSize(analysis,760);
+      doc.text(aw,30,y);
+    }
+  }
+
+  const fn='Mercados_Exp_'+(producto.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')||'IM')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent='✅ PDF descargado correctamente.';
+  statusEl.style.color='#16a34a';
+});
+
+updateProgress();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

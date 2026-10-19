@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab: Técnicas de Trabajo de Campo - IM // TERMINAL</title>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7; --accent2:#38bdf8;
+  --green:#059669; --red:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;padding:24px;}
+.container{max-width:980px;margin:0 auto;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);
+  white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0284c7 0%,#0ea5e9 100%);
+  border-radius:18px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 6px 24px rgba(2,132,199,0.35);position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header-left{}
+.header-left h1{font-size:20px;color:#fff;font-weight:800;margin-bottom:3px;}
+.header-left p{font-size:12px;color:rgba(255,255,255,0.8);margin:0;}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;
+  font-weight:700;padding:7px 16px;border-radius:20px;text-align:center;
+  line-height:1.6;border:1px solid rgba(255,255,255,0.35);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+
+/* Progress */
+.prog-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:0.85rem 1rem;margin-bottom:1rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.prog-top{display:flex;justify-content:space-between;
+  font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+.prog-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.prog-fill{height:10px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+.prog-steps{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pstep{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.pdot{width:10px;height:10px;border-radius:50%;
+  border:2px solid #bfdbfe;transition:all 0.3s;flex-shrink:0;}
+.pdot.on{border-color:currentColor;background:currentColor;}
+
+/* Instructions */
+.instr{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:1rem;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.instr-hdr{display:flex;justify-content:space-between;align-items:center;
+  padding:0.8rem 1rem;cursor:pointer;background:#f0f9ff;}
+.instr-hdr p{font-size:13px;font-weight:600;color:var(--sub);}
+.instr-body{max-height:0;overflow:hidden;transition:max-height 0.35s,padding 0.35s;
+  padding:0 1rem;}
+.instr-body.open{max-height:400px;padding:0.5rem 1rem 1rem;}
+.instr-body ol{font-size:12px;color:var(--text);
+  padding-left:1.2rem;line-height:2;}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:1.25rem;margin-bottom:1rem;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06);position:relative;z-index:1;
+  transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+/* Section tabs */
+.tabs{display:flex;gap:6px;margin-bottom:1.25rem;position:relative;z-index:1;flex-wrap:wrap;}
+.tab{padding:10px 22px;border-radius:30px;font-size:13px;font-weight:700;
+  cursor:pointer;border:2px solid #bfdbfe;background:#fff;
+  color:var(--sub);transition:all 0.25s;display:flex;align-items:center;gap:6px;}
+.tab.active{background:#0284c7;border-color:#0284c7;color:#fff;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* Inputs */
+input[type="text"],input[type="number"],select,textarea{
+  width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:8px;padding:9px 11px;font-size:13px;
+  background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,select:focus,textarea:focus{
+  outline:none;border-color:#0284c7;
+  box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+textarea{resize:vertical;}
+label{font-size:12px;color:var(--sub);font-weight:600;
+  display:block;margin-bottom:4px;}
+
+/* Students */
+.st-row{display:flex;gap:8px;margin-bottom:8px;}
+.st-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:#fff;border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-size:14px;cursor:pointer;
+  transition:all 0.2s;}
+.rm-st:hover{border-color:#dc2626;color:#dc2626;}
+#add-st{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;
+  color:#075985;border-radius:8px;padding:8px 16px;
+  font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+#add-st:hover{background:#bae6fd;}
+
+/* Question cards */
+.q-card{background:#f8fdff;border:1px solid #bfdbfe;
+  border-radius:12px;padding:1rem;margin-bottom:12px;
+  border-left:4px solid #0284c7;}
+.q-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.q-num{background:#0284c7;color:#fff;font-size:11px;font-weight:700;
+  width:26px;height:26px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;}
+.q-card.entrevista-q{border-left-color:#7c3aed;}
+.q-card.entrevista-q .q-num{background:#7c3aed;}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.opt-wrap{position:relative;}
+.opt-label{position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  font-size:11px;font-weight:700;color:#0284c7;pointer-events:none;}
+.opt-input{padding-left:26px !important;}
+
+/* Section headers */
+.sec-header{display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#0284c7,#38bdf8);
+  border-radius:12px;padding:0.85rem 1.25rem;margin-bottom:1rem;
+  color:#fff;position:relative;z-index:1;}
+.sec-header h2{font-size:16px;font-weight:700;margin:0;}
+.sec-header p{font-size:11px;margin:2px 0 0 0;opacity:0.85;}
+.sec-icon{font-size:28px;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;
+  padding:11px 26px;border-radius:10px;font-size:14px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(2,132,199,0.4);}
+.btn-purple{background:#7c3aed;border:none;color:#fff;
+  padding:11px 26px;border-radius:10px;font-size:14px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(124,58,237,0.35);transition:all 0.2s;}
+.btn-purple:hover{background:#6d28d9;transform:translateY(-1px);}
+.btn-secondary{background:#fff;border:2px solid var(--border);
+  color:var(--text);padding:11px 26px;border-radius:10px;
+  font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.btn-secondary:hover{border-color:#0284c7;color:#0284c7;}
+.btn-red{background:#fff;border:2px solid #fecaca;color:#dc2626;
+  padding:11px 22px;border-radius:10px;font-size:13px;
+  cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.btn-red:hover{background:#fef2f2;}
+.btn-pdf{background:linear-gradient(135deg,#0284c7,#7c3aed);border:none;
+  color:#fff;padding:12px 28px;border-radius:10px;font-size:14px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 16px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-pdf:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(2,132,199,0.4);}
+.actions{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;
+  position:relative;z-index:1;}
+
+/* Autosave */
+.autosave{font-size:10px;color:#059669;margin-top:4px;
+  position:relative;z-index:1;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+
+/* Footer */
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;
+  color:#93c5fd;position:relative;z-index:1;}
+.footer strong{color:#0284c7;}
+
+/* Concept box */
+.concept-box{background:#f0f9ff;border:1px solid #bfdbfe;
+  border-left:5px solid #0284c7;border-radius:10px;
+  padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px;
+  line-height:1.7;color:var(--text);position:relative;z-index:1;}
+
+@media(max-width:580px){
+  .opts-grid{grid-template-columns:1fr;}
+  .header{flex-direction:column;align-items:flex-start;}
+  .tabs{gap:4px;}
+  .tab{padding:8px 14px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 2 · Técnicas de Trabajo de Campo</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>🔬 Laboratorio · Técnicas de Trabajo de Campo</h1>
+    <p>IM // TERMINAL · Investigación de Mercado</p>
+  </div>
+  <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+</div>
+
+<!-- Progress -->
+<div class="prog-wrap">
+  <div class="prog-top">
+    <span>Progreso del laboratorio</span>
+    <span id="pct-lbl">0%</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-steps" id="prog-steps"></div>
+</div>
+
+<!-- Instructions -->
+<div class="instr">
+  <div class="instr-hdr" id="instr-hdr">
+    <p>📋 ¿Cómo completar este laboratorio?</p>
+    <span id="instr-arr" style="font-size:16px;color:#0284c7;">▼</span>
+  </div>
+  <div class="instr-body" id="instr-body">
+    <ol>
+      <li>Registra los <strong>integrantes del equipo</strong> (máximo 5).</li>
+      <li>En la sección <strong>Encuesta</strong>: ingresa el país objetivo, 2 objetivos y 10 preguntas con 4 opciones de respuesta cada una.</li>
+      <li>En la sección <strong>Entrevista</strong>: ingresa 2 objetivos y 10 preguntas abiertas (sin opciones de respuesta).</li>
+      <li>Haz clic en <strong>"Descargar PDF"</strong> para exportar toda la información del equipo.</li>
+    </ol>
+    <p style="font-size:11px;color:#0284c7;margin:6px 0 0 0;">💾 Tu avance se guarda automáticamente en el navegador.</p>
+  </div>
+</div>
+
+<!-- Integrantes -->
+<div class="card">
+  <p class="card-title">👥 Integrantes del equipo (máx. 5)</p>
+  <div id="students-list"></div>
+  <button id="add-st">+ Agregar integrante</button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="encuesta" onclick="switchTab('encuesta')">📋 Encuesta</div>
+  <div class="tab" data-tab="entrevista" onclick="switchTab('entrevista')">🎙️ Entrevista</div>
+</div>
+
+<!-- ═══════════════════════ ENCUESTA ═══════════════════════ -->
+<div class="tab-panel active" id="panel-encuesta">
+
+  <div class="sec-header">
+    <span class="sec-icon">📋</span>
+    <div>
+      <h2>Encuesta</h2>
+      <p>Cuestionario formal con preguntas de opción múltiple dirigido a un mercado específico</p>
+    </div>
+  </div>
+
+  <div class="concept-box">
+    <strong>📌 Cuestionario:</strong> En el trabajo de campo se acostumbra emplear cuestionarios formales compuesto por preguntas organizadas en un orden previamente establecido, lo que asegura un proceso claro y sistemático para la recopilación de información. Este enfoque permite obtener datos de manera eficiente y reducir posibles sesgos o errores en las respuestas.
+  </div>
+
+  <div class="card">
+    <p class="card-title">🌍 Datos generales de la encuesta</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div>
+        <label>País objetivo de la encuesta</label>
+        <input type="text" id="enc-pais" placeholder="Ej: Estados Unidos, China, España...">
+      </div>
+      <div>
+        <label>Producto o tema de investigación</label>
+        <input type="text" id="enc-producto" placeholder="Ej: Quinua orgánica, Café especial...">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <label>Objetivo 1 de la encuesta</label>
+        <textarea id="enc-obj1" rows="2" placeholder="Describe el primer objetivo de la encuesta..."></textarea>
+      </div>
+      <div>
+        <label>Objetivo 2 de la encuesta</label>
+        <textarea id="enc-obj2" rows="2" placeholder="Describe el segundo objetivo de la encuesta..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">❓ Preguntas de la encuesta (10 preguntas · 4 opciones c/u)</p>
+    <div id="enc-questions"></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════ ENTREVISTA ═══════════════════════ -->
+<div class="tab-panel" id="panel-entrevista">
+
+  <div class="sec-header" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);">
+    <span class="sec-icon">🎙️</span>
+    <div>
+      <h2>Entrevista</h2>
+      <p>Preguntas abiertas para recopilar información cualitativa en profundidad</p>
+    </div>
+  </div>
+
+  <div class="concept-box" style="border-left-color:#7c3aed;">
+    <strong style="color:#7c3aed;">📌 Entrevista:</strong> La entrevista es una técnica de investigación cualitativa que permite obtener información detallada a través de preguntas abiertas. A diferencia del cuestionario, no limita las respuestas del entrevistado, favoreciendo la exploración profunda de opiniones, percepciones y experiencias relevantes para la investigación de mercado.
+  </div>
+
+  <div class="card">
+    <p class="card-title">🎯 Objetivos de la entrevista</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <label>Objetivo 1 de la entrevista</label>
+        <textarea id="ent-obj1" rows="2" placeholder="Describe el primer objetivo de la entrevista..."></textarea>
+      </div>
+      <div>
+        <label>Objetivo 2 de la entrevista</label>
+        <textarea id="ent-obj2" rows="2" placeholder="Describe el segundo objetivo de la entrevista..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title">🎙️ Preguntas de la entrevista (10 preguntas abiertas)</p>
+    <div id="ent-questions"></div>
+  </div>
+
+</div>
+
+<!-- Botones -->
+<div class="actions">
+  <button class="btn-secondary btn-red" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-pdf" id="pdf-btn">⬇ Descargar PDF completo</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave-lbl"></p>
+
+<div class="footer">
+  IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong>
+</div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ── Progress steps ────────────────────────────────────────────────────
+const stepDefs = [
+  {lbl:'Integrantes', clr:'#0284c7'},
+  {lbl:'País / Producto', clr:'#0284c7'},
+  {lbl:'Objetivos Encuesta', clr:'#0284c7'},
+  {lbl:'Preguntas Encuesta', clr:'#0284c7'},
+  {lbl:'Objetivos Entrevista', clr:'#7c3aed'},
+  {lbl:'Preguntas Entrevista', clr:'#7c3aed'}
+];
+const stepsWrap = document.getElementById('prog-steps');
+stepDefs.forEach(function(s,i){
+  const el = document.createElement('div');
+  el.className = 'pstep';
+  el.innerHTML = '<div class="pdot" id="pd-'+i+'" style="color:'+s.clr+'"></div><span>'+s.lbl+'</span>';
+  stepsWrap.appendChild(el);
+});
+
+function setDot(i,on){
+  const d=document.getElementById('pd-'+i);
+  if(d) d.className='pdot'+(on?' on':'');
+}
+
+function updateProgress(){
+  let done=0;
+  // Students
+  const hasStudent=Array.from(document.querySelectorAll('.st-name'))
+    .some(function(i){return i.value.trim();});
+  if(hasStudent){done++;setDot(0,true);}else setDot(0,false);
+  // Pais / producto
+  const hasPais=document.getElementById('enc-pais').value.trim().length>0;
+  if(hasPais){done++;setDot(1,true);}else setDot(1,false);
+  // Objetivos encuesta
+  const hasObjEnc=document.getElementById('enc-obj1').value.trim().length>5 &&
+    document.getElementById('enc-obj2').value.trim().length>5;
+  if(hasObjEnc){done++;setDot(2,true);}else setDot(2,false);
+  // Preguntas encuesta
+  const encQs=Array.from(document.querySelectorAll('.enc-q'))
+    .filter(function(q){return q.value.trim().length>0;});
+  const hasEncQ=encQs.length>=5;
+  if(hasEncQ){done++;setDot(3,true);}else setDot(3,false);
+  // Objetivos entrevista
+  const hasObjEnt=document.getElementById('ent-obj1').value.trim().length>5 &&
+    document.getElementById('ent-obj2').value.trim().length>5;
+  if(hasObjEnt){done++;setDot(4,true);}else setDot(4,false);
+  // Preguntas entrevista
+  const entQs=Array.from(document.querySelectorAll('.ent-q'))
+    .filter(function(q){return q.value.trim().length>0;});
+  const hasEntQ=entQs.length>=5;
+  if(hasEntQ){done++;setDot(5,true);}else setDot(5,false);
+
+  const pct=Math.round((done/6)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('pct-lbl').textContent=pct+'%';
+}
+
+// ── Instructions ──────────────────────────────────────────────────────
+document.getElementById('instr-hdr').addEventListener('click',function(){
+  const b=document.getElementById('instr-body');
+  const a=document.getElementById('instr-arr');
+  b.classList.toggle('open');
+  a.textContent=b.classList.contains('open')?'▲':'▼';
+});
+
+// ── Tabs ──────────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.classList.toggle('active',t.dataset.tab===tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p){
+    p.classList.toggle('active',p.id==='panel-'+tab);
+  });
+}
+
+// ── Students ──────────────────────────────────────────────────────────
+const MAX_ST=5;
+let stCount=1;
+const stList=document.getElementById('students-list');
+
+function addStudentRow(idx){
+  const row=document.createElement('div');
+  row.className='st-row';
+  row.id='str-'+idx;
+  row.innerHTML=
+    '<input type="text" class="st-name" placeholder="Nombre">'+
+    '<input type="text" class="st-last" placeholder="Apellido">'+
+    '<button class="rm-st" aria-label="Eliminar">✕</button>';
+  stList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){
+    i.addEventListener('input',function(){updateProgress();save();});
+  });
+}
+
+function updateAddBtn(){
+  const btn=document.getElementById('add-st');
+  btn.disabled=stCount>=MAX_ST;
+  btn.style.opacity=stCount>=MAX_ST?'0.5':'1';
+}
+
+stList.addEventListener('click',function(e){
+  const btn=e.target.closest('.rm-st');
+  if(!btn||stList.children.length<=1)return;
+  btn.closest('.st-row').remove();
+  stCount--;
+  updateAddBtn();
+  updateProgress();save();
+});
+
+document.getElementById('add-st').addEventListener('click',function(){
+  if(stCount>=MAX_ST)return;
+  addStudentRow(stCount);
+  stCount++;
+  updateAddBtn();
+});
+
+addStudentRow(0);
+
+// ── Build questions ───────────────────────────────────────────────────
+const optLabels=['A','B','C','D'];
+
+// Encuesta: 10 preguntas con 4 opciones
+const encWrap=document.getElementById('enc-questions');
+for(let i=1;i<=10;i++){
+  const div=document.createElement('div');
+  div.className='q-card';
+  let html='<div class="q-header">'+
+    '<div class="q-num">'+i+'</div>'+
+    '<div style="flex:1;"><label style="margin:0;font-size:12px;font-weight:700;color:#0284c7;">Pregunta '+i+'</label>'+
+    '<input type="text" class="enc-q" id="enc-q'+i+'" placeholder="Escribe la pregunta '+i+'..." style="margin-top:4px;"></div></div>'+
+    '<div class="opts-grid">';
+  optLabels.forEach(function(lbl){
+    html+='<div class="opt-wrap">'+
+      '<span class="opt-label">'+lbl+')</span>'+
+      '<input type="text" class="opt-input enc-opt" id="enc-q'+i+'-opt'+lbl+'" placeholder="Opción '+lbl+'...">'+
+    '</div>';
+  });
+  html+='</div>';
+  div.innerHTML=html;
+  encWrap.appendChild(div);
+}
+
+// Entrevista: 10 preguntas abiertas
+const entWrap=document.getElementById('ent-questions');
+for(let i=1;i<=10;i++){
+  const div=document.createElement('div');
+  div.className='q-card entrevista-q';
+  div.innerHTML='<div class="q-header">'+
+    '<div class="q-num">'+i+'</div>'+
+    '<div style="flex:1;"><label style="margin:0;font-size:12px;font-weight:700;color:#7c3aed;">Pregunta '+i+'</label>'+
+    '<input type="text" class="ent-q" id="ent-q'+i+'" placeholder="Escribe la pregunta '+i+'..." style="margin-top:4px;"></div></div>';
+  entWrap.appendChild(div);
+}
+
+// Attach events
+document.querySelectorAll('.enc-q,.enc-opt,.ent-q').forEach(function(el){
+  el.addEventListener('input',function(){updateProgress();save();});
+});
+['enc-pais','enc-producto','enc-obj1','enc-obj2','ent-obj1','ent-obj2'].forEach(function(id){
+  document.getElementById(id).addEventListener('input',function(){updateProgress();save();});
+});
+
+// ── Autosave ──────────────────────────────────────────────────────────
+function save(){
+  try{
+    const d={
+      students:[],
+      encPais:document.getElementById('enc-pais').value,
+      encProducto:document.getElementById('enc-producto').value,
+      encObj1:document.getElementById('enc-obj1').value,
+      encObj2:document.getElementById('enc-obj2').value,
+      entObj1:document.getElementById('ent-obj1').value,
+      entObj2:document.getElementById('ent-obj2').value,
+      encQuestions:[],
+      entQuestions:[]
+    };
+    stList.querySelectorAll('.st-row').forEach(function(r){
+      d.students.push({n:r.querySelector('.st-name').value,a:r.querySelector('.st-last').value});
+    });
+    for(let i=1;i<=10;i++){
+      const q={text:document.getElementById('enc-q'+i)?.value||''};
+      optLabels.forEach(function(lbl){
+        q['opt'+lbl]=document.getElementById('enc-q'+i+'-opt'+lbl)?.value||'';
+      });
+      d.encQuestions.push(q);
+      d.entQuestions.push({text:document.getElementById('ent-q'+i)?.value||''});
+    }
+    localStorage.setItem('lab_campo_v1',JSON.stringify(d));
+    const lbl=document.getElementById('autosave-lbl');
+    lbl.textContent='💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){lbl.textContent='';},2500);
+  }catch(e){}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('lab_campo_v1');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.getElementById('enc-pais').value=d.encPais||'';
+    document.getElementById('enc-producto').value=d.encProducto||'';
+    document.getElementById('enc-obj1').value=d.encObj1||'';
+    document.getElementById('enc-obj2').value=d.encObj2||'';
+    document.getElementById('ent-obj1').value=d.entObj1||'';
+    document.getElementById('ent-obj2').value=d.entObj2||'';
+    if(d.students&&d.students.length>0){
+      stList.innerHTML='';stCount=0;
+      d.students.forEach(function(s,i){
+        addStudentRow(i);
+        const row=document.getElementById('str-'+i);
+        row.querySelector('.st-name').value=s.n||'';
+        row.querySelector('.st-last').value=s.a||'';
+        stCount++;
+      });
+      updateAddBtn();
+    }
+    if(d.encQuestions){
+      d.encQuestions.forEach(function(q,i){
+        const idx=i+1;
+        const qEl=document.getElementById('enc-q'+idx);
+        if(qEl)qEl.value=q.text||'';
+        optLabels.forEach(function(lbl){
+          const oEl=document.getElementById('enc-q'+idx+'-opt'+lbl);
+          if(oEl)oEl.value=q['opt'+lbl]||'';
+        });
+      });
+    }
+    if(d.entQuestions){
+      d.entQuestions.forEach(function(q,i){
+        const el=document.getElementById('ent-q'+(i+1));
+        if(el)el.value=q.text||'';
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+
+loadSaved();
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('rst-btn').addEventListener('click',function(){
+  if(!confirm('¿Reiniciar todo el laboratorio? Se perderán los datos.'))return;
+  ['enc-pais','enc-producto','enc-obj1','enc-obj2','ent-obj1','ent-obj2']
+    .forEach(function(id){document.getElementById(id).value='';});
+  for(let i=1;i<=10;i++){
+    const q=document.getElementById('enc-q'+i);if(q)q.value='';
+    optLabels.forEach(function(lbl){
+      const o=document.getElementById('enc-q'+i+'-opt'+lbl);if(o)o.value='';
+    });
+    const eq=document.getElementById('ent-q'+i);if(eq)eq.value='';
+  }
+  stList.innerHTML='';stCount=0;
+  addStudentRow(0);stCount=1;updateAddBtn();
+  try{localStorage.removeItem('lab_campo_v1');}catch(e){}
+  document.getElementById('pdf-status').textContent='';
+  updateProgress();
+});
+
+// ── PDF ───────────────────────────────────────────────────────────────
+document.getElementById('pdf-btn').addEventListener('click',function(){
+  const statusEl=document.getElementById('pdf-status');
+  if(typeof window.jspdf==='undefined'){
+    statusEl.textContent='Cargando librería PDF...';return;
+  }
+  statusEl.style.color='#0284c7';
+  statusEl.textContent='Generando PDF...';
+
+  const students=[];
+  stList.querySelectorAll('.st-row').forEach(function(r){
+    const n=r.querySelector('.st-name').value.trim();
+    const a=r.querySelector('.st-last').value.trim();
+    if(n||a)students.push((n+' '+a).trim());
+  });
+
+  const encPais=document.getElementById('enc-pais').value.trim()||'Sin especificar';
+  const encProducto=document.getElementById('enc-producto').value.trim()||'Sin especificar';
+  const encObj1=document.getElementById('enc-obj1').value.trim();
+  const encObj2=document.getElementById('enc-obj2').value.trim();
+  const entObj1=document.getElementById('ent-obj1').value.trim();
+  const entObj2=document.getElementById('ent-obj2').value.trim();
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  function decor(){
+    // Watermark
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34);doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+    doc.restoreGraphicsState();
+    // Top bar
+    doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+    // Bottom bar
+    doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8);doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar',W/2,H-8,{align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  // ── Portada ──
+  decor();
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,110,'F');
+  doc.setFontSize(20);doc.setTextColor(255,255,255);
+  doc.text('Laboratorio · Técnicas de Trabajo de Campo',W/2,46,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('IM // TERMINAL · Investigación de Mercado',W/2,70,{align:'center'});
+  doc.setFontSize(10);
+  doc.text('Encuesta & Entrevista',W/2,90,{align:'center'});
+  // Badge
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=135;
+  // Integrantes
+  const intLine='Integrantes: '+(students.length?students.join(' · '):'Sin registrar');
+  const wInt=doc.splitTextToSize(intLine,515);
+  doc.setFontSize(10);doc.text(wInt,40,y);
+  y+=wInt.length*12+2;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(),40,y);
+  doc.setTextColor(0,0,0);y+=22;
+
+  // ══════════ ENCUESTA ══════════
+  doc.setFillColor(2,132,199);doc.rect(40,y,W-80,28,'F');
+  doc.setFontSize(13);doc.setTextColor(255,255,255);
+  doc.text('📋  ENCUESTA',50,y+18);
+  doc.setTextColor(0,0,0);y+=36;
+
+  doc.setFontSize(10);doc.setTextColor(7,89,133);
+  doc.text('País objetivo: '+encPais,40,y);y+=14;
+  doc.text('Producto / Tema: '+encProducto,40,y);y+=16;
+
+  const objEncTable=[
+    ['Objetivo 1',encObj1||'Sin completar'],
+    ['Objetivo 2',encObj2||'Sin completar']
+  ];
+  doc.autoTable({
+    head:[['Objetivos de la Encuesta','Descripción']],
+    body:objEncTable,startY:y,
+    styles:{fontSize:9,cellPadding:5},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:100,fontStyle:'bold'}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+14;
+
+  // Preguntas encuesta
+  doc.setFontSize(11);doc.setTextColor(7,89,133);
+  doc.text('Preguntas de la Encuesta',40,y);y+=8;
+
+  const encBody=[];
+  for(let i=1;i<=10;i++){
+    const q=document.getElementById('enc-q'+i)?.value||'Sin completar';
+    const opts=optLabels.map(function(lbl){
+      return lbl+') '+(document.getElementById('enc-q'+i+'-opt'+lbl)?.value||'—');
+    }).join('   ');
+    encBody.push([i+'.',q,opts]);
+  }
+  doc.autoTable({
+    head:[['#','Pregunta','Opciones (A, B, C, D)']],
+    body:encBody,startY:y,
+    styles:{fontSize:8,cellPadding:4},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:22,halign:'center'},1:{cellWidth:165},2:{cellWidth:248}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+20;
+
+  // ══════════ ENTREVISTA ══════════
+  if(y>H-140){doc.addPage();decor();y=30;}
+  doc.setFillColor(124,58,237);doc.rect(40,y,W-80,28,'F');
+  doc.setFontSize(13);doc.setTextColor(255,255,255);
+  doc.text('🎙️  ENTREVISTA',50,y+18);
+  doc.setTextColor(0,0,0);y+=36;
+
+  const objEntTable=[
+    ['Objetivo 1',entObj1||'Sin completar'],
+    ['Objetivo 2',entObj2||'Sin completar']
+  ];
+  doc.autoTable({
+    head:[['Objetivos de la Entrevista','Descripción']],
+    body:objEntTable,startY:y,
+    styles:{fontSize:9,cellPadding:5},
+    headStyles:{fillColor:[124,58,237]},
+    columnStyles:{0:{cellWidth:100,fontStyle:'bold'}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+14;
+
+  doc.setFontSize(11);doc.setTextColor(124,58,237);
+  doc.text('Preguntas de la Entrevista',40,y);y+=8;
+
+  const entBody=[];
+  for(let i=1;i<=10;i++){
+    const q=document.getElementById('ent-q'+i)?.value||'Sin completar';
+    entBody.push([i+'.',q]);
+  }
+  doc.autoTable({
+    head:[['#','Pregunta']],
+    body:entBody,startY:y,
+    styles:{fontSize:9,cellPadding:5},
+    headStyles:{fillColor:[124,58,237]},
+    columnStyles:{0:{cellWidth:22,halign:'center'}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+
+  const fn='Tecnicas_Campo_'+(students[0]||'equipo').replace(/\s+/g,'_')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent='✅ PDF descargado correctamente.';
+  statusEl.style.color='#16a34a';
+});
+
+updateProgress();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

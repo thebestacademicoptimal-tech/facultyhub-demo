@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Matrices EFE y EFI - IM // TERMINAL</title>
+    <style>
+        :root { --accent: #38bdf8; --bg: #0f172a; --card: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: #f8fafc; padding: 40px; }
+        .container { max-width: 900px; margin: auto; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border: 1px solid #334155; text-align: center; }
+        input { width: 80px; padding: 5px; background: #0f172a; border: 1px solid var(--accent); color: white; border-radius: 4px; }
+        .btn { background: var(--accent); color: var(--bg); padding: 15px 30px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: block; margin: 20px auto; }
+        .hidden { display: none; }
+        #resultados-finales { margin-top: 20px; padding: 20px; border: 2px solid var(--accent); border-radius: 8px; background: #0f172a; }
+    </style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 1 · Ejemplo guiado EFE / EFI</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+
+<div class="container">
+    <h1>Laboratorio: Matrices EFE y EFI</h1>
+    <div class="card">
+        <h3>Configuración: Producto seleccionado</h3>
+        <select id="prodSelect" onchange="loadMatrices()">
+            <option value="">Seleccione producto...</option>
+            <option value="arandano">Bebida de arándanos</option>
+            <option value="algodon">Prendas de algodón</option>
+            <option value="cafe">Café</option>
+            <option value="cacao">Cacao</option>
+        </select>
+    </div>
+
+    <div id="matrices-container"></div>
+    <button class="btn" onclick="finalizarCalculos()">Finalizar Auditoría y Analizar</button>
+    
+    <div id="resultados-finales" class="hidden">
+        <h3>Análisis Final y Retroalimentación</h3>
+        <p id="efi-result"></p>
+        <p id="efe-result"></p>
+        <div id="feedback-box" style="margin-top: 15px; font-style: italic; color: var(--accent);"></div>
+    </div>
+</div>
+
+<script>
+    const data = {
+        arandano: { F: ["Alto valor nutricional", "Certificación Orgánica", "Diseño innovador", "Alta demanda externa", "Trazabilidad"], D: ["Perecibilidad", "Inversión logística", "Dependencia estacional", "Capital limitado", "Marca en crecimiento"], O: ["Tendencia 'Healthy'", "TLC mercados asiáticos", "Tecnología hidropónica", "Crecimiento E-commerce", "Nuevos mercados"], A: ["Cambio climático", "Plagas", "Volatilidad dólar", "Regulaciones", "Competencia"] },
+        algodon: { F: ["Calidad Pima", "Resistencia", "Certificación sostenible", "Versatilidad", "Tradición textil"], D: ["Costos altos", "Ciclos moda", "Dependencia insumos", "Capacidad instalada", "Poca presencia digital"], O: ["Tendencia 'Slow Fashion'", "Acuerdos comerciales", "Fibras técnicas", "Expansión nórdica", "Digitalización"], A: ["Competencia sintética", "Inestabilidad política", "Costos energéticos", "Regulaciones", "Contrabando"] },
+        cafe: { F: ["Sabor distintivo", "Comercio Justo", "Marca 'Origin'", "Lealtad clientes", "Cultivo amigable"], D: ["Precio bolsa", "Infraestructura", "Intermediarios", "Capital bajo", "Procesos básicos"], O: ["Café especial", "Turismo", "Exportación directa", "Automatización", "Nichos"], A: ["Plaga Roya", "Clima", "Fluctuación precio", "Baja tecnificación", "Legislación"] },
+        cacao: { F: ["Aroma/sabor", "Fairtrade", "Flavonoides", "Adaptabilidad", "Técnicas"], D: ["Valor agregado", "Logística", "Escala", "Tecnificación", "Branding"], O: ["Chocolate premium", "Derivados", "Procesamiento", "Reconversión", "Convenios"], A: ["Plagas", "Cambio climático", "Tipo de cambio", "Exigencias UE", "Competidores"] }
+    };
+
+    function loadMatrices() {
+        const prod = document.getElementById('prodSelect').value;
+        if (!prod) return;
+        const container = document.getElementById('matrices-container');
+        container.innerHTML = "";
+        
+        const sections = [
+            { id: "F", title: "Fortalezas (EFI)", items: data[prod].F },
+            { id: "D", title: "Debilidades (EFI)", items: data[prod].D },
+            { id: "O", title: "Oportunidades (EFE)", items: data[prod].O },
+            { id: "A", title: "Amenazas (EFE)", items: data[prod].A }
+        ];
+
+        sections.forEach(sec => {
+            let html = `<div class="card" id="sec-${sec.id}"><h4>${sec.title}</h4><table><tr><th>Factor</th><th>Peso (Max 0.5)</th><th>Calificación (1-4)</th><th>Puntaje</th></tr>`;
+            sec.items.forEach(item => {
+                html += `<tr><td>${item}</td><td><input type="number" step="0.01" class="peso" onchange="updateTotals(this)"></td><td><input type="number" step="1" min="1" max="4" class="calif" onchange="updateTotals(this)"></td><td class="puntaje">0.00</td></tr>`;
+            });
+            html += `<tr style="font-weight:bold;"><td>TOTAL</td><td class="total-peso">0.00</td><td>-</td><td class="total-puntaje">0.00</td></tr></table></div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function updateTotals(el) {
+        const table = el.closest('table');
+        let totalPeso = 0;
+        let totalPuntaje = 0;
+        const rows = table.querySelectorAll('tr:not(:last-child):not(:first-child)');
+        rows.forEach(tr => {
+            const peso = parseFloat(tr.querySelector('.peso').value) || 0;
+            const calif = parseFloat(tr.querySelector('.calif').value) || 0;
+            tr.querySelector('.puntaje').innerText = (peso * calif).toFixed(2);
+            totalPeso += peso;
+            totalPuntaje += (peso * calif);
+        });
+        if (totalPeso > 0.5) { alert("¡Advertencia! Peso excede 0.50."); el.value = 0; return updateTotals(el); }
+        table.querySelector('.total-peso').innerText = totalPeso.toFixed(2);
+        table.querySelector('.total-puntaje').innerText = totalPuntaje.toFixed(2);
+    }
+
+    function getFeedback(score) {
+        if (score > 2.5) return "Resultado > 2.5: La empresa responde adecuadamente a las oportunidades/amenazas y cuenta con fortalezas internas sólidas.";
+        if (score === 2.5) return "Resultado = 2.5: Las estrategias actuales son apenas suficientes para mantener la posición. Se requiere una revisión urgente para no perder competitividad.";
+        return "Resultado < 2.5: La empresa es vulnerable, sus debilidades superan a las fortalezas y no está aprovechando el entorno externo.";
+    }
+
+    function finalizarCalculos() {
+        const efiF = parseFloat(document.querySelector('#sec-F .total-puntaje').innerText);
+        const efiD = parseFloat(document.querySelector('#sec-D .total-puntaje').innerText);
+        const efeO = parseFloat(document.querySelector('#sec-O .total-puntaje').innerText);
+        const efeA = parseFloat(document.querySelector('#sec-A .total-puntaje').innerText);
+        
+        const totalEFI = efiF + efiD;
+        const totalEFE = efeO + efeA;
+
+        document.getElementById('efi-result').innerText = `Total EFI: ${totalEFI.toFixed(2)} | Retroalimentación EFI: ${getFeedback(totalEFI)}`;
+        document.getElementById('efe-result').innerText = `Total EFE: ${totalEFE.toFixed(2)} | Retroalimentación EFE: ${getFeedback(totalEFE)}`;
+        document.getElementById('resultados-finales').classList.remove('hidden');
+    }
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

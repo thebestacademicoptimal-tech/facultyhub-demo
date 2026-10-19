@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Canvas Propuesta de Valor - IM // TERMINAL</title>
+    <style>
+        :root { --accent: #38bdf8; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); padding: 40px; }
+        .container { max-width: 1000px; margin: auto; }
+        h1 { text-align: center; color: var(--accent); }
+        .selector-card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        select { width: 300px; padding: 15px; background: #0f172a; border: 1px solid var(--accent); color: white; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+        .canvas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border-left: 5px solid var(--accent); }
+        h3 { color: var(--accent); margin-top: 0; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; }
+        textarea { width: 100%; height: 90px; margin-top: 5px; background: #0f172a; color: white; border: 1px solid #334155; border-radius: 6px; padding: 10px; box-sizing: border-box; resize: none; }
+    </style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 1 · Canvas de Propuesta de Valor</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+
+<div class="container">
+    <h1>Canvas de Propuesta de Valor</h1>
+    
+    <div class="selector-card">
+        <label>Seleccione el producto para la práctica:</label><br><br>
+        <select id="productSelect" onchange="updateExamples()">
+            <option value="aguaymanto">Bebida de Aguaymanto</option>
+            <option value="algodon">Polos de Algodón</option>
+            <option value="cafe">Café</option>
+            <option value="arandanos">Arándanos</option>
+        </select>
+    </div>
+    
+    <div class="canvas-grid">
+        <div class="card">
+            <h3>Mapa de Valor (Producto)</h3>
+            <label>Productos y Servicios:</label>
+            <textarea id="prodServ"></textarea>
+            <label>Aliviadores de Frustraciones:</label>
+            <textarea id="alivFrus"></textarea>
+            <label>Creadores de Alegrías:</label>
+            <textarea id="creaAleg"></textarea>
+        </div>
+
+        <div class="card">
+            <h3>Perfil del Cliente (Segmento)</h3>
+            <label>Tareas del Cliente:</label>
+            <textarea id="tareasClie"></textarea>
+            <label>Frustraciones:</label>
+            <textarea id="frusClie"></textarea>
+            <label>Alegrías:</label>
+            <textarea id="alegClie"></textarea>
+        </div>
+    </div>
+</div>
+
+<script>
+    const data = {
+        aguaymanto: {
+            prodServ: "Bebida orgánica de aguaymanto, sin conservantes, embotellada.",
+            alivFrus: "Envase reciclable, entrega refrigerada, sin azúcar añadida.",
+            creaAleg: "Sabor premium único, certificaciones orgánicas, efecto energizante natural.",
+            tareasClie: "Consumidores de clase media que buscan alternativas saludables y prácticas.",
+            frusClie: "Exceso de azúcar en bebidas comerciales, falta de opciones naturales reales.",
+            alegClie: "Sentirse saludable, frescura, practicidad en la alimentación diaria."
+        },
+        algodon: {
+            prodServ: "Polos de algodón Pima de alta gramaje, diseño minimalista.",
+            alivFrus: "Costuras reforzadas, etiqueta sin picazón, alta durabilidad en lavados.",
+            creaAleg: "Suavidad al tacto, corte que favorece, colores resistentes al sol.",
+            tareasClie: "Adultos jóvenes que buscan comodidad y versatilidad para el día a día.",
+            frusClie: "Calor e incomodidad con telas sintéticas, pérdida de forma tras poco uso.",
+            alegClie: "Comodidad, estilo casual profesional, sensación de frescura."
+        },
+        cafe: {
+            prodServ: "Café de especialidad origen Cusco, tueste medio, en grano.",
+            alivFrus: "Empaque hermético con válvula, trazabilidad total, asesoría de preparación.",
+            creaAleg: "Aroma intenso, notas frutales exclusivas, experiencia de cafetería en casa.",
+            tareasClie: "Entusiastas del café que inician su mañana buscando energía y ritual.",
+            frusClie: "Café amargo o quemado, falta de frescura, empaques que no preservan aroma.",
+            alegClie: "Momentos de placer, energía productiva, conexión con el origen."
+        },
+        arandanos: {
+            prodServ: "Arándanos frescos premium seleccionados, formato de venta individual.",
+            alivFrus: "Empaque protector anti-golpes, cadena de frío garantizada, disponibilidad todo el año.",
+            creaAleg: "Sabor dulce-ácido equilibrado, alto contenido de antioxidantes, textura firme.",
+            tareasClie: "Padres de familia y deportistas que buscan snacks saludables rápidos.",
+            frusClie: "Fruta que se malogra muy rápido, precio inestable, poca disponibilidad fuera de temporada.",
+            alegClie: "Salud rápida, snacks sin culpa, vitalidad para los niños."
+        }
+    };
+
+    function updateExamples() {
+        const prod = document.getElementById('productSelect').value;
+        const info = data[prod];
+        document.getElementById('prodServ').value = info.prodServ;
+        document.getElementById('alivFrus').value = info.alivFrus;
+        document.getElementById('creaAleg').value = info.creaAleg;
+        document.getElementById('tareasClie').value = info.tareasClie;
+        document.getElementById('frusClie').value = info.frusClie;
+        document.getElementById('alegClie').value = info.alegClie;
+    }
+
+    // Cargar por defecto al abrir
+    window.onload = updateExamples;
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

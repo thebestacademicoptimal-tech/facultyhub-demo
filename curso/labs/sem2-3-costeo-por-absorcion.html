@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio: Costeo por Absorción - IM // TERMINAL</title>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7; --accent2:#38bdf8;
+  --green:#059669; --red:#dc2626;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;padding:24px;}
+.container{max-width:1000px;margin:0 auto;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);
+  white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0284c7 0%,#0ea5e9 100%);
+  border-radius:18px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 6px 24px rgba(2,132,199,0.35);position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header-left h1{font-size:20px;color:#fff;font-weight:800;margin-bottom:3px;}
+.header-left p{font-size:12px;color:rgba(255,255,255,0.8);}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;
+  font-weight:700;padding:7px 16px;border-radius:20px;text-align:center;
+  line-height:1.6;border:1px solid rgba(255,255,255,0.35);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+
+/* Progress */
+.prog-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:0.85rem 1rem;margin-bottom:1rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.prog-top{display:flex;justify-content:space-between;
+  font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+.prog-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.prog-fill{height:10px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+.prog-steps{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+.pstep{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.pdot{width:10px;height:10px;border-radius:50%;
+  border:2px solid #bfdbfe;transition:all 0.3s;}
+.pdot.on{border-color:currentColor;background:currentColor;}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:1.25rem;margin-bottom:1rem;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06);position:relative;z-index:1;
+  transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* Inputs */
+input[type="text"],input[type="number"],select{
+  width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;font-size:13px;
+  background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,select:focus{outline:none;border-color:#0284c7;
+  box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+
+/* Students */
+.st-row{display:flex;gap:8px;margin-bottom:8px;}
+.st-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:#fff;border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.rm-st:hover{border-color:#dc2626;color:#dc2626;}
+#add-st{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;
+  color:#075985;border-radius:8px;padding:8px 16px;
+  font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+#add-st:hover{background:#bae6fd;}
+
+/* Producto / unidades row */
+.config-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:1rem;}
+.config-row label{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:#0284c7;color:#fff;padding:10px 12px;
+  font-weight:600;font-size:12px;text-align:center;}
+thead th:first-child{text-align:left;}
+tbody tr{border-bottom:1px solid #e0f2fe;transition:background 0.15s;}
+tbody tr:hover{background:#f8fdff;}
+
+/* Section header rows */
+tr.sec-hdr td{background:linear-gradient(90deg,#e0f2fe,#f0f9ff);
+  font-weight:700;color:#0284c7;font-size:12px;
+  padding:8px 12px;border-bottom:2px solid #bfdbfe;letter-spacing:0.3px;}
+
+tbody td{padding:5px 8px;vertical-align:middle;text-align:center;}
+tbody td:first-child{text-align:left;padding:5px 10px;}
+tbody td input[type="text"]{text-align:left;}
+tbody td input[type="number"]{text-align:right;width:100%;
+  min-width:80px;height:30px;font-size:12px;}
+tbody td input[type="text"]{height:30px;font-size:12px;}
+
+td.qty-cell input{width:110px !important;}
+td.total-cell{font-weight:700;color:#0284c7;font-size:13px;
+  background:#f0f9ff;padding:6px 12px;text-align:right;}
+td.desc-cell{min-width:180px;}
+
+/* Total / Costo rows */
+tr.subtotal-row td{background:#dbeafe;font-weight:700;color:#075985;padding:8px 12px;}
+tr.grandtotal-row td{background:#0284c7;color:#fff;font-weight:800;
+  font-size:14px;padding:10px 12px;}
+tr.unitcost-row td{background:#0ea5e9;color:#fff;font-weight:800;
+  font-size:14px;padding:10px 12px;}
+
+/* Summary boxes */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:1rem;}
+.sum-box{border-radius:12px;padding:1rem;text-align:center;
+  border:2px solid transparent;}
+.sum-box .sum-label{font-size:11px;font-weight:600;opacity:0.8;letter-spacing:0.3px;}
+.sum-box .sum-val{font-size:26px;font-weight:900;margin:4px 0;}
+.sum-box .sum-sub{font-size:11px;opacity:0.7;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;
+  padding:11px 26px;border-radius:10px;font-size:14px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-secondary{background:#fff;border:2px solid var(--border);
+  color:var(--text);padding:11px 22px;border-radius:10px;
+  font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+.btn-secondary:hover{border-color:#0284c7;color:#0284c7;}
+.btn-red{background:#fff;border:2px solid #fecaca;color:#dc2626;
+  padding:11px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-red:hover{background:#fef2f2;}
+.actions{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;
+  position:relative;z-index:1;}
+.autosave{font-size:10px;color:#059669;margin-top:4px;position:relative;z-index:1;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;
+  color:#93c5fd;position:relative;z-index:1;}
+.footer strong{color:#0284c7;}
+
+@media(max-width:600px){
+  .config-row{grid-template-columns:1fr;}
+  .summary-grid{grid-template-columns:1fr;}
+  .header{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 2 · Costeo por Absorción</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>💰 Laboratorio · Costeo por Absorción</h1>
+    <p>IM // TERMINAL · Investigación de Mercado · Análisis Financiero de Exportación</p>
+  </div>
+  <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+</div>
+
+<!-- Progress -->
+<div class="prog-wrap">
+  <div class="prog-top">
+    <span>Progreso del laboratorio</span>
+    <span id="pct-lbl">0%</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-steps" id="prog-steps"></div>
+</div>
+
+<!-- Integrantes -->
+<div class="card">
+  <p class="card-title">👥 Integrantes del equipo (máx. 5)</p>
+  <div id="students-list"></div>
+  <button id="add-st">+ Agregar integrante</button>
+</div>
+
+<!-- Configuración -->
+<div class="card">
+  <p class="card-title">⚙️ Configuración del análisis</p>
+  <div class="config-row">
+    <div>
+      <label>Producto a analizar</label>
+      <input type="text" id="cfg-producto" placeholder="Ej: Prendas de Alpaca, Café Especial...">
+    </div>
+    <div>
+      <label>Moneda</label>
+      <select id="cfg-moneda">
+        <option value="S/">S/ (Soles)</option>
+        <option value="$">$ (Dólares)</option>
+        <option value="€">€ (Euros)</option>
+      </select>
+    </div>
+    <div>
+      <label>Unidades producidas</label>
+      <input type="number" id="cfg-units" placeholder="Ej: 100" min="1">
+    </div>
+  </div>
+</div>
+
+<!-- Tabla principal -->
+<div class="card">
+  <p class="card-title">📊 Estructura de Costeo por Absorción</p>
+  <div class="table-wrap">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th style="text-align:left;min-width:200px;">Costos</th>
+        <th style="min-width:140px;">Cantidad</th>
+        <th style="min-width:120px;">Precio Unit.</th>
+        <th style="min-width:120px;">Total</th>
+      </tr>
+    </thead>
+    <tbody id="table-body">
+      <!-- Materia Prima -->
+      <tr class="sec-hdr"><td colspan="4">🧵 Materia Prima</td></tr>
+      <tr class="data-row" data-section="mp"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Tela de Alpaca"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Ej: 200 m"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r0">0.00</td></tr>
+      <tr class="data-row" data-section="mp"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Hilos de Alpaca"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Ej: 5 Carretes"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r1">0.00</td></tr>
+      <tr class="data-row" data-section="mp"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 3"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r2">0.00</td></tr>
+      <tr class="data-row" data-section="mp"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 4"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r3">0.00</td></tr>
+      <tr class="subtotal-row"><td>Subtotal Materia Prima</td><td></td><td></td><td id="sub-mp" style="text-align:right;">0.00</td></tr>
+
+      <!-- Insumos de Producción -->
+      <tr class="sec-hdr"><td colspan="4">⚡ Insumos de Producción</td></tr>
+      <tr class="data-row" data-section="ip"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Electricidad"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Ej: 15 KV"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r4">0.00</td></tr>
+      <tr class="data-row" data-section="ip"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Alquiler de local"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Ej: 1 Local"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r5">0.00</td></tr>
+      <tr class="data-row" data-section="ip"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 3"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r6">0.00</td></tr>
+      <tr class="data-row" data-section="ip"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 4"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r7">0.00</td></tr>
+      <tr class="subtotal-row"><td>Subtotal Insumos de Producción</td><td></td><td></td><td id="sub-ip" style="text-align:right;">0.00</td></tr>
+
+      <!-- Mano de Obra -->
+      <tr class="sec-hdr"><td colspan="4">👷 Mano de Obra</td></tr>
+      <tr class="data-row" data-section="mo"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Trabajadores"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Ej: 50 Horas"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r8">0.00</td></tr>
+      <tr class="data-row" data-section="mo"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 2"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r9">0.00</td></tr>
+      <tr class="data-row" data-section="mo"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 3"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r10">0.00</td></tr>
+      <tr class="data-row" data-section="mo"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 4"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r11">0.00</td></tr>
+      <tr class="subtotal-row"><td>Subtotal Mano de Obra</td><td></td><td></td><td id="sub-mo" style="text-align:right;">0.00</td></tr>
+
+      <!-- Costos Fijos -->
+      <tr class="sec-hdr"><td colspan="4">🏛️ Costos Fijos</td></tr>
+      <tr class="data-row" data-section="cf"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Depreciación de maquinaria"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r12">0.00</td></tr>
+      <tr class="data-row" data-section="cf"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Ej: Seguros"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r13">0.00</td></tr>
+      <tr class="data-row" data-section="cf"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 3"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r14">0.00</td></tr>
+      <tr class="data-row" data-section="cf"><td class="desc-cell"><input type="text" class="i-desc" placeholder="Concepto 4"></td><td class="qty-cell"><input type="text" class="i-qty" placeholder="Cantidad"></td><td><input type="number" class="i-pu" placeholder="0.00" min="0" step="0.01"></td><td class="total-cell" data-id="r15">0.00</td></tr>
+      <tr class="subtotal-row"><td>Subtotal Costos Fijos</td><td></td><td></td><td id="sub-cf" style="text-align:right;">0.00</td></tr>
+
+      <!-- Totales -->
+      <tr class="grandtotal-row">
+        <td>💰 TOTAL COSTO DE PRODUCCIÓN</td>
+        <td></td><td></td>
+        <td id="grand-total" style="text-align:right;font-size:16px;">0.00</td>
+      </tr>
+      <tr class="unitcost-row">
+        <td>📦 COSTO UNITARIO</td>
+        <td id="units-display" style="font-size:11px;opacity:0.85;"></td>
+        <td></td>
+        <td id="unit-cost" style="text-align:right;font-size:16px;">0.00</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="card">
+  <p class="card-title">📈 Resumen del análisis</p>
+  <div class="summary-grid">
+    <div class="sum-box" id="box-total" style="background:#dbeafe;border-color:#0284c7;">
+      <div class="sum-label" style="color:#0284c7;">COSTO TOTAL</div>
+      <div class="sum-val" id="s-total" style="color:#0284c7;">0.00</div>
+      <div class="sum-sub" style="color:#0284c7;">Todos los costos sumados</div>
+    </div>
+    <div class="sum-box" id="box-unit" style="background:#d1fae5;border-color:#059669;">
+      <div class="sum-label" style="color:#059669;">COSTO UNITARIO</div>
+      <div class="sum-val" id="s-unit" style="color:#059669;">0.00</div>
+      <div class="sum-sub" style="color:#059669;">Por unidad producida</div>
+    </div>
+    <div class="sum-box" id="box-units" style="background:#ede9fe;border-color:#7c3aed;">
+      <div class="sum-label" style="color:#7c3aed;">UNIDADES</div>
+      <div class="sum-val" id="s-units" style="color:#7c3aed;">0</div>
+      <div class="sum-sub" style="color:#7c3aed;">Unidades producidas</div>
+    </div>
+  </div>
+</div>
+
+<!-- Análisis grupal -->
+<div class="card">
+  <p class="card-title">💬 Análisis grupal</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:8px;">¿Cómo impacta el costo unitario en la competitividad exportadora del producto? ¿Qué componente representa el mayor porcentaje del costo total?</p>
+  <textarea id="analysis" rows="4" placeholder="Escriban aquí el análisis y conclusiones del equipo..." style="width:100%;resize:vertical;border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit;color:var(--text);background:var(--card);"></textarea>
+</div>
+
+<!-- Botones -->
+<div class="actions">
+  <button class="btn-red" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-primary" id="pdf-btn">⬇ Descargar PDF</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave-lbl"></p>
+
+<div class="footer">IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong></div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ── Progress ───────────────────────────────────────────────────────────
+const stepDefs=[
+  {lbl:'Integrantes',clr:'#0284c7'},
+  {lbl:'Producto',clr:'#0284c7'},
+  {lbl:'Materia Prima',clr:'#059669'},
+  {lbl:'Insumos',clr:'#0284c7'},
+  {lbl:'Mano de Obra',clr:'#7c3aed'},
+  {lbl:'Costos Fijos',clr:'#d97706'},
+  {lbl:'Análisis',clr:'#0284c7'}
+];
+const stepsWrap=document.getElementById('prog-steps');
+stepDefs.forEach(function(s,i){
+  const el=document.createElement('div');
+  el.className='pstep';
+  el.innerHTML='<div class="pdot" id="pd-'+i+'" style="color:'+s.clr+'"></div><span>'+s.lbl+'</span>';
+  stepsWrap.appendChild(el);
+});
+
+function setDot(i,on){
+  const d=document.getElementById('pd-'+i);
+  if(d){d.className='pdot'+(on?' on':'');}
+}
+
+function sectionHasData(secClass){
+  const rows=document.querySelectorAll('tr.data-row[data-section="'+secClass+'"]');
+  return Array.from(rows).some(function(r){
+    return r.querySelector('.i-pu')&&parseFloat(r.querySelector('.i-pu').value)>0;
+  });
+}
+
+function updateProgress(){
+  let done=0;
+  // integrantes
+  const hasSt=Array.from(document.querySelectorAll('.st-name')).some(function(i){return i.value.trim();});
+  if(hasSt){done++;setDot(0,true);}else setDot(0,false);
+  // producto
+  const hasProd=document.getElementById('cfg-producto').value.trim().length>0;
+  if(hasProd){done++;setDot(1,true);}else setDot(1,false);
+  // secciones
+  ['mp','ip','mo','cf'].forEach(function(s,i){
+    const ok=sectionHasData(s);
+    if(ok)done++;
+    setDot(i+2,ok);
+  });
+  // análisis
+  const hasA=document.getElementById('analysis').value.trim().length>15;
+  if(hasA){done++;setDot(6,true);}else setDot(6,false);
+
+  const pct=Math.round((done/7)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('pct-lbl').textContent=pct+'%';
+}
+
+// ── Students ───────────────────────────────────────────────────────────
+const MAX_ST=5;
+let stCount=1;
+const stList=document.getElementById('students-list');
+
+function addStudentRow(idx){
+  const row=document.createElement('div');
+  row.className='st-row';
+  row.id='str-'+idx;
+  row.innerHTML=
+    '<input type="text" class="st-name" placeholder="Nombre">'+
+    '<input type="text" class="st-last" placeholder="Apellido">'+
+    '<button class="rm-st" aria-label="Eliminar">✕</button>';
+  stList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){
+    i.addEventListener('input',function(){updateProgress();save();});
+  });
+}
+
+function updateAddBtn(){
+  const btn=document.getElementById('add-st');
+  btn.disabled=stCount>=MAX_ST;
+  btn.style.opacity=stCount>=MAX_ST?'0.5':'1';
+}
+
+stList.addEventListener('click',function(e){
+  const btn=e.target.closest('.rm-st');
+  if(!btn||stList.children.length<=1)return;
+  btn.closest('.st-row').remove();
+  stCount--;
+  updateAddBtn();
+  updateProgress();save();
+});
+
+document.getElementById('add-st').addEventListener('click',function(){
+  if(stCount>=MAX_ST)return;
+  addStudentRow(stCount);
+  stCount++;
+  updateAddBtn();
+});
+
+addStudentRow(0);
+
+// ── Calculations ───────────────────────────────────────────────────────
+function getMoneda(){return document.getElementById('cfg-moneda').value||'S/';}
+
+function fmt(n){
+  return getMoneda()+' '+parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function calcAll(){
+  const rows=document.querySelectorAll('tr.data-row');
+  let sub={mp:0,ip:0,mo:0,cf:0};
+
+  rows.forEach(function(tr){
+    const sec=tr.dataset.section;
+    // For rows with number quantity
+    const puEl=tr.querySelector('.i-pu');
+    if(!puEl)return;
+    const pu=parseFloat(puEl.value)||0;
+
+    // Try to extract numeric from qty text
+    const qtyEl=tr.querySelector('.i-qty');
+    const qtyRaw=qtyEl?qtyEl.value:'';
+    const qtyNum=parseFloat(qtyRaw.replace(/[^0-9.]/g,''))||0;
+
+    // total = qty * price (if qty is numeric), else just price as lump sum
+    const total=qtyNum>0?(qtyNum*pu):pu;
+
+    // Find total cell by row index
+    const totalCell=tr.querySelector('.total-cell');
+    if(totalCell){
+      totalCell.textContent=total.toFixed(2);
+    }
+    if(sub[sec]!==undefined)sub[sec]+=total;
+  });
+
+  const M=getMoneda();
+  document.getElementById('sub-mp').textContent=M+' '+sub.mp.toFixed(2);
+  document.getElementById('sub-ip').textContent=M+' '+sub.ip.toFixed(2);
+  document.getElementById('sub-mo').textContent=M+' '+sub.mo.toFixed(2);
+  document.getElementById('sub-cf').textContent=M+' '+sub.cf.toFixed(2);
+
+  const grandTotal=sub.mp+sub.ip+sub.mo+sub.cf;
+  const units=Math.max(parseFloat(document.getElementById('cfg-units').value)||1,1);
+  const unitCost=grandTotal/units;
+
+  document.getElementById('grand-total').textContent=M+' '+grandTotal.toFixed(2);
+  document.getElementById('unit-cost').textContent=M+' '+unitCost.toFixed(2);
+  document.getElementById('units-display').textContent=units+' und.';
+
+  document.getElementById('s-total').textContent=M+' '+grandTotal.toFixed(2);
+  document.getElementById('s-unit').textContent=M+' '+unitCost.toFixed(2);
+  document.getElementById('s-units').textContent=units;
+
+  updateProgress();save();
+}
+
+// Attach events to all table inputs
+document.querySelectorAll('.i-pu,.i-qty,.i-desc').forEach(function(el){
+  el.addEventListener('input',function(){
+    if(el.classList.contains('i-pu')||el.classList.contains('i-qty'))calcAll();
+    else{updateProgress();save();}
+  });
+});
+
+document.getElementById('cfg-units').addEventListener('input',calcAll);
+document.getElementById('cfg-moneda').addEventListener('change',calcAll);
+document.getElementById('cfg-producto').addEventListener('input',function(){updateProgress();save();});
+document.getElementById('analysis').addEventListener('input',function(){updateProgress();save();});
+
+// ── Autosave ───────────────────────────────────────────────────────────
+function save(){
+  try{
+    const d={
+      producto:document.getElementById('cfg-producto').value,
+      moneda:document.getElementById('cfg-moneda').value,
+      units:document.getElementById('cfg-units').value,
+      analysis:document.getElementById('analysis').value,
+      students:[],
+      rows:[]
+    };
+    stList.querySelectorAll('.st-row').forEach(function(r){
+      d.students.push({n:r.querySelector('.st-name').value,a:r.querySelector('.st-last').value});
+    });
+    document.querySelectorAll('tr.data-row').forEach(function(tr){
+      d.rows.push({
+        sec:tr.dataset.section,
+        desc:tr.querySelector('.i-desc')?.value||'',
+        qty:tr.querySelector('.i-qty')?.value||'',
+        pu:tr.querySelector('.i-pu')?.value||''
+      });
+    });
+    localStorage.setItem('costeo_abs_v2',JSON.stringify(d));
+    const lbl=document.getElementById('autosave-lbl');
+    lbl.textContent='💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){lbl.textContent='';},2500);
+  }catch(e){}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('costeo_abs_v2');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.getElementById('cfg-producto').value=d.producto||'';
+    document.getElementById('cfg-moneda').value=d.moneda||'S/';
+    document.getElementById('cfg-units').value=d.units||'';
+    document.getElementById('analysis').value=d.analysis||'';
+    if(d.students&&d.students.length>0){
+      stList.innerHTML='';stCount=0;
+      d.students.forEach(function(s,i){
+        addStudentRow(i);
+        const row=document.getElementById('str-'+i);
+        row.querySelector('.st-name').value=s.n||'';
+        row.querySelector('.st-last').value=s.a||'';
+        stCount++;
+      });
+      updateAddBtn();
+    }
+    if(d.rows){
+      const trRows=document.querySelectorAll('tr.data-row');
+      d.rows.forEach(function(r,i){
+        if(!trRows[i])return;
+        const desc=trRows[i].querySelector('.i-desc');
+        const qty=trRows[i].querySelector('.i-qty');
+        const pu=trRows[i].querySelector('.i-pu');
+        if(desc)desc.value=r.desc||'';
+        if(qty)qty.value=r.qty||'';
+        if(pu)pu.value=r.pu||'';
+      });
+    }
+    calcAll();
+  }catch(e){}
+}
+
+loadSaved();
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('rst-btn').addEventListener('click',function(){
+  if(!confirm('¿Reiniciar todo el laboratorio? Se perderán los datos.'))return;
+  document.getElementById('cfg-producto').value='';
+  document.getElementById('cfg-moneda').value='S/';
+  document.getElementById('cfg-units').value='';
+  document.getElementById('analysis').value='';
+  document.querySelectorAll('tr.data-row').forEach(function(tr){
+    tr.querySelector('.i-desc').value='';
+    const qty=tr.querySelector('.i-qty');if(qty)qty.value='';
+    tr.querySelector('.i-pu').value='';
+    const tc=tr.querySelector('.total-cell');if(tc)tc.textContent='0.00';
+  });
+  stList.innerHTML='';stCount=0;
+  addStudentRow(0);stCount=1;updateAddBtn();
+  try{localStorage.removeItem('costeo_abs_v2');}catch(e){}
+  document.getElementById('pdf-status').textContent='';
+  calcAll();
+});
+
+// ── PDF ───────────────────────────────────────────────────────────────
+document.getElementById('pdf-btn').addEventListener('click',function(){
+  const statusEl=document.getElementById('pdf-status');
+  if(typeof window.jspdf==='undefined'){statusEl.textContent='Cargando librería...';return;}
+  statusEl.style.color='#0284c7';
+  statusEl.textContent='Generando PDF...';
+
+  const students=[];
+  stList.querySelectorAll('.st-row').forEach(function(r){
+    const n=r.querySelector('.st-name').value.trim();
+    const a=r.querySelector('.st-last').value.trim();
+    if(n||a)students.push((n+' '+a).trim());
+  });
+
+  const producto=document.getElementById('cfg-producto').value.trim()||'Sin especificar';
+  const units=document.getElementById('cfg-units').value||'0';
+  const analysis=document.getElementById('analysis').value.trim();
+  const M=getMoneda();
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  function decor(){
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34);doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8);doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar',W/2,H-8,{align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  decor();
+  // Banner
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,100,'F');
+  doc.setFontSize(19);doc.setTextColor(255,255,255);
+  doc.text('Laboratorio · Costeo por Absorción',W/2,42,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('Producto: '+producto+' ('+units+' unidades)',W/2,65,{align:'center'});
+  doc.setFontSize(9);
+  doc.text('IM // TERMINAL · Investigación de Mercado',W/2,85,{align:'center'});
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=125;
+  const intLine='Integrantes: '+(students.length?students.join(' · '):'Sin registrar');
+  const wInt=doc.splitTextToSize(intLine,515);
+  doc.setFontSize(10);doc.text(wInt,40,y);
+  y+=wInt.length*12+2;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(),40,y);
+  doc.setTextColor(0,0,0);y+=20;
+
+  // Build table data
+  const sections=[
+    {key:'mp',title:'Materia Prima'},
+    {key:'ip',title:'Insumos de Producción'},
+    {key:'mo',title:'Mano de Obra'},
+    {key:'cf',title:'Costos Fijos'}
+  ];
+  const body=[];
+  sections.forEach(function(sec){
+    body.push([{content:sec.title,colSpan:4,styles:{fillColor:[224,242,254],fontStyle:'bold',textColor:[2,132,199]}}]);
+    document.querySelectorAll('tr.data-row[data-section="'+sec.key+'"]').forEach(function(tr){
+      const desc=tr.querySelector('.i-desc')?.value||'—';
+      const qty=tr.querySelector('.i-qty')?.value||'—';
+      const pu=tr.querySelector('.i-pu')?.value||'0';
+      const tot=tr.querySelector('.total-cell')?.textContent||'0.00';
+      if(desc!=='—'||parseFloat(pu)>0){
+        body.push([desc,qty,M+' '+parseFloat(pu).toFixed(2),M+' '+parseFloat(tot).toFixed(2)]);
+      }
+    });
+    // Subtotal
+    const subEl=document.getElementById('sub-'+sec.key);
+    body.push([{content:'Subtotal '+sec.title,colSpan:3,styles:{fontStyle:'bold',fillColor:[219,234,254]}},{content:subEl?.textContent||'0.00',styles:{fontStyle:'bold',fillColor:[219,234,254],halign:'right'}}]);
+  });
+  // Grand total
+  body.push([
+    {content:'TOTAL COSTO DE PRODUCCIÓN',colSpan:3,styles:{fillColor:[2,132,199],textColor:[255,255,255],fontStyle:'bold',fontSize:11}},
+    {content:document.getElementById('grand-total')?.textContent||'0.00',styles:{fillColor:[2,132,199],textColor:[255,255,255],fontStyle:'bold',halign:'right',fontSize:11}}
+  ]);
+  body.push([
+    {content:'COSTO UNITARIO ('+units+' und.)',colSpan:3,styles:{fillColor:[14,165,233],textColor:[255,255,255],fontStyle:'bold',fontSize:11}},
+    {content:document.getElementById('unit-cost')?.textContent||'0.00',styles:{fillColor:[14,165,233],textColor:[255,255,255],fontStyle:'bold',halign:'right',fontSize:11}}
+  ]);
+
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Estructura de Costeo por Absorción',40,y);y+=8;
+
+  doc.autoTable({
+    head:[['Costos','Cantidad','Precio Unit.','Total']],
+    body:body,startY:y,
+    styles:{fontSize:9,cellPadding:5},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:175,halign:'left'},1:{cellWidth:100},2:{halign:'right'},3:{halign:'right'}},
+    margin:{left:40,right:40},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+18;
+
+  if(analysis){
+    if(y>H-80){doc.addPage();decor();y=30;}
+    doc.setFontSize(12);doc.setTextColor(7,89,133);
+    doc.text('Análisis grupal',40,y);y+=12;
+    doc.setFontSize(9);doc.setTextColor(0,0,0);
+    const aw=doc.splitTextToSize(analysis,515);
+    doc.text(aw,40,y);
+  }
+
+  const fn='Costeo_Absorcion_'+(producto.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')||'IM')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent='✅ PDF descargado correctamente.';
+  statusEl.style.color='#16a34a';
+});
+
+updateProgress();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

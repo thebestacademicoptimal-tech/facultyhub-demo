@@ -1,0 +1,2731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torre de Control · FacultyHub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --bg:#dbe6f5;
+  --bg-panel:#ffffff;
+  --bg-panel-2:#f2f7fd;
+  --bg-raised:#e7f0fa;
+  --grid-line:rgba(37,99,235,0.07);
+  --border:#c9dbf2;
+  --border-soft:#d8e6f6;
+  --primary:#2563eb;
+  --primary-dim:#a9c6f5;
+  --primary-glow:rgba(37,99,235,0.22);
+  --secondary:#0ea5e9;
+  --secondary-dim:#bde4f7;
+  --secondary-glow:rgba(14,165,233,0.22);
+  --green:#0d9488;
+  --green-dim:#c8ece7;
+  --red:#e11d48;
+  --red-dim:#fbd7e0;
+  --text:#0f2847;
+  --text-dim:#4f6f95;
+  --text-faint:#8fa4c2;
+  --font-display:'Space Grotesk',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --font-body:'Inter',sans-serif;
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+body{
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:36px 36px;
+  background-attachment:fixed;
+  position:relative;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(37,99,235,0.07), transparent 60%),
+             radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14,165,233,0.06), transparent 60%);
+  z-index:0;
+}
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='440' height='220'%3E%3Ctext x='0' y='170' font-family='monospace' font-size='15' letter-spacing='1' fill='%232563eb' fill-opacity='0.05' transform='rotate(-24 220 110)'%3EFACULTYHUB%20%C2%B7%20DEMO%20%C2%B7%20DANIEL%20SOLAR%3C/text%3E%3C/svg%3E");
+  background-repeat:repeat;
+}
+#app{position:relative;z-index:1;min-height:100vh;}
+::selection{background:var(--primary);color:#ffffff;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--bg-panel);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:var(--primary-dim);}
+
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+
+.hidden{display:none !important;}
+
+/* ============ scanline / reduced motion ============ */
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+}
+
+/* ============ Upload Screen ============ */
+#uploadScreen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  position:relative;
+  overflow:hidden;
+}
+.upload-orbit{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+.upload-orbit .ring{
+  position:absolute;
+  top:50%;left:50%;
+  border:1px solid var(--border);
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  opacity:0.5;
+}
+.upload-orbit .ring.r1{width:520px;height:520px;}
+.upload-orbit .ring.r2{width:780px;height:780px;border-color:var(--border-soft);}
+.upload-orbit .ring.r3{width:1040px;height:1040px;border-color:var(--border-soft);}
+.upload-orbit .sweep{
+  position:absolute;
+  top:50%;left:50%;
+  width:1040px;height:1040px;
+  margin:-520px 0 0 -520px;
+  border-radius:50%;
+  background:conic-gradient(from 0deg, transparent 0deg, var(--primary-glow) 8deg, transparent 40deg);
+  animation:spin 6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.upload-card{
+  position:relative;
+  z-index:2;
+  width:100%;
+  max-width:560px;
+  background:linear-gradient(180deg, var(--bg-panel-2), var(--bg-panel));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:44px 40px 36px;
+  box-shadow:0 30px 70px -30px rgba(37,99,235,0.25), 0 2px 8px rgba(15,40,71,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.upload-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--primary);
+  margin-bottom:18px;
+}
+.upload-eyebrow .dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--primary);
+  box-shadow:0 0 8px 2px var(--primary-glow);
+  animation:pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+.upload-card h1{
+  font-family:var(--font-display);
+  font-size:32px;
+  font-weight:700;
+  line-height:1.15;
+  margin-bottom:10px;
+  letter-spacing:-0.01em;
+}
+.upload-card h1 span{color:var(--primary);}
+.upload-card p.lead{
+  color:var(--text-dim);
+  font-size:14.5px;
+  line-height:1.6;
+  margin-bottom:28px;
+}
+.dropzone{
+  border:1.5px dashed var(--border);
+  border-radius:8px;
+  padding:32px 20px;
+  text-align:center;
+  transition:border-color .2s, background .2s;
+  cursor:pointer;
+  position:relative;
+}
+.dropzone:hover, .dropzone.dragover{
+  border-color:var(--primary);
+  background:rgba(37,99,235,0.04);
+}
+.dropzone .icon{
+  width:44px;height:44px;
+  margin:0 auto 14px;
+  border-radius:50%;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--primary);
+}
+.dropzone .title{font-weight:600;font-size:14.5px;margin-bottom:4px;}
+.dropzone .sub{font-size:12.5px;color:var(--text-faint);font-family:var(--font-mono);}
+#fileInput{display:none;}
+.demo-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.demo-actions .btn{flex:1;justify-content:center;min-width:180px;}
+.demo-badge{
+  display:inline-block;vertical-align:middle;margin-left:8px;
+  font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:0.1em;
+  padding:3px 8px;border-radius:999px;
+  background:var(--secondary-dim);color:#0b5f80;border:1px solid #8fd4f0;
+}
+@media (max-width:560px){ .demo-badge{display:none;} }
+
+.upload-status{
+  margin-top:18px;
+  font-family:var(--font-mono);
+  font-size:12px;
+  color:var(--text-dim);
+  min-height:18px;
+  text-align:center;
+}
+.upload-status.err{color:var(--red);}
+.upload-status.ok{color:var(--green);}
+
+.upload-foot{
+  margin-top:26px;
+  padding-top:18px;
+  border-top:1px solid var(--border-soft);
+  display:flex;
+  justify-content:space-between;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  color:var(--text-faint);
+  letter-spacing:0.03em;
+}
+
+/* ============ Dashboard shell ============ */
+#dashboard{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+header.topbar{
+  position:sticky;top:0;z-index:30;
+  background:rgba(238,244,251,0.85);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:14px 26px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  overflow:hidden;
+}
+header.topbar::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(90deg, transparent, var(--primary), transparent);
+  width:220px;
+  animation:sweepline 5s linear infinite;
+}
+@keyframes sweepline{
+  0%{transform:translateX(-260px);}
+  100%{transform:translateX(calc(100vw));}
+}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand .mark{
+  width:34px;height:34px;border-radius:8px;
+  background:linear-gradient(135deg, var(--primary), #1d4ed8);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;color:#ffffff;font-size:15px;
+  box-shadow:0 0 20px -4px var(--primary-glow);
+  flex-shrink:0;
+}
+.brand-text h2{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:-0.01em;}
+.brand-text .period{font-family:var(--font-mono);font-size:11px;color:var(--text-dim);margin-top:2px;}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.btn{
+  font-size:12.5px;
+  font-weight:600;
+  padding:9px 15px;
+  border-radius:7px;
+  border:1px solid var(--border);
+  background:var(--bg-raised);
+  color:var(--text);
+  display:flex;align-items:center;gap:7px;
+  transition:border-color .15s, transform .1s;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--primary-dim);}
+.btn:active{transform:scale(0.97);}
+.btn.primary{
+  background:linear-gradient(135deg, var(--primary), #1d4ed8);
+  color:#ffffff;
+  border-color:transparent;
+}
+.btn.ghost{background:transparent;}
+
+main{flex:1;padding:22px 26px 60px;max-width:1400px;width:100%;margin:0 auto;}
+
+/* ============ KPI strip ============ */
+.kpi-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:22px;
+}
+.kpi-strip.compare-mode{display:block;}
+.kpi-card{
+  background:linear-gradient(180deg,var(--bg-panel-2),var(--bg-panel));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px 18px;
+  position:relative;
+  overflow:hidden;
+}
+.kpi-card .kpi-label{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--text-dim);
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.kpi-card .kpi-label .tag{
+  font-size:9.5px;
+  padding:2px 6px;
+  border-radius:4px;
+  background:var(--border);
+  color:var(--text-dim);
+}
+.kpi-card.pending .kpi-label .tag{background:var(--red-dim);color:var(--red);}
+.kpi-card.complete .kpi-label .tag{background:var(--green-dim);color:var(--green);}
+.kpi-card.corte-actual .kpi-label .tag{background:var(--green-dim);color:var(--green);}
+.kpi-card.corte-cerrado .kpi-label .tag{background:var(--border);color:var(--text-dim);}
+.kpi-card.corte-proximo .kpi-label .tag{background:var(--secondary-dim);color:#0b5f80;}
+.modulo-chips{display:flex;gap:12px;flex-wrap:wrap;}
+.modulo-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border:1px solid var(--border);border-radius:999px;
+  font-size:12.5px;color:var(--text-dim);background:var(--bg-panel-2);
+}
+.modulo-chip.actual{border-color:var(--primary-dim);background:var(--secondary-dim);}
+.modulo-chip .modulo-name{font-weight:700;color:var(--text);font-family:var(--font-display);}
+.modulo-chip .modulo-range{font-family:var(--font-mono);font-size:11.5px;}
+.modulo-chip .modulo-badge{
+  font-family:var(--font-mono);font-size:9.5px;letter-spacing:0.08em;text-transform:uppercase;
+  background:var(--green-dim);color:var(--green);padding:2px 7px;border-radius:4px;
+}
+.odometer{
+  display:flex;
+  font-family:var(--font-mono);
+  font-weight:700;
+  font-size:30px;
+  letter-spacing:0.01em;
+  color:var(--text);
+}
+.odometer .prefix, .odometer .suffix{
+  font-size:16px;
+  color:var(--text-dim);
+  align-self:flex-end;
+  margin:0 2px 3px;
+}
+.odometer-digit{
+  position:relative;
+  width:0.62em;
+  height:1.15em;
+  overflow:hidden;
+  display:inline-block;
+}
+.odometer-digit .strip{
+  position:absolute;
+  top:0;left:0;
+  display:flex;
+  flex-direction:column;
+  transition:transform 0.9s cubic-bezier(.2,.9,.25,1);
+}
+.odometer-digit .strip span{
+  height:1.15em;
+  line-height:1.15em;
+  text-align:center;
+}
+.odometer-static{font-family:var(--font-mono);}
+.kpi-sub{
+  margin-top:8px;
+  font-size:11.5px;
+  color:var(--text-faint);
+  font-family:var(--font-mono);
+}
+.kpi-sub.pending{color:var(--red);}
+.kpi-sub.complete{color:var(--green);}
+
+/* ============ progress gauge ============ */
+.gauge-track{
+  height:5px;border-radius:3px;
+  background:var(--border);
+  margin-top:10px;
+  overflow:hidden;
+}
+.gauge-fill{
+  height:100%;
+  background:linear-gradient(90deg, var(--primary-dim), var(--primary));
+  border-radius:3px;
+  transition:width .6s ease;
+}
+
+/* ============ filter bar ============ */
+.filter-bar{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  margin-bottom:18px;
+}
+.filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+.search-wrap{
+  position:relative;
+  flex:1;
+  min-width:200px;
+}
+.search-wrap input{
+  width:100%;
+  background:var(--bg-raised);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:9px 12px 9px 34px;
+  color:var(--text);
+  font-size:13px;
+  outline:none;
+  transition:border-color .15s;
+}
+.search-wrap input:focus{border-color:var(--primary-dim);}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-faint);}
+.filter-bar select{
+  background:var(--bg-raised);
+  border:1px solid var(--border);
+  border-radius:7px;
+  padding:9px 10px;
+  color:var(--text);
+  font-size:12.5px;
+  outline:none;
+}
+.filter-count{
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  color:var(--text-faint);
+  white-space:nowrap;
+  margin-left:auto;
+}
+.chip-group{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.chip-group-label{
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--text-faint);
+  margin-right:2px;
+}
+.chip{
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  font-weight:600;
+  padding:7px 11px;
+  border-radius:7px;
+  border:1px solid var(--border);
+  background:var(--bg-raised);
+  color:var(--text-dim);
+  transition:border-color .15s, color .15s, background .15s;
+}
+.chip svg{flex-shrink:0;opacity:0.8;}
+.chip:hover{border-color:var(--primary-dim);color:var(--text);}
+.chip.active{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:rgba(37,99,235,0.08);
+  box-shadow:0 0 0 1px var(--primary) inset;
+}
+.chip.active svg{opacity:1;}
+.sede-toggle-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+
+.compare-wrap{
+  background:linear-gradient(180deg,var(--bg-panel-2),var(--bg-panel));
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:6px;
+  margin-bottom:22px;
+  overflow-x:auto;
+}
+.compare-table{width:100%;border-collapse:collapse;min-width:520px;}
+.compare-table th{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--text-faint);
+  text-align:right;
+  padding:14px 18px 10px;
+}
+.compare-table th:first-child{text-align:left;}
+.compare-table td{
+  font-family:var(--font-mono);
+  font-size:15px;
+  font-weight:600;
+  text-align:right;
+  padding:12px 18px;
+  border-top:1px solid var(--border-soft);
+  color:var(--text);
+}
+.compare-table td:first-child{
+  text-align:left;
+  font-family:var(--font-body);
+  font-weight:500;
+  font-size:12.5px;
+  color:var(--text-dim);
+}
+.compare-table td.col-total{color:var(--primary);}
+.compare-table tr.highlight td{
+  font-size:17px;
+  color:var(--primary);
+  border-top:2px solid var(--primary-dim);
+}
+.compare-table tr.highlight td:first-child{color:var(--text);font-family:var(--font-body);font-weight:700;font-size:12.5px;}
+
+.data-alert{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  background:var(--red-dim);
+  border:1px solid #f3a8bd;
+  border-radius:var(--radius);
+  padding:12px 16px;
+  margin-bottom:12px;
+  font-size:12.5px;
+  color:#8a0f36;
+  line-height:1.5;
+}
+.data-alert-stack{margin-bottom:18px;}
+.data-alert:last-child{margin-bottom:0;}
+.data-alert svg{flex-shrink:0;margin-top:1px;color:#c81e4e;}
+.data-alert b{font-weight:700;}
+.data-alert .names{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:#8a0f36;
+  margin-top:4px;
+  opacity:0.85;
+}
+.data-alert.warn{
+  background:#fef3e2;
+  border-color:#f5cf8e;
+  color:#92400e;
+}
+.data-alert.warn svg{color:#b45309;}
+.data-alert.warn .names{color:#92400e;}
+.data-alert.info{
+  background:var(--secondary-dim);
+  border-color:#8fd4f0;
+  color:#0b5f80;
+}
+.data-alert.info svg{color:#0ea5e9;}
+.data-alert.info .names{color:#0b5f80;}
+
+/* ============ tabs ============ */
+.tabs{
+  display:flex;
+  gap:4px;
+  margin-bottom:18px;
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:9px;
+  padding:4px;
+  width:fit-content;
+}
+.tab-btn{
+  font-family:var(--font-mono);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.03em;
+  padding:8px 16px;
+  border-radius:6px;
+  border:none;
+  background:transparent;
+  color:var(--text-dim);
+  transition:background .15s,color .15s;
+}
+.tab-btn.active{
+  background:var(--bg-raised);
+  color:var(--primary);
+  box-shadow:inset 0 0 0 1px var(--border);
+}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* ============ cards grid ============ */
+.card-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:12px;
+}
+.entity-card{
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.entity-card:hover{border-color:var(--primary-dim);}
+.entity-card .card-head{
+  padding:14px 16px;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  border-left:3px solid var(--secondary);
+}
+.entity-card.tarifa-pendiente .card-head{border-left-color:var(--red);}
+.entity-card.tarifa-completa .card-head{border-left-color:var(--green);}
+.card-head .name{font-family:var(--font-display);font-weight:600;font-size:14.5px;line-height:1.3;}
+.card-head .meta{font-family:var(--font-mono);font-size:10.5px;color:var(--text-faint);margin-top:3px;}
+.card-head .chev{color:var(--text-faint);transition:transform .2s;flex-shrink:0;margin-top:2px;}
+.entity-card.open .card-head .chev{transform:rotate(180deg);}
+.card-stats{
+  display:flex;
+  gap:16px;
+  padding:0 16px 14px;
+}
+.stat{display:flex;flex-direction:column;}
+.stat .v{font-family:var(--font-mono);font-weight:700;font-size:16px;color:var(--text);}
+.stat .l{font-family:var(--font-mono);font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em;margin-top:1px;}
+.stat.money .v{color:var(--primary);}
+.stat.money.pending .v{color:var(--red);font-size:12px;}
+.card-body{
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .3s ease;
+  border-top:1px solid transparent;
+}
+.entity-card.open .card-body{
+  max-height:2000px;
+  border-top:1px solid var(--border-soft);
+}
+.detail-table{width:100%;min-width:560px;border-collapse:collapse;font-size:11.5px;}
+.detail-table th{
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  color:var(--text-faint);
+  text-align:left;
+  padding:8px 10px;
+  border-bottom:1px solid var(--border-soft);
+  position:sticky;top:0;background:var(--bg-panel-2);
+}
+.detail-table td{
+  padding:7px 10px;
+  border-bottom:1px solid var(--border-soft);
+  color:var(--text-dim);
+  font-family:var(--font-mono);
+}
+.detail-table tr:last-child td{border-bottom:none;}
+.detail-wrap{max-height:280px;overflow-y:auto;overflow-x:auto;}
+.card-foot{
+  padding:10px 16px;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  background:var(--bg-panel-2);
+}
+.mini-btn{
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  padding:6px 10px;
+  border-radius:5px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--text-dim);
+}
+.mini-btn:hover{color:var(--primary);border-color:var(--primary-dim);}
+.badge{
+  display:inline-block;
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  padding:2px 7px;
+  border-radius:4px;
+  background:var(--border);
+  color:var(--text-dim);
+  margin-right:5px;
+}
+
+/* ============ summary panel (Escuela/Instituto tabs) ============ */
+.summary-grid{
+  display:grid;
+  grid-template-columns:1.3fr 1fr;
+  gap:14px;
+}
+.panel{
+  background:var(--bg-panel);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px 20px;
+}
+.panel h3{
+  font-family:var(--font-display);
+  font-size:14px;
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.panel h3::before{
+  content:'';
+  width:6px;height:6px;border-radius:50%;
+  background:var(--primary);
+}
+.bar-row{margin-bottom:12px;}
+.bar-row:last-child{margin-bottom:0;}
+.bar-row .bar-label{
+  display:flex;justify-content:space-between;
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  color:var(--text-dim);
+  margin-bottom:5px;
+}
+.bar-row .bar-label b{color:var(--text);font-weight:600;}
+.bar-track{height:7px;border-radius:4px;background:var(--border);overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--secondary-dim),var(--secondary));}
+.top-list{list-style:none;}
+.top-list li{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;
+  border-bottom:1px solid var(--border-soft);
+  font-size:12.5px;
+}
+.top-list li:last-child{border-bottom:none;}
+.top-list .rank{
+  font-family:var(--font-mono);
+  color:var(--text-faint);
+  font-size:11px;
+  width:22px;
+  flex-shrink:0;
+}
+.top-list .name{flex:1;color:var(--text-dim);}
+.top-list .val{font-family:var(--font-mono);font-weight:600;color:var(--primary);}
+
+/* ============ charts ============ */
+.chart-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.chart-panel{display:flex;flex-direction:column;}
+.chart-wrap{
+  position:relative;
+  height:280px;
+  width:100%;
+}
+@media (max-width:900px){
+  .chart-grid{grid-template-columns:1fr;}
+}
+
+/* ============ empty / loading states ============ */
+.empty-state{
+  text-align:center;
+  padding:60px 20px;
+  color:var(--text-faint);
+  font-family:var(--font-mono);
+  font-size:13px;
+}
+.spinner{
+  width:16px;height:16px;
+  border:2px solid var(--border);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  display:inline-block;
+  animation:sp .7s linear infinite;
+  vertical-align:-3px;
+  margin-right:8px;
+}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.footnote{
+  margin-top:30px;
+  padding-top:16px;
+  border-top:1px solid var(--border-soft);
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  color:var(--text-faint);
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+@media (max-width:900px){
+  .kpi-strip{grid-template-columns:repeat(2,1fr);}
+  .summary-grid{grid-template-columns:1fr;}
+}
+@media (max-width:560px){
+  .kpi-strip{grid-template-columns:1fr;}
+  header.topbar{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="uploadScreen">
+    <div class="upload-orbit">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="sweep"></div>
+    </div>
+    <div class="upload-card">
+      <div class="upload-eyebrow"><span class="dot"></span> FACULTYHUB · VERSIÓN DEMO</div>
+      <h1>Torre de Control <span>FacultyHub</span></h1>
+      <p class="lead">Sube el Excel de programación académica (hojas <b style="color:var(--text-dim)">Escuela</b> e <b style="color:var(--text-dim)">Instituto</b>) y el sistema calcula automáticamente docentes, secciones, horas y pagos por curso, escuela e instituto. Vuelve a subir el archivo cada vez que actualices la programación.</p>
+      <div class="dropzone" id="dropzone">
+        <div class="icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0-12l-4 4m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        </div>
+        <div class="title">Arrastra el archivo aquí o haz clic</div>
+        <div class="sub">.XLSX — hojas Escuela / Instituto</div>
+        <input type="file" id="fileInput" accept=".xlsx,.xls">
+      </div>
+      <div class="demo-actions">
+        <button class="btn primary" id="demoBtn" type="button">Ver demo con datos ficticios</button>
+        <button class="btn" id="sampleBtn" type="button">Descargar Excel de ejemplo</button>
+      </div>
+      <div class="upload-status" id="uploadStatus"></div>
+      <div class="upload-foot">
+        <span>DESARROLLADO POR DANIEL SOLAR GIRALDO</span>
+        <span id="clockTag">FACULTYHUB · DEMO</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">TC</div>
+        <div class="brand-text">
+          <h2>Torre de Control Académica <span class="demo-badge">DEMO · DATOS FICTICIOS</span></h2>
+          <div class="period" id="periodLabel">—</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn primary" id="reporteBtn">Reporte Gerencial</button>
+        <button class="btn ghost" id="exportCsvBtn">Exportar Excel</button>
+        <button class="btn" id="reloadBtn">Cargar mi Excel</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="sede-toggle-row">
+        <div class="chip-group-label">Panel de resumen</div>
+        <div class="chip-group" id="sedeToggle">
+          <button class="chip active" data-sede="escuela">Escuela</button>
+          <button class="chip" data-sede="instituto">Instituto</button>
+          <button class="chip" data-sede="comparar">Comparar</button>
+        </div>
+      </div>
+      <div class="kpi-strip" id="kpiStrip"></div>
+      <div id="dataQualityAlert" class="hidden"></div>
+
+      <div class="filter-bar">
+        <div class="filter-row">
+          <div class="search-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input type="text" id="searchInput" placeholder="Buscar docente o curso...">
+          </div>
+          <div class="filter-count" id="filterCount"></div>
+        </div>
+        <div class="filter-row">
+          <div class="chip-group-label">Ciclo</div>
+          <div class="chip-group" id="cicloChips"></div>
+        </div>
+        <div class="filter-row">
+          <div class="chip-group-label">Turno</div>
+          <div class="chip-group" id="turnoChips"></div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="docentes">DOCENTES</button>
+        <button class="tab-btn" data-tab="cursos">CURSOS</button>
+        <button class="tab-btn" data-tab="escuela">ESCUELA</button>
+        <button class="tab-btn" data-tab="instituto">INSTITUTO</button>
+        <button class="tab-btn" data-tab="graficos">GRÁFICOS</button>
+        <button class="tab-btn" data-tab="proyeccion">PROYECCIÓN</button>
+      </div>
+
+      <div class="tab-panel active" id="panel-docentes"><div class="card-grid" id="docentesGrid"></div></div>
+      <div class="tab-panel" id="panel-cursos"><div class="card-grid" id="cursosGrid"></div></div>
+      <div class="tab-panel" id="panel-escuela"><div class="summary-grid" id="escuelaSummary"></div></div>
+      <div class="tab-panel" id="panel-instituto"><div class="summary-grid" id="institutoSummary"></div></div>
+      <div class="tab-panel" id="panel-graficos">
+        <div class="chart-grid">
+          <div class="panel chart-panel">
+            <h3>Docentes, secciones y cursos</h3>
+            <div class="chart-wrap"><canvas id="chartConteos"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h3>Horas programadas</h3>
+            <div class="chart-wrap"><canvas id="chartHoras"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h3>Distribución del pago estimado</h3>
+            <div class="chart-wrap"><canvas id="chartPagoDona"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h3>% Tarifado por sede</h3>
+            <div class="chart-wrap"><canvas id="chartPagoBarras"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-proyeccion">
+        <div class="panel" style="margin-bottom:14px;">
+          <h3>Períodos del ciclo 2026-3</h3>
+          <div class="modulo-chips" id="moduloChips"></div>
+        </div>
+        <div class="kpi-strip" id="corteStrip"></div>
+        <div class="panel" id="proyeccionTotalPanel" style="margin-bottom:14px;"></div>
+        <div class="chart-grid">
+          <div class="panel chart-panel">
+            <h3>Pago estimado por fecha de corte</h3>
+            <div class="chart-wrap"><canvas id="chartCortePago"></canvas></div>
+          </div>
+          <div class="panel chart-panel">
+            <h3>Acumulado proyectado a diciembre</h3>
+            <div class="chart-wrap"><canvas id="chartCorteAcumulado"></canvas></div>
+          </div>
+        </div>
+        <div class="footnote" style="margin-top:14px;">
+          <span>Cada franja horaria (día + hora) se proyecta según cuántas veces se repite ese día entre el inicio y fin del curso, dentro de cada corte. Corte 1: 14 sep – 13 oct · Corte 2: 14 oct – 13 nov · Corte 3: 14 nov – 13 dic · Corte 4: 14 – 31 dic.</span>
+        </div>
+      </div>
+
+      <div class="footnote">
+        <span id="fileMeta">—</span>
+        <span>Pago = horas programadas × tarifa por docente. Docentes sin tarifa se marcan como pendientes.</span>
+        <span style="width:100%;text-align:center;color:var(--text-faint);opacity:0.8;">Torre de Control · FacultyHub — Desarrollado por Daniel Solar Giraldo · Demo con datos 100% ficticios</span>
+      </div>
+    </main>
+  </div>
+
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ================= Header normalization & aliases ================= */
+function normHeader(s){
+  return (s==null?'':String(s))
+    .trim().toUpperCase()
+    .replace(/[.,]/g,'')
+    .replace(/\s+/g,' ')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+const ALIASES = {
+  fecha:'FECHA DE SESION', codigoDocente:'CODIGO DOCENTE', dni:'DNI DOCENTE',
+  docente:'APELLIDOS Y NOMBRES DEL DOCENTE', codCurso:'COD CURSO', curso:'CURSO',
+  seccion:['SECCION ESC','SECCION INST','SECCION'], fusionEsc:'FUSION ESC', fusionInst:'FUSION INST',
+  turno:'TURNO MAESTRO', modalidadCurso:'MODALIDAD DEL CURSO',
+  modalidadSeccion:'MODALIDAD SECCION', modalidadFusion:'MODALIDAD DE LA SECCION FUSIONADA',
+  modalidadDictado:'MODALIDAD DE DICTADO PARA EL DOCENTE',
+  horaIngreso:'HOR INGRESO', horaSalida:'HOR SALIDA',
+  fechaIni:'FECHA INICIAL CURSO', fechaFin:'FECHA FINAL CURSO',
+  horas:'HORAS PROGRAMADAS', fuente:'FUENTE', anio:'ANO MAESTRO',
+  semestre:'SEMESTRE MAESTRO', dia:'DIA DICTADO', tarifa:'TARIFA', confirmacion:'CONFIRMACION'
+};
+
+function buildColMap(headerRow){
+  const map = {};
+  headerRow.forEach((h,i)=>{ map[normHeader(h)] = i; });
+  const out = {};
+  Object.keys(ALIASES).forEach(k=>{
+    const candidatos = Array.isArray(ALIASES[k]) ? ALIASES[k] : [ALIASES[k]];
+    let idx = -1;
+    for(const cand of candidatos){ if(map.hasOwnProperty(cand)){ idx = map[cand]; break; } }
+    out[k] = idx;
+  });
+  return out;
+}
+
+function get(row, col, key){ const i = col[key]; return i>=0 ? row[i] : null; }
+
+function fmtDate(d){
+  if(!(d instanceof Date) || isNaN(d)) return '';
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+function titleCase(s){
+  if(!s) return '';
+  return s.toString().toLowerCase().split(' ').map(w=> w.length ? w.charAt(0).toUpperCase()+w.slice(1) : w).join(' ');
+}
+function numOr0(v){ const n = parseFloat(v); return isNaN(n)?0:n; }
+function moneyFmt(n){ return 'S/ ' + n.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+/* ================= Row parsing ================= */
+function parseSheetRows(ws){
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
+  if(!aoa.length) return [];
+  const col = buildColMap(aoa[0]);
+  const rows = [];
+  for(let r=1;r<aoa.length;r++){
+    const row = aoa[r];
+    if(!row || row.every(c=>c===null || c==='')) continue;
+    const curso = get(row,col,'curso');
+    const codigoDocente = get(row,col,'codigoDocente');
+    if(!curso && !codigoDocente) continue;
+    const seccionVal = get(row,col,'seccion');
+    const cicloMatch = seccionVal!=null ? String(seccionVal).match(/^(\d)/) : null;
+    rows.push({
+      fecha: get(row,col,'fecha'),
+      codigoDocente: codigoDocente || null,
+      dni: get(row,col,'dni'),
+      docente: get(row,col,'docente'),
+      codCurso: get(row,col,'codCurso'),
+      curso: curso || '(Sin curso)',
+      seccion: seccionVal,
+      ciclo: cicloMatch ? cicloMatch[1] : null,
+      fusionEsc: get(row,col,'fusionEsc'),
+      turno: get(row,col,'turno'),
+      modalidadCurso: get(row,col,'modalidadCurso'),
+      modalidadDictado: get(row,col,'modalidadDictado'),
+      horaIngreso: get(row,col,'horaIngreso'),
+      horaSalida: get(row,col,'horaSalida'),
+      fechaIni: get(row,col,'fechaIni'),
+      fechaFin: get(row,col,'fechaFin'),
+      horas: numOr0(get(row,col,'horas')),
+      semestre: get(row,col,'semestre') || '—',
+      dia: get(row,col,'dia'),
+      tarifa: (function(){ const t = get(row,col,'tarifa'); return (t===null||t===''||isNaN(parseFloat(t))) ? null : parseFloat(t); })()
+    });
+  }
+  return rows;
+}
+
+/* ================= Aggregation ================= */
+function normDocenteKey(nombre){
+  return nombre==null ? null : String(nombre).trim().toUpperCase().replace(/\s+/g,' ');
+}
+
+/* Claves de sesión (docente+día+hora de inicio) programadas en Escuela.
+   Escuela es la unidad "maestra": si Instituto repite la misma sesión
+   (mismo docente, mismo día, misma hora), no se le paga ahí para evitar duplicar el pago. */
+function buildEscuelaSessionKeys(rows){
+  const keys = new Set();
+  rows.forEach(row=>{
+    const dk = normDocenteKey(row.docente);
+    if(dk && row.horas>0 && row.dia && row.horaIngreso){
+      keys.add(dk+'|'+String(row.dia).trim().toUpperCase()+'|'+String(row.horaIngreso).trim());
+    }
+  });
+  return keys;
+}
+
+/* Fusiones dentro de una misma sede: cuando el mismo docente dicta 2 o 3 secciones
+   el mismo día y a la misma hora (secciones fusionadas), solo la primera
+   (por código de sección) conserva el pago; las demás quedan en cero.
+   Se aplica por separado dentro de Escuela y dentro de Instituto. */
+function markIntraFusion(rows){
+  const groups = new Map();
+  rows.forEach(row=>{
+    const dk = normDocenteKey(row.docente);
+    if(dk && row.horas>0 && row.dia && row.horaIngreso){
+      const key = dk+'|'+String(row.dia).trim().toUpperCase()+'|'+String(row.horaIngreso).trim();
+      if(!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(row);
+    }
+  });
+  const noPrimario = new Set();
+  groups.forEach(list=>{
+    if(list.length<2) return;
+    const ordenado = list.slice().sort((a,b)=>{
+      const sa = a.seccion!=null ? String(a.seccion) : '';
+      const sb = b.seccion!=null ? String(b.seccion) : '';
+      return sa.localeCompare(sb, 'es', {numeric:true});
+    });
+    for(let i=1;i<ordenado.length;i++) noPrimario.add(ordenado[i]);
+  });
+  return rows.map(row => noPrimario.has(row) ? Object.assign({}, row, {fusionIntra:true}) : row);
+}
+
+function buildModel(rows, hasDocentes, escuelaKeys){
+  const docentes = new Map();
+  const cursos = new Map();
+  const turnoHoras = {};
+  const semestreHoras = {};
+  const modalidadHoras = {};
+  const cicloHoras = {};
+  const cicloCursos = {}; // ciclo -> Set(curso nombre)
+  let totalHoras=0, totalPago=0, filasConTarifa=0, horasConTarifa=0, filasDuplicadas=0, filasFusionIntra=0;
+  const seccionesSet = new Set(), cursosSet = new Set(), docentesSet = new Set();
+
+  rows.forEach(row=>{
+    const seccionKey = row.seccion!=null ? String(row.seccion).trim() : null;
+    const seccionCuenta = seccionKey && row.horas > 0; // excluye secciones fusionadas (hijas) sin horas propias
+    const docenteKey = normDocenteKey(row.docente);
+    const sessionKey = (docenteKey && row.dia && row.horaIngreso)
+      ? docenteKey+'|'+String(row.dia).trim().toUpperCase()+'|'+String(row.horaIngreso).trim() : null;
+    const duplicadoEscuela = !!(escuelaKeys && sessionKey && escuelaKeys.has(sessionKey));
+    const fusionIntra = !!row.fusionIntra;
+    const sinPago = duplicadoEscuela || fusionIntra;
+    const pagoRow = (hasDocentes && row.tarifa!=null && !sinPago) ? row.horas * row.tarifa : null;
+    if(duplicadoEscuela) filasDuplicadas++;
+    if(fusionIntra) filasFusionIntra++;
+
+    totalHoras += row.horas;
+    if(pagoRow!=null){ totalPago += pagoRow; filasConTarifa++; horasConTarifa += row.horas; }
+    if(seccionCuenta) seccionesSet.add(seccionKey);
+    if(row.curso) cursosSet.add(row.curso);
+    if(docenteKey) docentesSet.add(docenteKey);
+
+    const t = row.turno || '—';
+    turnoHoras[t] = (turnoHoras[t]||0) + row.horas;
+    const sem = row.semestre || '—';
+    semestreHoras[sem] = (semestreHoras[sem]||0) + row.horas;
+    const mod = row.modalidadCurso || '—';
+    modalidadHoras[mod] = (modalidadHoras[mod]||0) + row.horas;
+    if(row.ciclo){
+      cicloHoras[row.ciclo] = (cicloHoras[row.ciclo]||0) + row.horas;
+      if(!cicloCursos[row.ciclo]) cicloCursos[row.ciclo] = new Set();
+      if(row.curso) cicloCursos[row.ciclo].add(row.curso);
+    }
+
+    if(hasDocentes && docenteKey){
+      let d = docentes.get(docenteKey);
+      if(!d){
+        d = { key:docenteKey, codigos:new Set(), dnis:new Set(), nombre: titleCase(row.docente)||docenteKey,
+              secciones:new Set(), cursos:new Set(), horas:0, pago:0, tarifas:new Set(),
+              turnos:new Set(), semestres:new Set(), ciclos:new Set(), detalle:[], weeklySlots:new Map(), duplicados:0, duplicadosCross:0, duplicadosFusion:0 };
+        docentes.set(docenteKey, d);
+      }
+      if(row.codigoDocente) d.codigos.add(row.codigoDocente);
+      if(row.dni) d.dnis.add(row.dni);
+      if(seccionCuenta) d.secciones.add(seccionKey);
+      if(row.curso) d.cursos.add(row.curso);
+      d.horas += row.horas;
+      if(row.tarifa!=null){ d.tarifas.add(row.tarifa); if(pagoRow!=null) d.pago += pagoRow; }
+      if(row.turno) d.turnos.add(row.turno);
+      if(row.semestre) d.semestres.add(row.semestre);
+      if(row.ciclo) d.ciclos.add(row.ciclo);
+      if(sinPago) d.duplicados++;
+      if(duplicadoEscuela) d.duplicadosCross++;
+      if(fusionIntra) d.duplicadosFusion++;
+      d.detalle.push(Object.assign({}, row, {duplicadoEscuela, fusionIntra}));
+      // horas semanales: una franja recurrente = curso+seccion+dia (no se multiplica por semanas del ciclo)
+      if(row.horas>0){
+        const slotKey = row.curso+'|'+(seccionKey||'')+'|'+(row.dia||'');
+        d.weeklySlots.set(slotKey, Math.max(d.weeklySlots.get(slotKey)||0, row.horas));
+      }
+    }
+
+    if(row.curso){
+      let c = cursos.get(row.curso);
+      if(!c){
+        c = { nombre:row.curso, codigos:new Set(), secciones:new Set(), docentes:new Set(),
+              horas:0, pago:0, filasConTarifa:0, filasTotal:0, semestres:new Set(), turnos:new Set(), ciclos:new Set() };
+        cursos.set(row.curso, c);
+      }
+      if(row.codCurso) c.codigos.add(row.codCurso);
+      if(seccionCuenta) c.secciones.add(seccionKey);
+      if(docenteKey) c.docentes.add(docenteKey);
+      c.horas += row.horas;
+      c.filasTotal++;
+      if(pagoRow!=null){ c.pago += pagoRow; c.filasConTarifa++; }
+      if(row.semestre) c.semestres.add(row.semestre);
+      if(row.turno) c.turnos.add(row.turno);
+      if(row.ciclo) c.ciclos.add(row.ciclo);
+    }
+  });
+
+  return {
+    docentes, cursos, turnoHoras, semestreHoras, modalidadHoras, cicloHoras, cicloCursos,
+    totals:{ horas: totalHoras, pago: totalPago, filas: rows.length, filasConTarifa, horasConTarifa, filasDuplicadas, filasFusionIntra,
+             secciones: seccionesSet.size, cursosCount: cursosSet.size, docentesCount: docentesSet.size }
+  };
+}
+
+/* ================= Global state ================= */
+const state = {
+  escuelaRowsAll: [], institutoRowsAll: [],
+  fileName:'', loadedAt:null,
+  filters:{ search:'', ciclo:'ALL', turno:'ALL' },
+  activeTab:'docentes',
+  kpiSede:'escuela',
+  openCards:new Set()
+};
+
+/* ================= Filtering ================= */
+function applyFilters(rows){
+  const f = state.filters;
+  const s = f.search.trim().toLowerCase();
+  return rows.filter(r=>{
+    if(f.ciclo!=='ALL' && r.ciclo!==f.ciclo) return false;
+    if(f.turno!=='ALL' && (r.turno||'—')!==f.turno) return false;
+    if(s){
+      const hay = (titleCase(r.docente)+' '+(r.curso||'')).toLowerCase();
+      if(!hay.includes(s)) return false;
+    }
+    return true;
+  });
+}
+
+/* ================= Odometer (rolling digits) ================= */
+function odometerHTML(id, prefix, suffix){
+  return `<div class="odometer" id="${id}">${prefix?`<span class="prefix">${prefix}</span>`:''}<span class="digits"></span>${suffix?`<span class="suffix">${suffix}</span>`:''}</div>`;
+}
+function setOdometer(id, value){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const digitsWrap = el.querySelector('.digits');
+  const str = String(Math.max(0,Math.round(value)));
+  // build/update digit columns to match length
+  let existing = digitsWrap.querySelectorAll('.odometer-digit');
+  if(existing.length !== str.length){
+    digitsWrap.innerHTML = '';
+    for(let i=0;i<str.length;i++){
+      const d = document.createElement('span');
+      d.className='odometer-digit';
+      const strip = document.createElement('span');
+      strip.className='strip';
+      for(let n=0;n<10;n++){ const sp=document.createElement('span'); sp.textContent=n; strip.appendChild(sp); }
+      d.appendChild(strip);
+      digitsWrap.appendChild(d);
+    }
+    existing = digitsWrap.querySelectorAll('.odometer-digit');
+  }
+  str.split('').forEach((ch,i)=>{
+    const strip = existing[i].querySelector('.strip');
+    strip.style.transform = `translateY(-${parseInt(ch,10)*1.15}em)`;
+  });
+}
+
+/* ================= Rendering ================= */
+let modelEscuela=null, modelInstituto=null;
+let weeklyCombined = new Map(); // docenteKey -> {nombre, escuela, instituto, total}
+const MAX_HORAS_SEMANALES = 26;
+
+function computeWeeklyCombined(){
+  const combined = new Map();
+  const addFrom = (model, campo)=>{
+    model.docentes.forEach((d,key)=>{
+      const w = [...d.weeklySlots.values()].reduce((s,v)=>s+v,0);
+      if(!combined.has(key)) combined.set(key, {nombre:d.nombre, escuela:0, instituto:0});
+      combined.get(key)[campo] = w;
+    });
+  };
+  addFrom(modelEscuela,'escuela');
+  addFrom(modelInstituto,'instituto');
+  combined.forEach(o=>{ o.total = Math.round((o.escuela+o.instituto)*10)/10; });
+  return combined;
+}
+
+function render(){
+  const filteredEscuela = applyFilters(state.escuelaRowsAll);
+  const filteredInstituto = applyFilters(state.institutoRowsAll);
+  const escuelaRowsFusion = markIntraFusion(filteredEscuela);
+  modelEscuela = buildModel(escuelaRowsFusion, true);
+  const escuelaKeys = buildEscuelaSessionKeys(filteredEscuela);
+  const institutoRowsFusion = markIntraFusion(filteredInstituto);
+  modelInstituto = buildModel(institutoRowsFusion, true, escuelaKeys);
+  weeklyCombined = computeWeeklyCombined();
+
+  renderKPIs();
+  renderDataQualityAlert();
+  renderDocentes();
+  renderCursos();
+  renderSummary('escuelaSummary', modelEscuela, true);
+  renderSummary('institutoSummary', modelInstituto, modelInstituto.totals.docentesCount>0);
+  renderGraficos();
+  renderProyeccion();
+  updateFilterCount();
+}
+
+function updateFilterCount(){
+  const sede = state.kpiSede || 'escuela';
+  if(sede==='comparar'){
+    document.getElementById('filterCount').textContent =
+      `${modelEscuela.totals.docentesCount + modelInstituto.totals.docentesCount} docentes (ambas sedes) · ${modelEscuela.docentes.size + modelInstituto.docentes.size + modelEscuela.cursos.size + modelInstituto.cursos.size} registros visibles`;
+    return;
+  }
+  const m = sede==='instituto' ? modelInstituto : modelEscuela;
+  document.getElementById('filterCount').textContent =
+    `${m.totals.docentesCount} docentes · ${m.docentes.size + m.cursos.size} registros visibles`;
+}
+
+function renderDataQualityAlert(){
+  const el = document.getElementById('dataQualityAlert');
+  const conflictivos = [...modelEscuela.docentes.values(), ...modelInstituto.docentes.values()].filter(d=>d.codigos.size>1);
+  let html = '';
+  if(conflictivos.length){
+    const nombres = conflictivos.slice(0,6).map(d=>d.nombre).join(' · ');
+    html += `<div class="data-alert">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <div>
+        <b>${conflictivos.length} docente${conflictivos.length!==1?'s':''} con más de un CÓDIGO DOCENTE en el Excel</b> — el nombre se usa como identificador porque el código/DNI parece arrastrado en algunas filas.
+        <div class="names">${nombres}${conflictivos.length>6?` +${conflictivos.length-6} más`:''}</div>
+      </div></div>`;
+  }
+
+  const sobrecargados = [...weeklyCombined.values()].filter(o=>o.total>MAX_HORAS_SEMANALES).sort((a,b)=>b.total-a.total);
+  if(sobrecargados.length){
+    const lista = sobrecargados.slice(0,6).map(o=>`${o.nombre} (${o.total}h)`).join(' · ');
+    html += `<div class="data-alert warn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <div>
+        <b>${sobrecargados.length} docente${sobrecargados.length!==1?'s':''} supera${sobrecargados.length!==1?'n':''} las ${MAX_HORAS_SEMANALES}h semanales</b> (Escuela + Instituto combinado) — límite recomendado de carga docente.
+        <div class="names">${lista}${sobrecargados.length>6?` +${sobrecargados.length-6} más`:''}</div>
+      </div></div>`;
+  }
+
+  const duplicadosInst = [...modelInstituto.docentes.values()].filter(d=>d.duplicadosCross>0).sort((a,b)=>b.duplicadosCross-a.duplicadosCross);
+  if(modelInstituto.totals.filasDuplicadas>0){
+    const lista = duplicadosInst.slice(0,6).map(d=>`${d.nombre} (${d.duplicadosCross})`).join(' · ');
+    html += `<div class="data-alert info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>
+        <b>${modelInstituto.totals.filasDuplicadas} ${modelInstituto.totals.filasDuplicadas!==1?'sesiones':'sesión'} de Instituto coincide${modelInstituto.totals.filasDuplicadas!==1?'n':''} en docente, día y hora con Escuela</b> — su pago no se contabiliza en Instituto (Escuela es la unidad que mantiene el pago).
+        <div class="names">${lista}${duplicadosInst.length>6?` +${duplicadosInst.length-6} más`:''}</div>
+      </div></div>`;
+  }
+
+  const fusionEscuela = [...modelEscuela.docentes.values()].filter(d=>d.duplicadosFusion>0).sort((a,b)=>b.duplicadosFusion-a.duplicadosFusion);
+  if(modelEscuela.totals.filasFusionIntra>0){
+    const lista = fusionEscuela.slice(0,6).map(d=>`${d.nombre} (${d.duplicadosFusion})`).join(' · ');
+    html += `<div class="data-alert info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>
+        <b>${modelEscuela.totals.filasFusionIntra} ${modelEscuela.totals.filasFusionIntra!==1?'secciones':'sección'} en Escuela ${modelEscuela.totals.filasFusionIntra!==1?'están':'está'} fusionadas</b> (mismo docente, día y hora) — se contabiliza el pago de una sola sección por grupo fusionado.
+        <div class="names">${lista}${fusionEscuela.length>6?` +${fusionEscuela.length-6} más`:''}</div>
+      </div></div>`;
+  }
+
+  const fusionInstituto = [...modelInstituto.docentes.values()].filter(d=>d.duplicadosFusion>0).sort((a,b)=>b.duplicadosFusion-a.duplicadosFusion);
+  if(modelInstituto.totals.filasFusionIntra>0){
+    const lista = fusionInstituto.slice(0,6).map(d=>`${d.nombre} (${d.duplicadosFusion})`).join(' · ');
+    html += `<div class="data-alert info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>
+        <b>${modelInstituto.totals.filasFusionIntra} ${modelInstituto.totals.filasFusionIntra!==1?'secciones':'sección'} en Instituto ${modelInstituto.totals.filasFusionIntra!==1?'están':'está'} fusionadas</b> (mismo docente, día y hora) — se contabiliza el pago de una sola sección por grupo fusionado.
+        <div class="names">${lista}${fusionInstituto.length>6?` +${fusionInstituto.length-6} más`:''}</div>
+      </div></div>`;
+  }
+
+  if(!html){ el.className='hidden'; el.innerHTML=''; return; }
+  el.className = 'data-alert-stack';
+  el.innerHTML = html;
+}
+
+function buildCompareRows(){
+  const e = modelEscuela.totals, i = modelInstituto.totals;
+  const pctE = e.filas? Math.round(e.filasConTarifa/e.filas*100):0;
+  const pctI = i.filas? Math.round(i.filasConTarifa/i.filas*100):0;
+  const filasT = e.filas + i.filas;
+  const conTarifaT = e.filasConTarifa + i.filasConTarifa;
+  const pctT = filasT? Math.round(conTarifaT/filasT*100):0;
+  const avgE = e.horasConTarifa>0 ? e.pago/e.horasConTarifa : null;
+  const avgI = i.horasConTarifa>0 ? i.pago/i.horasConTarifa : null;
+  const horasConTarifaT = e.horasConTarifa + i.horasConTarifa;
+  const avgT = horasConTarifaT>0 ? (e.pago+i.pago)/horasConTarifaT : null;
+  return {e, i, pctE, pctI, pctT, avgE, avgI, avgT,
+    docentesT: e.docentesCount + i.docentesCount,
+    seccionesT: e.secciones + i.secciones,
+    horasT: e.horas + i.horas,
+    pagoT: e.pago + i.pago};
+}
+
+/* ================= Proyección de pagos por fecha de corte ================= */
+/* Módulo A: 21 sep - 7 nov · Módulo B: 9 nov - 26 dic.
+   Las fechas de corte son independientes de los módulos: se repiten del 14 al 13
+   de cada mes, salvo el último corte del año que cierra el 31 de diciembre. */
+const MODULOS = [
+  { nombre:'Módulo A', ini:new Date(2026,8,21),  fin:new Date(2026,10,7)  },
+  { nombre:'Módulo B', ini:new Date(2026,10,9),  fin:new Date(2026,11,26) }
+];
+const CORTES = [
+  { nombre:'Corte 1', ini:new Date(2026,8,14),  fin:new Date(2026,9,13)  },
+  { nombre:'Corte 2', ini:new Date(2026,9,14),  fin:new Date(2026,10,13) },
+  { nombre:'Corte 3', ini:new Date(2026,10,14), fin:new Date(2026,11,13) },
+  { nombre:'Corte 4', ini:new Date(2026,11,14), fin:new Date(2026,11,31) }
+];
+function dayOnly(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function fmtRange(ini,fin){ return fmtDate(ini)+' – '+fmtDate(fin); }
+function corteEstado(b, hoy){
+  const h = dayOnly(hoy);
+  if(h > b.fin) return {label:'Cerrado', cls:'cerrado'};
+  if(h >= b.ini && h <= b.fin) return {label:'En curso', cls:'actual'};
+  return {label:'Próximo', cls:'proximo'};
+}
+
+/* El Excel trae una sola fila por franja semanal recurrente (p.ej. "Martes 20:00",
+   solo con la fecha de la primera semana cargada), no una fila por cada semana real
+   del corte. Para proyectar el monto total hay que repetir esa franja tantas veces
+   como ese día de la semana ocurra entre la fecha de inicio y fin del curso
+   (columnas FECHA INICIAL CURSO / FECHA FINAL CURSO), recortado a cada corte. */
+const DIA_INDEX = {DOMINGO:0, LUNES:1, MARTES:2, MIERCOLES:3, JUEVES:4, VIERNES:5, SABADO:6};
+function diaToIndex(dia){
+  if(!dia) return null;
+  const n = normHeader(dia);
+  return DIA_INDEX.hasOwnProperty(n) ? DIA_INDEX[n] : null;
+}
+function countWeekdayInRange(dow, start, end){
+  if(!(start instanceof Date) || !(end instanceof Date) || isNaN(start) || isNaN(end)) return 0;
+  if(start>end) return 0;
+  const first = new Date(start);
+  const add = (dow - first.getDay() + 7) % 7;
+  first.setDate(first.getDate()+add);
+  if(first>end) return 0;
+  return Math.floor((end-first)/(7*86400000)) + 1;
+}
+
+function computeCorteProjection(){
+  const buckets = CORTES.map(c=>({
+    nombre:c.nombre, ini:c.ini, fin:c.fin,
+    pago:0, horas:0, sesiones:0, docentesSet:new Set()
+  }));
+  function addFromModel(model){
+    model.docentes.forEach(d=>{
+      d.detalle.forEach(r=>{
+        const sinPago = r.duplicadoEscuela || r.fusionIntra;
+        const pagoPorSesion = (r.tarifa!=null && !sinPago) ? r.horas*r.tarifa : 0;
+        const dow = diaToIndex(r.dia);
+        const rowIni = (r.fechaIni instanceof Date && !isNaN(r.fechaIni)) ? dayOnly(r.fechaIni) : null;
+        const rowFin = (r.fechaFin instanceof Date && !isNaN(r.fechaFin)) ? dayOnly(r.fechaFin) : null;
+        buckets.forEach(b=>{
+          let occ = 0;
+          if(dow!=null && rowIni && rowFin){
+            const ini = rowIni > b.ini ? rowIni : b.ini;
+            const fin = rowFin < b.fin ? rowFin : b.fin;
+            occ = countWeekdayInRange(dow, ini, fin);
+          } else {
+            // Sin fecha inicial/final de curso o día no reconocido: usa solo la fecha puntual de la fila
+            const f = (r.fecha instanceof Date && !isNaN(r.fecha)) ? dayOnly(r.fecha) : null;
+            if(f && f>=b.ini && f<=b.fin) occ = 1;
+          }
+          if(occ>0){
+            b.pago += pagoPorSesion*occ;
+            b.horas += r.horas*occ;
+            b.sesiones += occ;
+            b.docentesSet.add(d.key);
+          }
+        });
+      });
+    });
+  }
+  addFromModel(modelEscuela);
+  addFromModel(modelInstituto);
+  return buckets;
+}
+
+const CHART_COLORS = {
+  escuela: '#2563eb',
+  escuelaBg: 'rgba(37,99,235,0.12)',
+  instituto: '#0ea5e9',
+  institutoBg: 'rgba(14,165,233,0.12)',
+  grid: '#e4eef9',
+  text: '#4f6f95',
+  dark: '#0f2847'
+};
+let chartConteos=null, chartHoras=null, chartPagoDona=null, chartPagoBarras=null;
+let chartCortePago=null, chartCorteAcumulado=null;
+let datalabelsRegistered = false;
+function ensureDatalabels(){
+  if(!datalabelsRegistered && typeof Chart!=='undefined' && typeof ChartDataLabels!=='undefined'){
+    Chart.register(ChartDataLabels);
+    datalabelsRegistered = true;
+  }
+}
+
+function baseChartOptions(extra){
+  return Object.assign({
+    responsive:true,
+    maintainAspectRatio:false,
+    layout:{padding:{top:18}},
+    plugins:{
+      legend:{position:'bottom', labels:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:11}, boxWidth:12, padding:14}},
+      tooltip:{titleFont:{family:'Inter'}, bodyFont:{family:'JetBrains Mono'}},
+      datalabels:{display:false}
+    }
+  }, extra||{});
+}
+
+/* Config de los 4 gráficos, reutilizable en pantalla y para exportar a imagen (Excel) */
+function buildChartConfigs(c){
+  const scalesXY = {
+    x:{ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:11}}, grid:{display:false}},
+    y:{beginAtZero:true, ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}}, grid:{color:CHART_COLORS.grid}}
+  };
+
+  const conteos = {
+    type:'bar',
+    data:{
+      labels:['Docentes','Secciones','Cursos'],
+      datasets:[
+        {label:'Escuela', data:[c.e.docentesCount, c.e.secciones, c.e.cursosCount], backgroundColor:CHART_COLORS.escuela, borderRadius:5, maxBarThickness:46},
+        {label:'Instituto', data:[c.i.docentesCount, c.i.secciones, c.i.cursosCount], backgroundColor:CHART_COLORS.instituto, borderRadius:5, maxBarThickness:46}
+      ]
+    },
+    options: baseChartOptions({scales:scalesXY, plugins:{datalabels:{
+      display:true, anchor:'end', align:'top', color:CHART_COLORS.dark,
+      font:{family:'JetBrains Mono', size:11, weight:'700'}, formatter:v=>v
+    }}})
+  };
+
+  const horas = {
+    type:'bar',
+    data:{
+      labels:['Escuela','Instituto'],
+      datasets:[{
+        label:'Horas programadas',
+        data:[Math.round(c.e.horas), Math.round(c.i.horas)],
+        backgroundColor:[CHART_COLORS.escuela, CHART_COLORS.instituto],
+        borderRadius:6, maxBarThickness:70
+      }]
+    },
+    options: baseChartOptions({indexAxis:'y', plugins:{legend:{display:false}, datalabels:{
+      display:true, anchor:'end', align:'right', color:CHART_COLORS.dark,
+      font:{family:'JetBrains Mono', size:12, weight:'700'}, formatter:v=>v.toLocaleString('es-PE')+' h'
+    }}, scales:{
+      x:{beginAtZero:true, ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}}, grid:{color:CHART_COLORS.grid}},
+      y:{type:'category', labels:['Escuela','Instituto'], ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:11}}, grid:{display:false}}
+    }})
+  };
+
+  const totalPago = c.e.pago + c.i.pago;
+  const pagoDona = {
+    type:'doughnut',
+    data:{
+      labels:['Escuela ('+moneyFmt(c.e.pago)+')','Instituto ('+moneyFmt(c.i.pago)+')'],
+      datasets:[{data:[c.e.pago, c.i.pago], backgroundColor:[CHART_COLORS.escuela, CHART_COLORS.instituto], borderWidth:2, borderColor:'#ffffff'}]
+    },
+    options: baseChartOptions({cutout:'62%', plugins:{
+      legend:{position:'bottom', labels:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10.5}, boxWidth:12, padding:14}},
+      datalabels:{
+        display: ctx => totalPago>0 && (ctx.dataset.data[ctx.dataIndex]/totalPago) > 0.05,
+        color:'#ffffff', font:{family:'JetBrains Mono', size:12, weight:'700'},
+        formatter:v => totalPago>0 ? Math.round(v/totalPago*100)+'%' : '0%'
+      }
+    }})
+  };
+
+  const pctTarifado = {
+    type:'bar',
+    data:{
+      labels:['Escuela','Instituto','Total'],
+      datasets:[{
+        label:'% Tarifado',
+        data:[c.pctE, c.pctI, c.pctT],
+        backgroundColor:[CHART_COLORS.escuela, CHART_COLORS.instituto, '#94a3b8'],
+        borderRadius:6, maxBarThickness:60
+      }]
+    },
+    options: baseChartOptions({plugins:{legend:{display:false}, datalabels:{
+      display:true, anchor:'end', align:'top', color:CHART_COLORS.dark,
+      font:{family:'JetBrains Mono', size:12, weight:'700'}, formatter:v=>v+'%'
+    }}, scales:{
+      x:{ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:11}}, grid:{display:false}},
+      y:{beginAtZero:true, max:100, ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}, callback:v=>v+'%'}, grid:{color:CHART_COLORS.grid}}
+    }})
+  };
+
+  return {conteos, horas, pagoDona, pctTarifado};
+}
+
+/* Config de los 2 gráficos de proyección por corte */
+function buildCorteChartConfigs(buckets){
+  const hoy = new Date();
+  const labels = buckets.map(b=>[b.nombre, fmtRange(b.ini,b.fin)]);
+  const barColors = buckets.map(b=>{
+    const est = corteEstado(b, hoy).cls;
+    if(est==='proximo' && b.pago===0) return '#cbd5e1';
+    return est==='actual' ? CHART_COLORS.instituto : CHART_COLORS.escuela;
+  });
+
+  const pagoPorCorte = {
+    type:'bar',
+    data:{ labels, datasets:[{ label:'Pago estimado', data:buckets.map(b=>Math.round(b.pago*100)/100),
+      backgroundColor:barColors, borderRadius:6, maxBarThickness:80 }] },
+    options: baseChartOptions({plugins:{legend:{display:false}, datalabels:{
+      display:true, anchor:'end', align:'top', color:CHART_COLORS.dark,
+      font:{family:'JetBrains Mono', size:11, weight:'700'}, formatter:v=>moneyFmt(v)
+    }}, scales:{
+      x:{ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}}, grid:{display:false}},
+      y:{beginAtZero:true, ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}, callback:v=>'S/ '+v.toLocaleString('es-PE')}, grid:{color:CHART_COLORS.grid}}
+    }})
+  };
+
+  let running=0;
+  const acumulado = buckets.map(b=>{ running += b.pago; return Math.round(running*100)/100; });
+  const acumuladoChart = {
+    type:'line',
+    data:{ labels, datasets:[{ label:'Pago acumulado', data:acumulado,
+      borderColor:CHART_COLORS.instituto, backgroundColor:CHART_COLORS.institutoBg, fill:true,
+      tension:0.35, pointRadius:5, pointBackgroundColor:CHART_COLORS.instituto, pointBorderColor:'#fff', pointBorderWidth:2 }] },
+    options: baseChartOptions({plugins:{legend:{display:false}, datalabels:{
+      display:true, anchor:'end', align:'top', color:CHART_COLORS.dark,
+      font:{family:'JetBrains Mono', size:11, weight:'700'}, formatter:v=>moneyFmt(v)
+    }}, scales:{
+      x:{ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}}, grid:{display:false}},
+      y:{beginAtZero:true, ticks:{color:CHART_COLORS.text, font:{family:'JetBrains Mono', size:10}, callback:v=>'S/ '+v.toLocaleString('es-PE')}, grid:{color:CHART_COLORS.grid}}
+    }})
+  };
+
+  return {pagoPorCorte, acumuladoChart};
+}
+
+function renderGraficos(){
+  if(typeof Chart==='undefined') return;
+  ensureDatalabels();
+  const panel = document.getElementById('panel-graficos');
+  if(!panel || !panel.classList.contains('active')) return; // evita medir canvas oculto
+  const c = buildCompareRows();
+  const cfg = buildChartConfigs(c);
+
+  if(chartConteos) chartConteos.destroy();
+  chartConteos = new Chart(document.getElementById('chartConteos'), cfg.conteos);
+
+  if(chartHoras) chartHoras.destroy();
+  chartHoras = new Chart(document.getElementById('chartHoras'), cfg.horas);
+
+  if(chartPagoDona) chartPagoDona.destroy();
+  chartPagoDona = new Chart(document.getElementById('chartPagoDona'), cfg.pagoDona);
+
+  if(chartPagoBarras) chartPagoBarras.destroy();
+  chartPagoBarras = new Chart(document.getElementById('chartPagoBarras'), cfg.pctTarifado);
+}
+
+function renderProyeccion(){
+  const moduloEl = document.getElementById('moduloChips');
+  if(moduloEl){
+    const hoy = new Date();
+    moduloEl.innerHTML = MODULOS.map(m=>{
+      const enCurso = dayOnly(hoy)>=dayOnly(m.ini) && dayOnly(hoy)<=dayOnly(m.fin);
+      return `<div class="modulo-chip${enCurso?' actual':''}">
+        <span class="modulo-name">${m.nombre}</span>
+        <span class="modulo-range">${fmtRange(m.ini,m.fin)}</span>
+        ${enCurso?'<span class="modulo-badge">En curso</span>':''}
+      </div>`;
+    }).join('');
+  }
+
+  const buckets = computeCorteProjection();
+  const hoy = new Date();
+  const strip = document.getElementById('corteStrip');
+  if(strip){
+    strip.innerHTML = buckets.map(b=>{
+      const est = corteEstado(b, hoy);
+      const sinDatos = b.pago===0 && b.sesiones===0;
+      return `<div class="kpi-card corte-${est.cls}">
+        <div class="kpi-label">${b.nombre} <span class="tag">${est.label}</span></div>
+        <div class="odometer-static" style="font-size:24px;font-weight:700;">${sinDatos?'—':moneyFmt(b.pago)}</div>
+        <div class="kpi-sub">${fmtRange(b.ini,b.fin)}</div>
+        <div class="kpi-sub">${b.docentesSet.size} docentes · ${Math.round(b.horas)} h · ${b.sesiones} sesiones</div>
+        ${sinDatos?'<div class="kpi-sub pending">Sin sesiones cargadas aún</div>':''}
+      </div>`;
+    }).join('');
+  }
+
+  const totalPanel = document.getElementById('proyeccionTotalPanel');
+  if(totalPanel){
+    const totalProyectado = buckets.reduce((s,b)=>s+b.pago,0);
+    const pendientes = buckets.filter(b=>b.pago===0 && b.sesiones===0).map(b=>b.nombre);
+    const pendientesTxt = pendientes.length>1
+      ? pendientes.slice(0,-1).join(', ')+' y '+pendientes[pendientes.length-1]
+      : pendientes[0];
+    totalPanel.innerHTML = `
+      <h3>Total proyectado al cierre de diciembre</h3>
+      <div class="odometer-static" style="font-size:30px;font-weight:700;color:var(--primary);">${moneyFmt(totalProyectado)}</div>
+      ${pendientes.length ? `<div class="kpi-sub pending" style="margin-top:8px;">${pendientesTxt} aún ${pendientes.length>1?'no tienen':'no tiene'} sesiones cargadas — sube la programación de Módulo B para completar la proyección.</div>` : ''}
+    `;
+  }
+
+  if(typeof Chart==='undefined') return;
+  ensureDatalabels();
+  const panel = document.getElementById('panel-proyeccion');
+  if(!panel || !panel.classList.contains('active')) return; // evita medir canvas oculto
+  const cfg = buildCorteChartConfigs(buckets);
+
+  if(chartCortePago) chartCortePago.destroy();
+  chartCortePago = new Chart(document.getElementById('chartCortePago'), cfg.pagoPorCorte);
+
+  if(chartCorteAcumulado) chartCorteAcumulado.destroy();
+  chartCorteAcumulado = new Chart(document.getElementById('chartCorteAcumulado'), cfg.acumuladoChart);
+}
+
+/* Genera los 4 gráficos como imágenes PNG (canvas fuera de pantalla) para incrustarlas en el Excel */
+async function generateChartImages(){
+  if(typeof Chart==='undefined') return null;
+  ensureDatalabels();
+  const c = buildCompareRows();
+  const cfg = buildChartConfigs(c);
+  const W = 760, H = 380;
+  const out = {};
+  for(const key of Object.keys(cfg)){
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    canvas.style.position='fixed'; canvas.style.left='-99999px'; canvas.style.top='0';
+    canvas.style.width = W+'px'; canvas.style.height = H+'px';
+    document.body.appendChild(canvas);
+    const conf = JSON.parse(JSON.stringify(cfg[key], (k,v)=> typeof v==='function' ? undefined : v));
+    // formatter/callback functions se pierden al clonar via JSON; se reconstruyen aquí
+    conf.options = conf.options || {};
+    conf.options.responsive = false;
+    conf.options.animation = false;
+    conf.options.devicePixelRatio = 2;
+    if(key==='conteos') conf.options.plugins.datalabels.formatter = v=>v;
+    if(key==='horas') conf.options.plugins.datalabels.formatter = v=>v.toLocaleString('es-PE')+' h';
+    if(key==='pctTarifado') conf.options.plugins.datalabels.formatter = v=>v+'%';
+    if(key==='pagoDona'){
+      const totalPago = c.e.pago + c.i.pago;
+      conf.options.plugins.datalabels.formatter = v => totalPago>0 ? Math.round(v/totalPago*100)+'%' : '0%';
+      conf.options.plugins.datalabels.display = ctx => totalPago>0 && (ctx.dataset.data[ctx.dataIndex]/totalPago) > 0.05;
+    }
+    if(key==='pctTarifado') conf.options.scales.y.ticks.callback = v=>v+'%';
+    const chart = new Chart(canvas, conf);
+    await new Promise(r=>setTimeout(r,60));
+    out[key] = canvas.toDataURL('image/png', 1.0);
+    chart.destroy();
+    document.body.removeChild(canvas);
+  }
+  return out;
+}
+
+function renderKPIs(){
+  const sede = state.kpiSede || 'escuela';
+  const strip = document.getElementById('kpiStrip');
+  strip.classList.toggle('compare-mode', sede==='comparar');
+
+  if(sede==='comparar'){
+    const c = buildCompareRows();
+    strip.innerHTML = `
+    <div class="compare-wrap">
+      <table class="compare-table">
+        <thead><tr><th></th><th>Escuela</th><th>Instituto</th><th>Total</th></tr></thead>
+        <tbody>
+          <tr><td>Docentes programados</td><td>${c.e.docentesCount}</td><td>${c.i.docentesCount}</td><td class="col-total">${c.docentesT}</td></tr>
+          <tr><td>Secciones activas</td><td>${c.e.secciones}</td><td>${c.i.secciones}</td><td class="col-total">${c.seccionesT}</td></tr>
+          <tr><td>Horas programadas</td><td>${Math.round(c.e.horas)} h</td><td>${Math.round(c.i.horas)} h</td><td class="col-total">${Math.round(c.horasT)} h</td></tr>
+          <tr><td>% Tarifado</td><td>${c.pctE}%</td><td>${c.pctI}%</td><td class="col-total">${c.pctT}%</td></tr>
+          <tr><td>Tarifa promedio/h</td><td>${c.avgE!=null?moneyFmt(c.avgE):'—'}</td><td>${c.avgI!=null?moneyFmt(c.avgI):'—'}</td><td class="col-total">${c.avgT!=null?moneyFmt(c.avgT):'—'}</td></tr>
+          <tr class="highlight"><td>Pago estimado</td><td>${moneyFmt(c.e.pago)}</td><td>${moneyFmt(c.i.pago)}</td><td>${moneyFmt(c.pagoT)}</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+    return;
+  }
+
+  const activeModel = sede==='instituto' ? modelInstituto : modelEscuela;
+  const otherModel = sede==='instituto' ? modelEscuela : modelInstituto;
+  const otherLabel = sede==='instituto' ? 'Escuela' : 'Instituto';
+  const sedeLabel = sede==='instituto' ? 'INSTITUTO' : 'ESCUELA';
+  const t = activeModel.totals;
+  const pctTarifa = t.filas ? Math.round((t.filasConTarifa / t.filas) * 100) : 0;
+  strip.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">DOCENTES PROGRAMADOS <span class="tag">${sedeLabel}</span></div>
+      ${odometerHTML('kpiDocentes')}
+      <div class="kpi-sub">${otherModel.totals.cursosCount} cursos${otherModel.totals.docentesCount>0?` · ${otherModel.totals.docentesCount} docentes`:''} en ${otherLabel}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">SECCIONES ACTIVAS <span class="tag">${sedeLabel}</span></div>
+      ${odometerHTML('kpiSecciones')}
+      <div class="kpi-sub">${t.cursosCount} cursos · ${activeModel.docentes.size} en cartera</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">HORAS PROGRAMADAS <span class="tag">${sedeLabel}</span></div>
+      ${odometerHTML('kpiHoras','', 'h')}
+      <div class="kpi-sub">${Math.round(otherModel.totals.horas)} h en ${otherLabel}</div>
+    </div>
+    <div class="kpi-card ${pctTarifa===100?'complete':pctTarifa===0?'pending':''}">
+      <div class="kpi-label">PAGO ${sedeLabel} <span class="tag">${pctTarifa}% TARIFADO</span></div>
+      <div class="odometer-static" style="font-size:22px;font-weight:700;padding-top:6px;">${t.pago>0? moneyFmt(t.pago) : (pctTarifa===0? '— Pendiente' : moneyFmt(t.pago))}</div>
+      <div class="gauge-track"><div class="gauge-fill" style="width:${pctTarifa}%"></div></div>
+      <div class="kpi-sub ${pctTarifa<100?'pending':'complete'}">${t.filas - t.filasConTarifa} sesiones sin tarifa asignada</div>
+    </div>
+  `;
+  requestAnimationFrame(()=>{
+    setOdometer('kpiDocentes', t.docentesCount);
+    setOdometer('kpiSecciones', t.secciones);
+    setOdometer('kpiHoras', Math.round(t.horas));
+  });
+}
+
+function docenteCard(d, sede){
+  const allDuplicated = d.duplicados>0 && d.duplicados===d.detalle.length;
+  const pendiente = d.tarifas.size===0 && !allDuplicated;
+  const allDupTxt = d.duplicadosCross>0 && d.duplicadosFusion===0 ? 'Ya en Escuela' : 'Pago en otra sección';
+  const tarifaTxt = allDuplicated ? allDupTxt : (d.tarifas.size===0 ? 'Pendiente' : (d.tarifas.size===1 ? moneyFmt([...d.tarifas][0])+'/h' : 'Varias tarifas'));
+  const cls = pendiente ? 'tarifa-pendiente' : 'tarifa-completa';
+  const uid = (sede==='Instituto'?'inst-':'esc-') + encodeURIComponent(d.key);
+  const isOpen = state.openCards.has('doc-'+uid);
+  const codigoTxt = d.codigos.size===0 ? '—' : [...d.codigos].join(', ');
+  const codigoWarn = d.codigos.size>1;
+  const wk = weeklyCombined.get(d.key);
+  const sobrecargado = wk && wk.total > MAX_HORAS_SEMANALES;
+  const dupParts = [];
+  if(d.duplicadosCross>0) dupParts.push(`${d.duplicadosCross} ya en Escuela`);
+  if(d.duplicadosFusion>0) dupParts.push(`${d.duplicadosFusion} fusión`);
+  const dupBadge = dupParts.length ? `<span class="badge" style="background:var(--secondary-dim);color:#0b5f80;">🔗 ${dupParts.join(' · ')}</span>` : '';
+  const rows = d.detalle.slice().sort((a,b)=> (a.fecha&&b.fecha)? a.fecha-b.fecha : 0);
+  const detailRows = rows.map(r=>{
+    const pago = r.duplicadoEscuela ? 'Ya en Escuela' : (r.fusionIntra ? 'Fusión: ya pagada' : (r.tarifa!=null ? moneyFmt(r.horas*r.tarifa) : '—'));
+    return `<tr${(r.duplicadoEscuela||r.fusionIntra)?' style="opacity:0.65;"':''}>
+      <td>${fmtDate(r.fecha)}</td>
+      <td>${r.curso}</td>
+      <td>${r.seccion||'—'}</td>
+      <td>${r.turno||'—'}</td>
+      <td>${r.dia||'—'}</td>
+      <td>${r.horas}</td>
+      <td>${pago}</td>
+    </tr>`;
+  }).join('');
+  return `
+  <div class="entity-card ${cls} ${isOpen?'open':''}" data-card="doc-${uid}">
+    <div class="card-head" data-toggle="doc-${uid}">
+      <div>
+        <div class="name">${d.nombre} ${sede==='Instituto'?'<span class="badge" style="background:var(--secondary-dim);color:#0b5f80;">Instituto</span>':''}${sobrecargado?`<span class="badge" style="background:#fde0b3;color:#92400e;">⚠ ${wk.total}h/sem</span>`:''}${dupBadge}</div>
+        <div class="meta">${codigoWarn?`<span style="color:var(--red)">⚠ ${d.codigos.size} códigos: ${codigoTxt}</span>`:`COD ${codigoTxt}`} · ${d.cursos.size} curso${d.cursos.size!==1?'s':''} · ${[...d.turnos].join(', ')||'—'} ${d.ciclos.size?'· Ciclo '+[...d.ciclos].sort((a,b)=>a-b).join(', '):''}</div>
+      </div>
+      <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="card-stats">
+      <div class="stat"><div class="v">${d.secciones.size}</div><div class="l">Secciones</div></div>
+      <div class="stat"><div class="v">${d.horas}</div><div class="l">Horas</div></div>
+      <div class="stat money ${pendiente?'pending':''}"><div class="v">${tarifaTxt}</div><div class="l">Tarifa</div></div>
+      <div class="stat money ${pendiente?'pending':''}"><div class="v">${allDuplicated?allDupTxt:(pendiente?'—':moneyFmt(d.pago))}</div><div class="l">Pago ciclo</div></div>
+    </div>
+    <div class="card-body">
+      <div class="detail-wrap">
+        <table class="detail-table">
+          <thead><tr><th>Fecha</th><th>Curso</th><th>Sec.</th><th>Turno</th><th>Día</th><th>Horas</th><th>Pago</th></tr></thead>
+          <tbody>${detailRows}</tbody>
+        </table>
+      </div>
+      <div class="card-foot">
+        <button class="mini-btn" data-pdf="${uid}">Exportar PDF</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+
+function renderDocentes(){
+  const grid = document.getElementById('docentesGrid');
+  const sede = state.kpiSede || 'escuela';
+  if(sede==='comparar'){
+    const escuelaList = [...modelEscuela.docentes.values()].sort((a,b)=> b.horas - a.horas).map(d=>docenteCard(d,'Escuela'));
+    const institutoList = [...modelInstituto.docentes.values()].sort((a,b)=> b.horas - a.horas).map(d=>docenteCard(d,'Instituto'));
+    const all = escuelaList.concat(institutoList);
+    if(!all.length){ grid.innerHTML = `<div class="empty-state">Sin docentes que coincidan con los filtros actuales.</div>`; return; }
+    grid.innerHTML = all.join('');
+    return;
+  }
+  const activeModel = sede==='instituto' ? modelInstituto : modelEscuela;
+  const sedeLabel = sede==='instituto' ? 'Instituto' : 'Escuela';
+  const list = [...activeModel.docentes.values()].sort((a,b)=> b.horas - a.horas).map(d=>docenteCard(d, sedeLabel));
+  if(!list.length){ grid.innerHTML = `<div class="empty-state">Sin docentes de ${sedeLabel} que coincidan con los filtros actuales.</div>`; return; }
+  grid.innerHTML = list.join('');
+}
+
+function cursoCard(c, sede){
+  const pendiente = c.filasConTarifa===0;
+  const cls = pendiente ? 'tarifa-pendiente' : (c.filasConTarifa===c.filasTotal ? 'tarifa-completa':'');
+  return `
+  <div class="entity-card ${cls}">
+    <div class="card-head" style="cursor:default">
+      <div>
+        <div class="name">${c.nombre} ${sede==='Instituto'?'<span class="badge" style="background:var(--secondary-dim);color:#0b5f80;">Instituto</span>':''}</div>
+        <div class="meta">${[...c.codigos].join(', ')||'—'} ${c.ciclos.size?'· Ciclo '+[...c.ciclos].sort((a,b)=>a-b).join(', '):''}</div>
+      </div>
+    </div>
+    <div class="card-stats">
+      <div class="stat"><div class="v">${c.secciones.size}</div><div class="l">Secciones</div></div>
+      <div class="stat"><div class="v">${c.docentes.size||'—'}</div><div class="l">Docentes</div></div>
+      <div class="stat"><div class="v">${c.horas}</div><div class="l">Horas</div></div>
+      <div class="stat money ${pendiente?'pending':''}"><div class="v">${pendiente?'—':moneyFmt(c.pago)}</div><div class="l">Pago</div></div>
+    </div>
+  </div>`;
+}
+
+function renderCursos(){
+  const grid = document.getElementById('cursosGrid');
+  const sede = state.kpiSede || 'escuela';
+  if(sede==='comparar'){
+    const escuelaList = [...modelEscuela.cursos.values()].sort((a,b)=> b.horas - a.horas).map(c=>cursoCard(c,'Escuela'));
+    const institutoList = [...modelInstituto.cursos.values()].sort((a,b)=> b.horas - a.horas).map(c=>cursoCard(c,'Instituto'));
+    const all = escuelaList.concat(institutoList);
+    if(!all.length){ grid.innerHTML = `<div class="empty-state">Sin cursos que coincidan con los filtros actuales.</div>`; return; }
+    grid.innerHTML = all.join('');
+    return;
+  }
+  const activeModel = sede==='instituto' ? modelInstituto : modelEscuela;
+  const sedeLabel = sede==='instituto' ? 'Instituto' : 'Escuela';
+  const list = [...activeModel.cursos.values()].sort((a,b)=> b.horas - a.horas).map(c=>cursoCard(c, sedeLabel));
+  if(!list.length){ grid.innerHTML = `<div class="empty-state">Sin cursos de ${sedeLabel} que coincidan con los filtros actuales.</div>`; return; }
+  grid.innerHTML = list.join('');
+}
+
+function renderSummary(elId, model, hasDocentes){
+  const el = document.getElementById(elId);
+  const t = model.totals;
+  const turnoEntries = Object.entries(model.turnoHoras).sort((a,b)=>b[1]-a[1]);
+  const maxTurno = Math.max(1, ...turnoEntries.map(e=>e[1]));
+  const modEntries = Object.entries(model.modalidadHoras).sort((a,b)=>b[1]-a[1]);
+  const maxMod = Math.max(1, ...modEntries.map(e=>e[1]));
+  const topCursos = [...model.cursos.values()].sort((a,b)=>b.horas-a.horas).slice(0,8);
+  const cicloEntries = Object.entries(model.cicloHoras).sort((a,b)=>a[0]-b[0]);
+  const maxCiclo = Math.max(1, ...cicloEntries.map(e=>e[1]));
+
+  const cicloPanel = `
+    <div class="panel" style="grid-column:1 / -1;">
+      <h3>Programación por ciclo</h3>
+      ${cicloEntries.map(([k,v])=>{
+        const nCursos = (model.cicloCursos[k]||new Set()).size;
+        return `
+        <div class="bar-row">
+          <div class="bar-label"><span>Ciclo ${k} <span style="color:var(--text-faint)">· ${nCursos} curso${nCursos!==1?'s':''}</span></span><b>${v} h</b></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(v/maxCiclo*100).toFixed(0)}%"></div></div>
+        </div>`;
+      }).join('') || '<div class="empty-state">Sin datos de ciclo (verifica la columna Sección).</div>'}
+    </div>`;
+
+  el.innerHTML = cicloPanel + `
+    <div class="panel">
+      <h3>Distribución por turno</h3>
+      ${turnoEntries.map(([k,v])=>`
+        <div class="bar-row">
+          <div class="bar-label"><span>${k}</span><b>${v} h</b></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(v/maxTurno*100).toFixed(0)}%"></div></div>
+        </div>`).join('') || '<div class="empty-state">Sin datos.</div>'}
+      <h3 style="margin-top:22px;">Distribución por modalidad</h3>
+      ${modEntries.map(([k,v])=>`
+        <div class="bar-row">
+          <div class="bar-label"><span>${k}</span><b>${v} h</b></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(v/maxMod*100).toFixed(0)}%"></div></div>
+        </div>`).join('') || '<div class="empty-state">Sin datos.</div>'}
+    </div>
+    <div class="panel">
+      <h3>Totales generales</h3>
+      <div class="card-stats" style="padding:0 0 14px;">
+        <div class="stat"><div class="v">${t.cursosCount}</div><div class="l">Cursos</div></div>
+        <div class="stat"><div class="v">${t.secciones}</div><div class="l">Secciones</div></div>
+        <div class="stat"><div class="v">${Math.round(t.horas)}</div><div class="l">Horas</div></div>
+        ${hasDocentes?`<div class="stat"><div class="v">${t.docentesCount}</div><div class="l">Docentes</div></div>`:''}
+      </div>
+      ${hasDocentes?`<div class="bar-row"><div class="bar-label"><span>Pago total estimado</span><b>${t.pago>0?moneyFmt(t.pago):'—'}</b></div></div>`:`<div class="kpi-sub">Instituto no registra docente ni tarifa por fila — solo programación de secciones.</div>`}
+      <h3 style="margin-top:22px;">Cursos con más horas</h3>
+      <ul class="top-list">
+        ${topCursos.map((c,i)=>`<li><span class="rank">${String(i+1).padStart(2,'0')}</span><span class="name">${c.nombre}</span><span class="val">${c.horas} h</span></li>`).join('') || '<li class="empty-state">Sin datos.</li>'}
+      </ul>
+    </div>
+  `;
+}
+
+/* ================= PDF export per docente ================= */
+function exportDocentePDF(uid){
+  const isInst = uid.startsWith('inst-');
+  const key = decodeURIComponent(uid.replace(/^(inst-|esc-)/,''));
+  const d = (isInst ? modelInstituto : modelEscuela).docentes.get(key);
+  if(!d) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  addWatermark(doc);
+  doc.setFontSize(14);
+  doc.setTextColor(20,40,70);
+  doc.text(`Programación — ${d.nombre}`, 14, 16);
+  doc.setFontSize(9);
+  doc.setTextColor(100);
+  doc.text(`Sede: ${isInst?'Instituto':'Escuela'}  ·  Cod. docente: ${[...d.codigos].join(', ')||'—'}  ·  Secciones: ${d.secciones.size}  ·  Horas: ${d.horas}  ·  Pago ciclo: ${d.tarifas.size?moneyFmt(d.pago):'Pendiente'}`, 14, 22);
+  doc.autoTable({
+    startY:28,
+    head:[['Fecha','Curso','Sección','Turno','Día','Horas','Pago']],
+    body: d.detalle.map(r=>[fmtDate(r.fecha), r.curso, r.seccion||'—', r.turno||'—', r.dia||'—', r.horas, r.duplicadoEscuela?'Ya en Escuela':(r.fusionIntra?'Fusión: ya pagada':(r.tarifa!=null?moneyFmt(r.horas*r.tarifa):'—'))]),
+    styles:{fontSize:8},
+    headStyles:{fillColor:[37,99,235]}
+  });
+  doc.setFontSize(8);
+  doc.setTextColor(140);
+  doc.text('FacultyHub · Desarrollado por Daniel Solar Giraldo · Datos ficticios', 14, doc.internal.pageSize.height-10);
+  doc.save(`${d.nombre.replace(/\s+/g,'_')}_programacion.pdf`);
+}
+
+function addWatermark(doc){
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+  doc.saveGraphicsState();
+  try{ doc.setGState(new doc.GState({opacity:0.06})); }catch(e){}
+  doc.setTextColor(37,99,235);
+  doc.setFontSize(26);
+  doc.text('FACULTYHUB  ·  DEMO', w/2, h/2, {angle:35, align:'center'});
+  doc.restoreGraphicsState();
+}
+
+/* ================= Reporte Gerencial (PDF ejecutivo) ================= */
+function exportReporteGerencial(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const marginX = 14;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const c = buildCompareRows();
+
+  const drawFooter = (data)=>{
+    addWatermark(doc);
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('FacultyHub · Desarrollado por Daniel Solar Giraldo · Datos ficticios', marginX, pageH-10);
+    doc.text(`Página ${doc.internal.getNumberOfPages()}`, pageW-marginX, pageH-10, {align:'right'});
+  };
+
+  // ---- Portada / encabezado ----
+  addWatermark(doc);
+  doc.setFontSize(18);
+  doc.setTextColor(15,40,71);
+  doc.text('Reporte Ejecutivo — Programación Académica', marginX, 20);
+  doc.setFontSize(9.5);
+  doc.setTextColor(100);
+  const periodo = document.getElementById('periodLabel').textContent;
+  const generado = new Date().toLocaleString('es-PE');
+  doc.text(`Periodo: ${periodo}`, marginX, 27);
+  doc.text(`Generado: ${generado}`, marginX, 32);
+
+  // ---- Tabla comparativa Escuela vs Instituto vs Total ----
+  let y = 40;
+  doc.setFontSize(12);
+  doc.setTextColor(15,40,71);
+  doc.text('Resumen comparativo', marginX, y);
+  doc.autoTable({
+    startY: y+4,
+    head: [['Indicador','Escuela','Instituto','Total']],
+    body: [
+      ['Docentes programados', c.e.docentesCount, c.i.docentesCount, c.docentesT],
+      ['Secciones activas', c.e.secciones, c.i.secciones, c.seccionesT],
+      ['Horas programadas', Math.round(c.e.horas), Math.round(c.i.horas), Math.round(c.horasT)],
+      ['% Tarifado', c.pctE+'%', c.pctI+'%', c.pctT+'%'],
+      ['Tarifa promedio/h', c.avgE!=null?moneyFmt(c.avgE):'—', c.avgI!=null?moneyFmt(c.avgI):'—', c.avgT!=null?moneyFmt(c.avgT):'—'],
+      ['Pago estimado', moneyFmt(c.e.pago), moneyFmt(c.i.pago), moneyFmt(c.pagoT)],
+    ],
+    styles:{fontSize:9},
+    headStyles:{fillColor:[37,99,235]},
+    columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right',fontStyle:'bold'}},
+    didDrawPage: drawFooter,
+    margin:{left:marginX,right:marginX}
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // ---- Top 10 docentes por pago (ambas sedes) ----
+  const docentesTodos = [
+    ...[...modelEscuela.docentes.values()].map(d=>({...d, sede:'Escuela'})),
+    ...[...modelInstituto.docentes.values()].map(d=>({...d, sede:'Instituto'}))
+  ].sort((a,b)=> b.pago - a.pago).slice(0,10);
+
+  if(y > pageH-60){ doc.addPage(); y = 20; }
+  doc.setFontSize(12);
+  doc.setTextColor(15,40,71);
+  doc.text('Top 10 docentes por pago estimado', marginX, y);
+  doc.autoTable({
+    startY: y+4,
+    head:[['Docente','Sede','Secciones','Horas','Tarifa','Pago']],
+    body: docentesTodos.map(d=>[
+      d.nombre, d.sede, d.secciones.size, d.horas,
+      d.tarifas.size===1?moneyFmt([...d.tarifas][0])+'/h':(d.tarifas.size>1?'Varias':'Pendiente'),
+      d.tarifas.size?moneyFmt(d.pago):'—'
+    ]),
+    styles:{fontSize:8.5},
+    headStyles:{fillColor:[37,99,235]},
+    columnStyles:{2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},5:{halign:'right',fontStyle:'bold'}},
+    didDrawPage: drawFooter,
+    margin:{left:marginX,right:marginX}
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // ---- Docentes con sobrecarga horaria (>26h semanales combinado) ----
+  const sobrecargados = [...weeklyCombined.values()].filter(o=>o.total>MAX_HORAS_SEMANALES).sort((a,b)=>b.total-a.total);
+  if(sobrecargados.length){
+    if(y > pageH-60){ doc.addPage(); y = 20; }
+    doc.setFontSize(12);
+    doc.setTextColor(180,60,10);
+    doc.text(`Alerta: docentes que superan ${MAX_HORAS_SEMANALES}h semanales (Escuela + Instituto)`, marginX, y);
+    doc.autoTable({
+      startY: y+4,
+      head:[['Docente','Horas/sem. Escuela','Horas/sem. Instituto','Total/sem.']],
+      body: sobrecargados.map(o=>[o.nombre, o.escuela||'—', o.instituto||'—', o.total]),
+      styles:{fontSize:8.5},
+      headStyles:{fillColor:[217,119,6]},
+      columnStyles:{1:{halign:'right'},2:{halign:'right'},3:{halign:'right',fontStyle:'bold'}},
+      didDrawPage: drawFooter,
+      margin:{left:marginX,right:marginX}
+    });
+    y = doc.lastAutoTable.finalY + 12;
+  }
+
+  // ---- Top 10 cursos por horas (ambas sedes) ----
+  const cursosTodos = [
+    ...[...modelEscuela.cursos.values()].map(cc=>({...cc, sede:'Escuela'})),
+    ...[...modelInstituto.cursos.values()].map(cc=>({...cc, sede:'Instituto'}))
+  ].sort((a,b)=> b.horas - a.horas).slice(0,10);
+
+  if(y > pageH-60){ doc.addPage(); y = 20; }
+  doc.setFontSize(12);
+  doc.setTextColor(15,40,71);
+  doc.text('Top 10 cursos por horas programadas', marginX, y);
+  doc.autoTable({
+    startY: y+4,
+    head:[['Curso','Sede','Secciones','Docentes','Horas','Pago']],
+    body: cursosTodos.map(cc=>[
+      cc.nombre, cc.sede, cc.secciones.size, cc.docentes.size||'—', cc.horas,
+      cc.filasConTarifa?moneyFmt(cc.pago):'—'
+    ]),
+    styles:{fontSize:8.5},
+    headStyles:{fillColor:[37,99,235]},
+    columnStyles:{2:{halign:'right'},3:{halign:'right'},4:{halign:'right'},5:{halign:'right',fontStyle:'bold'}},
+    didDrawPage: drawFooter,
+    margin:{left:marginX,right:marginX}
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  // ---- Desglose por ciclo ----
+  const cicloRows = (model)=> Object.entries(model.cicloHoras).sort((a,b)=>a[0]-b[0])
+    .map(([k,v])=>[`Ciclo ${k}`, (model.cicloCursos[k]||new Set()).size, Math.round(v)]);
+
+  if(y > pageH-60){ doc.addPage(); y = 20; }
+  doc.setFontSize(12);
+  doc.setTextColor(15,40,71);
+  doc.text('Programación por ciclo — Escuela', marginX, y);
+  doc.autoTable({
+    startY: y+4,
+    head:[['Ciclo','Cursos','Horas']],
+    body: cicloRows(modelEscuela),
+    styles:{fontSize:8.5},
+    headStyles:{fillColor:[37,99,235]},
+    columnStyles:{1:{halign:'right'},2:{halign:'right'}},
+    didDrawPage: drawFooter,
+    margin:{left:marginX,right:marginX}
+  });
+  y = doc.lastAutoTable.finalY + 12;
+
+  if(modelInstituto.totals.horas>0){
+    if(y > pageH-60){ doc.addPage(); y = 20; }
+    doc.setFontSize(12);
+    doc.setTextColor(15,40,71);
+    doc.text('Programación por ciclo — Instituto', marginX, y);
+    doc.autoTable({
+      startY: y+4,
+      head:[['Ciclo','Cursos','Horas']],
+      body: cicloRows(modelInstituto),
+      styles:{fontSize:8.5},
+      headStyles:{fillColor:[37,99,235]},
+      columnStyles:{1:{halign:'right'},2:{halign:'right'}},
+      didDrawPage: drawFooter,
+      margin:{left:marginX,right:marginX}
+    });
+  }
+
+  // ---- Proyección de pagos por fecha de corte ----
+  const buckets = computeCorteProjection();
+  const hoy = new Date();
+  if(y > pageH-70){ doc.addPage(); y = 20; }
+  doc.setFontSize(12);
+  doc.setTextColor(15,40,71);
+  doc.text('Proyección de pagos por fecha de corte (hasta diciembre)', marginX, y);
+  doc.autoTable({
+    startY: y+4,
+    head:[['Corte','Rango','Estado','Docentes','Horas','Pago estimado']],
+    body: buckets.map(b=>{
+      const est = corteEstado(b, hoy);
+      const sinDatos = b.pago===0 && b.sesiones===0;
+      return [b.nombre, fmtRange(b.ini,b.fin), est.label, b.docentesSet.size, Math.round(b.horas), sinDatos?'Sin datos':moneyFmt(b.pago)];
+    }),
+    foot:[['', '', '', '', 'Total proyectado', moneyFmt(buckets.reduce((s,b)=>s+b.pago,0))]],
+    styles:{fontSize:8.5},
+    headStyles:{fillColor:[37,99,235]},
+    footStyles:{fillColor:[15,40,71], textColor:[255,255,255], fontStyle:'bold'},
+    columnStyles:{3:{halign:'right'},4:{halign:'right'},5:{halign:'right',fontStyle:'bold'}},
+    didDrawPage: drawFooter,
+    margin:{left:marginX,right:marginX}
+  });
+  y = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(8);
+  doc.setTextColor(130);
+  doc.text('Módulo A: 21 sep – 7 nov · Módulo B: 9 nov – 26 dic. Cada franja horaria se proyecta repitiéndola por día de la semana entre el inicio y fin del curso, dentro de cada corte.', marginX, y);
+
+  doc.save(`Reporte_Gerencial_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+/* ================= Excel export (formateado, con hojas por sede) ================= */
+const HEADER_FILL = {type:'pattern', pattern:'solid', fgColor:{argb:'FF2563EB'}};
+const HEADER_FONT = {bold:true, color:{argb:'FFFFFFFF'}, size:10};
+const THIN_BORDER = {top:{style:'thin',color:{argb:'FFD7E6F7'}},bottom:{style:'thin',color:{argb:'FFD7E6F7'}},left:{style:'thin',color:{argb:'FFD7E6F7'}},right:{style:'thin',color:{argb:'FFD7E6F7'}}};
+
+function styleHeaderRow(row){
+  row.eachCell(cell=>{
+    cell.fill = HEADER_FILL;
+    cell.font = HEADER_FONT;
+    cell.alignment = {vertical:'middle'};
+    cell.border = THIN_BORDER;
+  });
+  row.height = 20;
+}
+
+function addDocentesSheet(wb, name, model){
+  const ws = wb.addWorksheet(name);
+  ws.columns = [
+    {header:'Código', key:'codigo', width:16},
+    {header:'Docente', key:'nombre', width:32},
+    {header:'Secciones', key:'secciones', width:11},
+    {header:'Cursos', key:'cursos', width:9},
+    {header:'Horas (ciclo)', key:'horas', width:12},
+    {header:'Horas/semana', key:'semanal', width:12},
+    {header:'Tarifa/h', key:'tarifa', width:11},
+    {header:'Pago estimado', key:'pago', width:14},
+  ];
+  styleHeaderRow(ws.getRow(1));
+  [...model.docentes.values()].sort((a,b)=>b.horas-a.horas).forEach(d=>{
+    const wk = weeklyCombined.get(d.key);
+    const semanal = wk ? wk.total : 0;
+    const row = ws.addRow({
+      codigo: [...d.codigos].join(', ')||'—',
+      nombre: d.nombre,
+      secciones: d.secciones.size,
+      cursos: d.cursos.size,
+      horas: d.horas,
+      semanal: semanal,
+      tarifa: d.tarifas.size===1?[...d.tarifas][0]:(d.tarifas.size>1?'Varias':null),
+      pago: d.tarifas.size? Math.round(d.pago*100)/100 : null
+    });
+    row.getCell('pago').numFmt = '"S/" #,##0.00';
+    row.getCell('tarifa').numFmt = '"S/" 0.00';
+    row.eachCell(cell=>{ cell.border = THIN_BORDER; });
+    if(semanal > MAX_HORAS_SEMANALES){
+      row.getCell('semanal').font = {color:{argb:'FFB45309'}, bold:true};
+      row.getCell('semanal').fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFFEF3E2'}};
+    }
+    if(d.codigos.size>1){
+      row.getCell('codigo').font = {color:{argb:'FFC81E4E'}, bold:true};
+    }
+  });
+  ws.autoFilter = { from:'A1', to:'H1' };
+  ws.views = [{state:'frozen', ySplit:1}];
+}
+
+function addCursosSheet(wb){
+  const ws = wb.addWorksheet('Cursos');
+  ws.columns = [
+    {header:'Curso', key:'nombre', width:38},
+    {header:'Sede', key:'sede', width:11},
+    {header:'Código(s)', key:'codigos', width:20},
+    {header:'Secciones', key:'secciones', width:11},
+    {header:'Docentes', key:'docentes', width:10},
+    {header:'Horas', key:'horas', width:9},
+    {header:'Pago estimado', key:'pago', width:14},
+  ];
+  styleHeaderRow(ws.getRow(1));
+  const addRows = (model, sede)=>{
+    [...model.cursos.values()].sort((a,b)=>b.horas-a.horas).forEach(c=>{
+      const row = ws.addRow({
+        nombre:c.nombre, sede, codigos:[...c.codigos].join(', '),
+        secciones:c.secciones.size, docentes:c.docentes.size||null,
+        horas:c.horas, pago: c.filasConTarifa? Math.round(c.pago*100)/100 : null
+      });
+      row.getCell('pago').numFmt = '"S/" #,##0.00';
+      row.eachCell(cell=>{ cell.border = THIN_BORDER; });
+    });
+  };
+  addRows(modelEscuela,'Escuela');
+  addRows(modelInstituto,'Instituto');
+  ws.autoFilter = { from:'A1', to:'G1' };
+  ws.views = [{state:'frozen', ySplit:1}];
+}
+
+function addResumenSheet(wb){
+  const ws = wb.addWorksheet('Resumen');
+  const c = buildCompareRows();
+  ws.columns = [
+    {header:'Indicador', key:'k', width:24},
+    {header:'Escuela', key:'e', width:16},
+    {header:'Instituto', key:'i', width:16},
+    {header:'Total', key:'t', width:16},
+  ];
+  styleHeaderRow(ws.getRow(1));
+  const rows = [
+    ['Docentes programados', c.e.docentesCount, c.i.docentesCount, c.docentesT],
+    ['Secciones activas', c.e.secciones, c.i.secciones, c.seccionesT],
+    ['Horas programadas', Math.round(c.e.horas), Math.round(c.i.horas), Math.round(c.horasT)],
+    ['% Tarifado', c.pctE/100, c.pctI/100, c.pctT/100],
+    ['Tarifa promedio/h', c.avgE, c.avgI, c.avgT],
+    ['Pago estimado', Math.round(c.e.pago*100)/100, Math.round(c.i.pago*100)/100, Math.round(c.pagoT*100)/100],
+  ];
+  rows.forEach(([k,e,i,t])=>{
+    const row = ws.addRow({k,e,i,t});
+    row.eachCell(cell=>{ cell.border = THIN_BORDER; });
+    if(k==='% Tarifado'){ ['e','i','t'].forEach(col=> row.getCell(col).numFmt='0%'); }
+    if(k==='Tarifa promedio/h' || k==='Pago estimado'){ ['e','i','t'].forEach(col=> row.getCell(col).numFmt='"S/" #,##0.00'); }
+    if(k==='Pago estimado'){ row.eachCell(cell=>cell.font={bold:true}); }
+  });
+
+  if(weeklyCombined.size){
+    ws.addRow([]);
+    const hRow = ws.addRow(['Docentes que superan '+MAX_HORAS_SEMANALES+'h semanales (Escuela+Instituto)']);
+    hRow.getCell(1).font = {bold:true, color:{argb:'FFB45309'}};
+    const sobrecargados = [...weeklyCombined.values()].filter(o=>o.total>MAX_HORAS_SEMANALES).sort((a,b)=>b.total-a.total);
+    if(sobrecargados.length){
+      const hh = ws.addRow(['Docente','Horas/sem. Escuela','Horas/sem. Instituto','Total/sem.']);
+      styleHeaderRow(hh);
+      sobrecargados.forEach(o=>{
+        const row = ws.addRow([o.nombre, o.escuela||0, o.instituto||0, o.total]);
+        row.eachCell(cell=>{ cell.border = THIN_BORDER; });
+      });
+    } else {
+      ws.addRow(['Ninguno']);
+    }
+  }
+}
+
+async function addGraficosSheet(wb){
+  const images = await generateChartImages();
+  if(!images) return;
+  const ws = wb.addWorksheet('Gráficos');
+  ws.getColumn(1).width = 2;
+  const titles = {
+    conteos:'Docentes, secciones y cursos',
+    horas:'Horas programadas',
+    pagoDona:'Distribución del pago estimado',
+    pctTarifado:'% Tarifado por sede'
+  };
+  const order = ['conteos','horas','pagoDona','pctTarifado'];
+  let rowCursor = 1;
+  order.forEach(key=>{
+    const titleRow = ws.getRow(rowCursor);
+    titleRow.getCell(2).value = titles[key];
+    titleRow.getCell(2).font = {bold:true, size:12, color:{argb:'FF0F2847'}};
+    rowCursor += 1;
+    const imgId = wb.addImage({ base64: images[key], extension:'png' });
+    // 760x380 px ~ escalado a celdas (ancho col ~64px, alto fila ~20px)
+    ws.addImage(imgId, { tl:{col:1, row:rowCursor}, ext:{width:570, height:285} });
+    rowCursor += 16; // deja espacio para la imagen antes del siguiente título
+  });
+}
+
+function addProyeccionSheet(wb){
+  const ws = wb.addWorksheet('Proyección');
+  const buckets = computeCorteProjection();
+  const hoy = new Date();
+  ws.columns = [
+    {header:'Corte', key:'corte', width:12},
+    {header:'Rango', key:'rango', width:22},
+    {header:'Estado', key:'estado', width:12},
+    {header:'Docentes', key:'docentes', width:11},
+    {header:'Horas', key:'horas', width:10},
+    {header:'Sesiones', key:'sesiones', width:10},
+    {header:'Pago estimado', key:'pago', width:16},
+  ];
+  styleHeaderRow(ws.getRow(1));
+  buckets.forEach(b=>{
+    const est = corteEstado(b, hoy);
+    const row = ws.addRow({corte:b.nombre, rango:fmtRange(b.ini,b.fin), estado:est.label,
+      docentes:b.docentesSet.size, horas:Math.round(b.horas), sesiones:b.sesiones, pago:Math.round(b.pago*100)/100});
+    row.eachCell(cell=>{ cell.border = THIN_BORDER; });
+    row.getCell('pago').numFmt = '"S/" #,##0.00';
+  });
+  ws.addRow([]);
+  const totalRow = ws.addRow({corte:'Total proyectado', pago:Math.round(buckets.reduce((s,b)=>s+b.pago,0)*100)/100});
+  totalRow.getCell('corte').font = {bold:true};
+  totalRow.getCell('pago').font = {bold:true};
+  totalRow.getCell('pago').numFmt = '"S/" #,##0.00';
+  ws.addRow(['Módulo A: 21 sep – 7 nov · Módulo B: 9 nov – 26 dic. Cada franja horaria se proyecta repitiéndola por día de la semana entre el inicio y fin del curso, dentro de cada corte.']);
+}
+
+async function exportXLSX(){
+  const btn = document.getElementById('exportCsvBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Generando...';
+  btn.disabled = true;
+  try{
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'FacultyHub - Daniel Solar Giraldo';
+    wb.created = new Date();
+    addResumenSheet(wb);
+    await addGraficosSheet(wb);
+    addProyeccionSheet(wb);
+    addDocentesSheet(wb, 'Docentes Escuela', modelEscuela);
+    if(modelInstituto.docentes.size) addDocentesSheet(wb, 'Docentes Instituto', modelInstituto);
+    addCursosSheet(wb);
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Programacion_Academica_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click(); URL.revokeObjectURL(url);
+  }catch(err){
+    console.error(err);
+    alert('No se pudo generar el Excel. Intenta de nuevo.');
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+}
+
+/* ================= Event wiring ================= */
+const TURNO_ICONS = {
+  'MAÑANA': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  'TAR': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 18a4.5 4.5 0 10-1-8.89A6 6 0 006 12.1"/><circle cx="12" cy="10" r="3"/><path d="M3 18h18M5 21h14"/></svg>',
+  'TARDE': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 18a4.5 4.5 0 10-1-8.89A6 6 0 006 12.1"/><circle cx="12" cy="10" r="3"/><path d="M3 18h18M5 21h14"/></svg>',
+  'NOCHE': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 1110 3.2a6.5 6.5 0 0010 11.3z"/></svg>',
+  'NOC': '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8 8 0 1110 3.2a6.5 6.5 0 0010 11.3z"/></svg>'
+};
+function turnoIcon(t){ return TURNO_ICONS[(t||'').toUpperCase()] || ''; }
+
+function populateFilterOptions(){
+  const cicloSet = new Set(), turnoSet = new Set();
+  state.escuelaRowsAll.concat(state.institutoRowsAll).forEach(r=>{
+    if(r.ciclo) cicloSet.add(r.ciclo);
+    if(r.turno) turnoSet.add(r.turno);
+  });
+  const cicloChips = document.getElementById('cicloChips');
+  const turnoChips = document.getElementById('turnoChips');
+  const ciclosSorted = [...cicloSet].sort((a,b)=>a-b);
+  cicloChips.innerHTML = `<button class="chip active" data-ciclo="ALL">Todos</button>` +
+    ciclosSorted.map(c=>`<button class="chip" data-ciclo="${c}">Ciclo ${c}</button>`).join('');
+  const turnosSorted = [...turnoSet].sort();
+  turnoChips.innerHTML = `<button class="chip active" data-turno="ALL">Todos</button>` +
+    turnosSorted.map(t=>`<button class="chip" data-turno="${t}">${turnoIcon(t)}${titleCase(t)}</button>`).join('');
+}
+
+function detectPeriodLabel(){
+  const all = state.escuelaRowsAll.concat(state.institutoRowsAll);
+  const inis = all.map(r=>r.fechaIni).filter(d=>d instanceof Date && !isNaN(d));
+  const fins = all.map(r=>r.fechaFin).filter(d=>d instanceof Date && !isNaN(d));
+  const sems = [...new Set(all.map(r=>r.semestre).filter(Boolean))];
+  if(!inis.length) return sems.join(' · ') || '—';
+  const min = new Date(Math.min(...inis));
+  const max = new Date(Math.max(...fins.length?fins:inis));
+  return `${fmtDate(min)} — ${fmtDate(max)}  ·  ${sems.join(', ')}`;
+}
+
+function wireEvents(){
+  const dz = document.getElementById('dropzone');
+  const fi = document.getElementById('fileInput');
+  dz.addEventListener('click', ()=>fi.click());
+  dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', ()=> dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault(); dz.classList.remove('dragover');
+    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fi.addEventListener('change', e=>{ if(e.target.files.length) handleFile(e.target.files[0]); });
+
+  document.getElementById('reloadBtn').addEventListener('click', ()=>{
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('uploadScreen').classList.remove('hidden');
+    document.getElementById('uploadStatus').textContent='';
+    fi.value='';
+  });
+
+  document.getElementById('exportCsvBtn').addEventListener('click', exportXLSX);
+  document.getElementById('reporteBtn').addEventListener('click', exportReporteGerencial);
+
+  document.getElementById('searchInput').addEventListener('input', e=>{
+    state.filters.search = e.target.value; render();
+  });
+  document.getElementById('sedeToggle').addEventListener('click', e=>{
+    const btn = e.target.closest('.chip');
+    if(!btn) return;
+    state.kpiSede = btn.dataset.sede;
+    document.querySelectorAll('#sedeToggle .chip').forEach(c=>c.classList.toggle('active', c===btn));
+    renderKPIs();
+    renderDocentes();
+    renderCursos();
+    updateFilterCount();
+  });
+  document.getElementById('cicloChips').addEventListener('click', e=>{
+    const btn = e.target.closest('.chip');
+    if(!btn) return;
+    state.filters.ciclo = btn.dataset.ciclo;
+    document.querySelectorAll('#cicloChips .chip').forEach(c=>c.classList.toggle('active', c===btn));
+    render();
+  });
+  document.getElementById('turnoChips').addEventListener('click', e=>{
+    const btn = e.target.closest('.chip');
+    if(!btn) return;
+    state.filters.turno = btn.dataset.turno;
+    document.querySelectorAll('#turnoChips .chip').forEach(c=>c.classList.toggle('active', c===btn));
+    render();
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+      state.activeTab = btn.dataset.tab;
+      if(btn.dataset.tab==='graficos') renderGraficos();
+      if(btn.dataset.tab==='proyeccion') renderProyeccion();
+    });
+  });
+
+  // event delegation for card open/close & pdf export
+  document.getElementById('main') && null;
+  document.querySelector('main').addEventListener('click', e=>{
+    const toggle = e.target.closest('[data-toggle]');
+    if(toggle){
+      const key = toggle.dataset.toggle;
+      const card = toggle.closest('.entity-card');
+      if(state.openCards.has(key)){ state.openCards.delete(key); card.classList.remove('open'); }
+      else { state.openCards.add(key); card.classList.add('open'); }
+      return;
+    }
+    const pdfBtn = e.target.closest('[data-pdf]');
+    if(pdfBtn){ exportDocentePDF(pdfBtn.dataset.pdf); }
+  });
+}
+
+function handleFile(file){
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.className = 'upload-status';
+  statusEl.innerHTML = '<span class="spinner"></span> Procesando archivo...';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      if(!loadWorkbook(wb, file.name)){
+        statusEl.className='upload-status err';
+        statusEl.textContent = 'No se encontraron las hojas "Escuela" ni "Instituto" en el archivo.';
+      }
+      return;
+      const escuelaSheet = wb.Sheets['Escuela'] || wb.Sheets[wb.SheetNames.find(n=>normHeader(n)==='ESCUELA')];
+      const institutoSheet = wb.Sheets['Instituto'] || wb.Sheets[wb.SheetNames.find(n=>normHeader(n)==='INSTITUTO')];
+      if(!escuelaSheet && !institutoSheet){
+        statusEl.className='upload-status err';
+        statusEl.textContent = 'No se encontraron las hojas "Escuela" ni "Instituto" en el archivo.';
+        return;
+      }
+      state.escuelaRowsAll = escuelaSheet ? parseSheetRows(escuelaSheet) : [];
+      state.institutoRowsAll = institutoSheet ? parseSheetRows(institutoSheet) : [];
+      state.fileName = file.name;
+      state.loadedAt = new Date();
+      state.filters = {search:'', ciclo:'ALL', turno:'ALL'};
+      state.kpiSede = 'escuela';
+      state.openCards = new Set();
+
+      populateFilterOptions();
+      document.querySelectorAll('#sedeToggle .chip').forEach(c=>c.classList.toggle('active', c.dataset.sede==='escuela'));
+      document.getElementById('periodLabel').textContent = detectPeriodLabel();
+      document.getElementById('fileMeta').textContent = `${file.name} · cargado ${state.loadedAt.toLocaleString('es-PE')}`;
+
+      render();
+
+      document.getElementById('uploadScreen').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+    }catch(err){
+      console.error(err);
+      statusEl.className='upload-status err';
+      statusEl.textContent = 'No se pudo leer el archivo. Verifica que sea un .xlsx válido.';
+    }
+  };
+  reader.onerror = function(){
+    statusEl.className='upload-status err';
+    statusEl.textContent = 'Error al leer el archivo.';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ================= DEMO: datos 100% ficticios =================
+   Genera un Excel en memoria con la misma estructura que el real
+   (hojas Escuela e Instituto). Nombres, DNI, códigos y tarifas son inventados. */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+function buildDemoRows(){
+  const rnd = mulberry32(20263);
+  const pick = arr => arr[Math.floor(rnd()*arr.length)];
+
+  const APELLIDOS = ['QUISPE','MENDOZA','VARGAS','SALAZAR','CÁCERES','ROMERO','PAREDES','HUAMÁN','CHÁVEZ','FLORES','DELGADO','NAVARRO','RAMÍREZ','TORRES','CASTILLO','ESPINOZA','GUTIÉRREZ','MORALES','VALDIVIA','PALACIOS','BENAVIDES','ZEGARRA','LLANOS','ORTIZ','CAMPOS','RIVERA','SOTO','AGUILAR'];
+  const NOMBRES = ['ANA LUCÍA','CARLOS ALBERTO','MARÍA FERNANDA','JORGE LUIS','ROSA ELENA','MIGUEL ÁNGEL','PATRICIA','RICARDO','GABRIELA','LUIS ENRIQUE','CLAUDIA','FERNANDO','VERÓNICA','JULIO CÉSAR','SANDRA','ÓSCAR','KATHERINE','RAÚL','DIANA','HÉCTOR','MÓNICA','EDUARDO','PAOLA','VÍCTOR','LORENA','ANDRÉS','CECILIA','MARCO ANTONIO','SILVIA','GUSTAVO'];
+
+  const docentes = [];
+  const usados = new Set();
+  while(docentes.length < 42){
+    const a1 = pick(APELLIDOS), a2 = pick(APELLIDOS);
+    if(a1===a2) continue;
+    const n = `${a1} ${a2} ${pick(NOMBRES)}`;
+    if(usados.has(n)) continue;
+    usados.add(n);
+    const tarifas = [38,40,42,45,48,50,55,60];
+    docentes.push({
+      nombre:n,
+      codigo:'DOC'+String(1000+docentes.length*7).padStart(5,'0'),
+      dni:String(40000000+Math.floor(rnd()*9999999)),
+      tarifa: rnd()<0.12 ? null : pick(tarifas)
+    });
+  }
+
+  // Módulo A / B (coinciden con la lógica de cortes del tablero)
+  const MOD = [
+    {ini:new Date(2026,8,21), fin:new Date(2026,10,7)},
+    {ini:new Date(2026,10,9), fin:new Date(2026,11,26)}
+  ];
+
+  const ESCUELA = {
+    1:[['CE101','Fundamentos de Comercio Exterior'],['MT102','Matemática Financiera'],['EC103','Economía General'],['IN104','Inglés Comercial I']],
+    2:[['LG201','Logística Internacional'],['CT202','Contabilidad General'],['MK203','Marketing Estratégico'],['IN204','Inglés Comercial II']],
+    3:[['AD301','Legislación Aduanera'],['IM302','Investigación de Mercados'],['CP303','Costos y Presupuestos'],['CA304','Clasificación Arancelaria']],
+    4:[['MP401','Medios de Pago Internacionales'],['TS402','Transporte y Seguros Internacionales'],['MI403','Marketing Internacional'],['ES404','Estadística Aplicada a los Negocios']],
+    5:[['GI501','Gestión de Importaciones'],['EC502','Comercio Electrónico Global'],['FI503','Finanzas Internacionales'],['NI504','Negociación Internacional']],
+    6:[['PN601','Plan de Negocios de Exportación'],['SC602','Supply Chain Management'],['AC603','Acuerdos Comerciales y TLC'],['OA604','Gestión de Operaciones Aduaneras']]
+  };
+  const INSTITUTO = {
+    1:[['TC111','Introducción al Comercio Exterior'],['OF112','Ofimática Empresarial'],['DC113','Documentación Comercial'],['CO114','Comunicación Efectiva']],
+    2:[['AL211','Almacenes y Distribución'],['TR212','Trámite Documentario Aduanero'],['VE213','Técnicas de Venta'],['IN214','Inglés para Exportación']],
+    3:[['EM311','Embalaje y Etiquetado'],['CR312','Costeo de Exportación'],['ME313','Mercados de Destino'],['LG314','Operaciones Logísticas']],
+    4:[['PR411','Proyecto de Exportación'],['GC412','Gestión de Calidad'],['DI413','Marketing Digital'],['EM414','Emprendimiento Exportador']]
+  };
+
+  // Cada curso tiene un pequeño "pool" de docentes especialistas (se cruzan entre sedes)
+  const pool = {};
+  function poolFor(code){
+    if(!pool[code]){
+      const size = 2 + Math.floor(rnd()*2);
+      pool[code] = Array.from({length:size}, ()=>pick(docentes));
+    }
+    return pool[code];
+  }
+
+  const SLOTS = {
+    'MAÑANA':[['08:00','11:00'],['11:00','14:00']],
+    'TARDE':[['14:00','17:00'],['17:00','20:00']],
+    'NOCHE':[['19:00','22:00'],['19:00','22:00']]
+  };
+  const DIAS_PARES = [['LUNES','MIÉRCOLES'],['MARTES','JUEVES'],['MIÉRCOLES','VIERNES'],['LUNES','JUEVES']];
+  const DOW = {DOMINGO:0,LUNES:1,MARTES:2,'MIÉRCOLES':3,JUEVES:4,VIERNES:5,'SÁBADO':6};
+  function firstOn(dia, ini){ const d=new Date(ini); d.setDate(d.getDate()+((DOW[dia]-d.getDay()+7)%7)); return d; }
+
+  const cargaDoc = new Map();
+  function build(plan, turnos, seccionesPorTurno, sedeTag){
+    const rows = [];
+    Object.keys(plan).forEach(ciclo=>{
+      turnos.forEach(turno=>{
+        const n = seccionesPorTurno(ciclo, turno);
+        for(let s=1;s<=n;s++){
+          const seccion = `${ciclo}${turno.charAt(0)}${sedeTag}${String(s).padStart(2,'0')}`;
+          plan[ciclo].forEach(([cod,curso],idx)=>{
+            const m = MOD[idx<2?0:1];
+            const slot = SLOTS[turno][idx%2];
+            const dias = DIAS_PARES[(idx + s + Number(ciclo)) % DIAS_PARES.length];
+            const load = d => (cargaDoc.get(d)||0);
+            let doc = poolFor(cod).slice().sort((a,b)=>load(a)-load(b))[0];
+            if(load(doc) >= 30) doc = docentes.slice().sort((a,b)=>load(a)-load(b))[Math.floor(rnd()*3)];
+            cargaDoc.set(doc, load(doc) + (parseInt(slot[1])-parseInt(slot[0]))*2);
+            dias.forEach(dia=>{
+              const h = (parseInt(slot[1]) - parseInt(slot[0]));
+              rows.push([
+                firstOn(dia, m.ini), doc.codigo, doc.dni, doc.nombre, cod, curso, seccion,
+                turno, idx%3===2 ? 'VIRTUAL' : 'PRESENCIAL', slot[0], slot[1],
+                m.ini, m.fin, h, '2026-3', dia, doc.tarifa
+              ]);
+            });
+          });
+        }
+      });
+    });
+    return rows;
+  }
+
+  const escuela = build(ESCUELA, ['MAÑANA','NOCHE'], (c,t)=> (Number(c)<=2 ? 2 : 1) + (t==='NOCHE' && Number(c)===1 ? 1 : 0), 'E');
+  const instituto = build(INSTITUTO, ['TARDE','NOCHE'], (c,t)=> Number(c)<=2 ? 2 : 1, 'I');
+
+  // Un caso realista de calidad de datos: un docente con código "arrastrado" en una fila
+  if(escuela.length>5){ escuela[5] = escuela[5].slice(); escuela[5][1] = 'DOC09999'; }
+  return {escuela, instituto};
+}
+
+const DEMO_HEADERS = ['FECHA DE SESIÓN','CÓDIGO DOCENTE','DNI DOCENTE','APELLIDOS Y NOMBRES DEL DOCENTE','COD. CURSO','CURSO','SECCIÓN ESC','TURNO MAESTRO','MODALIDAD DEL CURSO','HOR. INGRESO','HOR. SALIDA','FECHA INICIAL CURSO','FECHA FINAL CURSO','HORAS PROGRAMADAS','SEMESTRE MAESTRO','DÍA DICTADO','TARIFA'];
+
+function buildDemoWorkbook(){
+  const {escuela, instituto} = buildDemoRows();
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([DEMO_HEADERS, ...escuela], {cellDates:true}), 'Escuela');
+  const instHeaders = DEMO_HEADERS.slice(); instHeaders[6] = 'SECCIÓN INST';
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([instHeaders, ...instituto], {cellDates:true}), 'Instituto');
+  return wb;
+}
+
+function loadWorkbook(wb, label){
+  const escuelaSheet = wb.Sheets['Escuela'] || wb.Sheets[wb.SheetNames.find(n=>normHeader(n)==='ESCUELA')];
+  const institutoSheet = wb.Sheets['Instituto'] || wb.Sheets[wb.SheetNames.find(n=>normHeader(n)==='INSTITUTO')];
+  if(!escuelaSheet && !institutoSheet) return false;
+  state.escuelaRowsAll = escuelaSheet ? parseSheetRows(escuelaSheet) : [];
+  state.institutoRowsAll = institutoSheet ? parseSheetRows(institutoSheet) : [];
+  state.fileName = label;
+  state.loadedAt = new Date();
+  state.filters = {search:'', ciclo:'ALL', turno:'ALL'};
+  state.kpiSede = 'escuela';
+  state.openCards = new Set();
+  document.getElementById('searchInput').value = '';
+  populateFilterOptions();
+  document.querySelectorAll('#sedeToggle .chip').forEach(c=>c.classList.toggle('active', c.dataset.sede==='escuela'));
+  document.getElementById('periodLabel').textContent = detectPeriodLabel();
+  document.getElementById('fileMeta').textContent = `${label} · cargado ${state.loadedAt.toLocaleString('es-PE')}`;
+  render();
+  document.getElementById('uploadScreen').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  return true;
+}
+
+function wireDemo(){
+  document.getElementById('demoBtn').addEventListener('click', ()=> loadWorkbook(buildDemoWorkbook(), 'Demo FacultyHub · datos ficticios'));
+  document.getElementById('sampleBtn').addEventListener('click', ()=> XLSX.writeFile(buildDemoWorkbook(), 'FacultyHub_programacion_ejemplo.xlsx', {cellDates:true}));
+}
+
+wireEvents();
+wireDemo();
+loadWorkbook(buildDemoWorkbook(), 'Demo FacultyHub · datos ficticios');
+})();
+</script>
+</body>
+</html>

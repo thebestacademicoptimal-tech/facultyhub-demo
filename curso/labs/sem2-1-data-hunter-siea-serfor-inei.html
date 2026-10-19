@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Hunter - Herramientas de Investigación</title>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7; --accent2:#38bdf8;
+  --green:#059669; --red:#dc2626; --yellow:#d97706;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;display:flex;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);
+  white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Sidebar */
+.sidebar{width:280px;min-height:100vh;background:linear-gradient(180deg,#0c4a6e 0%,#075985 100%);
+  padding:24px 16px;position:fixed;left:0;top:0;bottom:0;
+  box-shadow:4px 0 20px rgba(2,132,199,0.2);z-index:10;
+  display:flex;flex-direction:column;gap:0;}
+.sidebar-logo{text-align:center;margin-bottom:20px;padding-bottom:16px;
+  border-bottom:1px solid rgba(255,255,255,0.15);}
+.sidebar-logo h2{font-size:17px;color:#fff;font-weight:800;letter-spacing:1px;}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.65);margin-top:2px;}
+.sidebar-score{background:rgba(255,255,255,0.12);border-radius:12px;
+  padding:12px;text-align:center;margin-bottom:16px;border:1px solid rgba(255,255,255,0.2);}
+.sidebar-score .sc-label{font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;}
+.sidebar-score .sc-val{font-size:32px;font-weight:900;color:#fff;line-height:1;}
+.sidebar-score .sc-sub{font-size:11px;color:rgba(255,255,255,0.6);}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;
+  margin-bottom:8px;background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);
+  border-radius:10px;cursor:pointer;text-align:left;font-weight:600;
+  font-size:13px;font-family:inherit;transition:all 0.2s;}
+.nav-btn:hover{background:rgba(255,255,255,0.18);color:#fff;}
+.nav-btn.active{background:rgba(255,255,255,0.95);color:#075985;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.nav-btn .nb-icon{font-size:18px;flex-shrink:0;}
+.nav-btn .nb-pts{font-size:10px;margin-left:auto;opacity:0.7;white-space:nowrap;}
+.nav-btn.done .nb-pts{color:var(--green);}
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid rgba(255,255,255,0.15);
+  text-align:center;font-size:10px;color:rgba(255,255,255,0.5);}
+
+/* Main */
+.main-content{margin-left:280px;flex:1;padding:28px 32px;overflow-y:auto;position:relative;z-index:1;}
+.module{display:none;}
+.module.active{display:block;}
+
+/* Header strip */
+.page-header{background:linear-gradient(135deg,#0284c7,#0ea5e9);
+  border-radius:16px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 6px 24px rgba(2,132,199,0.3);flex-wrap:wrap;gap:10px;}
+.page-header h1{font-size:18px;color:#fff;font-weight:800;}
+.page-header p{font-size:11px;color:rgba(255,255,255,0.8);}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;
+  font-weight:700;padding:6px 14px;border-radius:20px;text-align:center;
+  line-height:1.6;border:1px solid rgba(255,255,255,0.3);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;}
+
+/* Inputs */
+input[type="text"]{width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;font-size:14px;background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;margin-bottom:12px;}
+input:focus{outline:none;border-color:#0284c7;box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+
+/* Option buttons */
+.option-btn{display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;
+  margin:8px 0;background:#f8fdff;color:var(--text);
+  border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:left;
+  font-size:13px;font-weight:500;font-family:inherit;transition:all 0.2s;}
+.option-btn:hover:not(:disabled){border-color:#0284c7;background:#e0f2fe;color:#075985;
+  transform:translateX(4px);}
+.option-btn:disabled{cursor:not-allowed;opacity:0.8;}
+.option-btn .opt-letter{width:28px;height:28px;border-radius:50%;background:#0284c7;
+  color:#fff;font-weight:800;font-size:12px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;}
+.option-btn.correct{border-color:#059669;background:#d1fae5;color:#065f46;}
+.option-btn.correct .opt-letter{background:#059669;}
+.option-btn.wrong{border-color:#dc2626;background:#fee2e2;color:#991b1b;}
+.option-btn.wrong .opt-letter{background:#dc2626;}
+
+/* Feedback */
+.feedback-box{margin-top:14px;padding:14px 18px;border-radius:10px;
+  display:none;font-size:13px;font-weight:600;line-height:1.6;}
+.feedback-box.ok{background:#d1fae5;border:1px solid #059669;color:#065f46;}
+.feedback-box.fail{background:#fee2e2;border:1px solid #dc2626;color:#991b1b;}
+
+/* Progress bar (quiz) */
+.quiz-progress{background:#e0f2fe;border-radius:99px;height:8px;margin-bottom:20px;overflow:hidden;}
+.quiz-progress-fill{height:8px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+
+/* Module badge */
+.module-badge{display:inline-flex;align-items:center;gap:6px;
+  background:#0284c7;color:#fff;font-size:12px;font-weight:700;
+  padding:5px 14px;border-radius:20px;margin-bottom:14px;}
+
+/* Concept box */
+.concept-box{background:#f0f9ff;border:1px solid #bfdbfe;
+  border-left:5px solid #0284c7;border-radius:10px;
+  padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px;
+  line-height:1.7;color:var(--text);}
+.concept-box strong{color:#0284c7;}
+
+/* Diploma */
+.diploma-wrap{text-align:center;padding:2rem 1rem;}
+.diploma{background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);
+  border-radius:20px;padding:40px 48px;display:inline-block;max-width:680px;
+  width:100%;position:relative;overflow:hidden;
+  box-shadow:0 8px 40px rgba(2,132,199,0.25);}
+.diploma::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  border-radius:20px;border:3px solid #0284c7;pointer-events:none;}
+.diploma::after{content:'';position:absolute;top:8px;left:8px;right:8px;bottom:8px;
+  border-radius:16px;border:1px solid #bfdbfe;pointer-events:none;}
+.diploma-logo{font-size:14px;font-weight:800;color:#0284c7;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:6px;}
+.diploma-curso{font-size:12px;color:#0369a1;margin-bottom:20px;}
+.diploma-seal{font-size:52px;margin-bottom:14px;}
+.diploma-title{font-size:22px;font-weight:800;color:#075985;margin-bottom:6px;}
+.diploma-subtitle{font-size:13px;color:#0369a1;margin-bottom:20px;}
+.diploma-name{font-size:28px;font-weight:900;color:#0284c7;
+  border-bottom:2px solid #0284c7;padding-bottom:6px;
+  display:inline-block;margin-bottom:16px;min-width:300px;}
+.diploma-score{font-size:40px;font-weight:900;margin-bottom:8px;}
+.diploma-label{font-size:14px;font-weight:600;margin-bottom:20px;}
+.diploma-feedback{font-size:13px;line-height:1.7;color:#0369a1;
+  background:#fff;border-radius:10px;padding:12px 16px;
+  border:1px solid #bfdbfe;margin-bottom:20px;text-align:left;}
+.diploma-docente{font-size:12px;color:#0369a1;font-weight:600;
+  border-top:1px solid #bfdbfe;padding-top:14px;margin-top:8px;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;padding:12px 28px;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;margin-right:10px;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-green{background:#059669;border:none;color:#fff;padding:12px 28px;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(5,150,105,0.35);transition:all 0.2s;}
+.btn-green:hover{background:#047857;transform:translateY(-1px);}
+.btn-secondary{background:#fff;border:2px solid var(--border);color:var(--text);
+  padding:12px 24px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+
+#pdf-status{font-size:12px;color:#0284c7;margin-top:8px;}
+.footer-main{text-align:center;font-size:11px;color:#93c5fd;margin-top:24px;}
+.footer-main strong{color:#0284c7;}
+
+@media(max-width:700px){
+  .sidebar{width:100%;min-height:auto;position:relative;}
+  .main-content{margin-left:0;}
+  body{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 2 · Data Hunter: SIEA, SERFOR e INEI</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h2>🔍 DATA HUNTER</h2>
+    <p>FacultyHub · Investigación de Mercado</p>
+  </div>
+  <div class="sidebar-score">
+    <div class="sc-label">PUNTUACIÓN TOTAL</div>
+    <div class="sc-val"><span id="totalScore">0</span><span style="font-size:16px;opacity:0.6;">/20</span></div>
+    <div class="sc-sub" id="score-label">Completa los módulos</div>
+  </div>
+  <button class="nav-btn active" onclick="showModule('home','Registro',this)" id="btn-home">
+    <span class="nb-icon">👤</span>Registro Inicial
+  </button>
+  <button class="nav-btn" onclick="showModule('siea','SIEA',this)" id="btn-siea">
+    <span class="nb-icon">🌾</span>1. SIEA<span class="nb-pts">5 pts</span>
+  </button>
+  <button class="nav-btn" onclick="showModule('serfor','SERFOR',this)" id="btn-serfor">
+    <span class="nb-icon">🌲</span>2. SERFOR<span class="nb-pts">5 pts</span>
+  </button>
+  <button class="nav-btn" onclick="showModule('inei-inf','INEI Informes',this)" id="btn-inei-inf">
+    <span class="nb-icon">📊</span>3. INEI Informes<span class="nb-pts">5 pts</span>
+  </button>
+  <button class="nav-btn" onclick="showModule('inei-est','INEI Estadística',this)" id="btn-inei-est">
+    <span class="nb-icon">📈</span>4. INEI Estadística<span class="nb-pts">5 pts</span>
+  </button>
+  <button class="nav-btn" onclick="showModule('diploma','Certificado',this)" id="btn-diploma">
+    <span class="nb-icon">🏆</span>Certificado Final
+  </button>
+  <div class="sidebar-footer">Docente: Daniel Solar<br>UD Investigación de Mercado</div>
+</nav>
+
+<!-- Main -->
+<main class="main-content">
+
+<!-- ── HOME ── -->
+<div id="home" class="module active">
+  <div class="page-header">
+    <div><h1>🔍 Data Hunter</h1><p>Certificación en Herramientas de Investigación de Mercado</p></div>
+    <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+  </div>
+  <div class="card">
+    <p class="card-title">👤 Registro del analista</p>
+    <p style="font-size:13px;color:var(--sub);margin-bottom:14px;">Ingresa tu nombre completo para comenzar la certificación. Este nombre aparecerá en tu diploma.</p>
+    <input type="text" id="stuName" placeholder="Ej: Solar, Daniel Alfredo">
+    <button class="btn-primary" onclick="saveName()">✅ Confirmar y comenzar</button>
+  </div>
+  <div class="concept-box">
+    <strong>📌 ¿Qué es Data Hunter?</strong><br>
+    En este laboratorio pondrás a prueba tu capacidad para navegar las principales fuentes de datos del Perú utilizadas en Investigación de Mercados: <strong>SIEA, SERFOR, INEI Informes</strong> e <strong>INEI Estadística</strong>.<br><br>
+    Cada módulo vale <strong>5 puntos</strong>. La nota máxima es <strong>20</strong>. Con <strong>13 o más apruebas</strong> y obtienes tu certificado.
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:1rem;">
+    <div style="background:#dbeafe;border-radius:12px;padding:1rem;text-align:center;border:2px solid #0284c7;">
+      <div style="font-size:24px;">🌾</div>
+      <div style="font-size:12px;font-weight:700;color:#0284c7;margin-top:4px;">SIEA</div>
+      <div style="font-size:10px;color:#0369a1;">Sector Agropecuario</div>
+    </div>
+    <div style="background:#d1fae5;border-radius:12px;padding:1rem;text-align:center;border:2px solid #059669;">
+      <div style="font-size:24px;">🌲</div>
+      <div style="font-size:12px;font-weight:700;color:#059669;margin-top:4px;">SERFOR</div>
+      <div style="font-size:10px;color:#047857;">Sector Forestal</div>
+    </div>
+    <div style="background:#ede9fe;border-radius:12px;padding:1rem;text-align:center;border:2px solid #7c3aed;">
+      <div style="font-size:24px;">📊</div>
+      <div style="font-size:12px;font-weight:700;color:#7c3aed;margin-top:4px;">INEI Informes</div>
+      <div style="font-size:10px;color:#5b21b6;">Informes Técnicos</div>
+    </div>
+    <div style="background:#fef3c7;border-radius:12px;padding:1rem;text-align:center;border:2px solid #d97706;">
+      <div style="font-size:24px;">📈</div>
+      <div style="font-size:12px;font-weight:700;color:#d97706;margin-top:4px;">INEI Estadística</div>
+      <div style="font-size:10px;color:#92400e;">Estadísticas Sectoriales</div>
+    </div>
+  </div>
+</div>
+
+<!-- Módulos de desafío generados dinámicamente -->
+<div id="modules-container"></div>
+
+<!-- ── DIPLOMA ── -->
+<div id="diploma" class="module">
+  <div class="page-header">
+    <div><h1>🏆 Certificado Final</h1><p>Resultado de tu evaluación Data Hunter</p></div>
+    <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+  </div>
+  <div class="diploma-wrap">
+    <div class="diploma" id="diploma-card">
+      <div class="diploma-logo">FacultyHub · Escuela demo</div>
+      <div class="diploma-curso">Curso: Investigación de Mercados</div>
+      <div class="diploma-seal" id="diploma-seal">🏆</div>
+      <div class="diploma-title" id="diploma-title">CERTIFICADO DE LOGRO</div>
+      <div class="diploma-subtitle" id="diploma-subtitle">Herramientas de Investigación de Mercado</div>
+      <div class="diploma-name" id="diploma-name">[ Analista ]</div>
+      <div class="diploma-score" id="diploma-score">0</div>
+      <div class="diploma-label" id="diploma-label">puntos de 20</div>
+      <div class="diploma-feedback" id="diploma-feedback">Completa los módulos para ver tu retroalimentación.</div>
+      <div class="diploma-docente">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;">
+          <div style="text-align:left;">
+            <div style="font-size:14px;font-weight:800;color:#075985;">Daniel Solar</div>
+            <div style="font-size:11px;color:#0369a1;">Docente · UD Investigación de Mercado</div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:#0369a1;" id="diploma-date"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:1rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+    <button class="btn-primary" onclick="buildDiploma()">🔄 Actualizar certificado</button>
+    <button class="btn-green" id="pdf-btn" onclick="downloadCertificate()">⬇ Descargar PDF</button>
+  </div>
+  <p id="pdf-status" style="text-align:center;"></p>
+</div>
+
+<div class="footer-main">IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong></div>
+</main>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ── Data ──────────────────────────────────────────────────────────────
+const challenges=[
+  {
+    id:'siea',title:'SIEA',icon:'🌾',color:'#0284c7',light:'#dbeafe',
+    intro:'El <strong>SIEA (Sistema Integrado de Estadística Agraria)</strong> es la plataforma del Ministerio de Desarrollo Agrario y Riego que concentra estadísticas del sector agropecuario peruano, incluyendo producción, precios y valor bruto.',
+    q:'¿Cuál es la ruta correcta para consultar el Valor Bruto de Producción en SIEA?',
+    options:['Inicio → Reportes → Excel local','Estadística Agropecuaria → Valor Bruto Producción','Publicaciones → Anuarios → SIEA','Informes Técnicos → Producción Nacional'],
+    correct:1,
+    explanation:'La ruta correcta es <strong>Estadística Agropecuaria → Valor Bruto Producción</strong>. Este módulo permite acceder a los datos de producción por cultivo, región y período directamente en la plataforma SIEA.'
+  },
+  {
+    id:'serfor',title:'SERFOR',icon:'🌲',color:'#059669',light:'#d1fae5',
+    intro:'<strong>SERFOR (Servicio Nacional Forestal y de Fauna Silvestre)</strong> es el organismo técnico del MINAGRI responsable de gestionar y supervisar el aprovechamiento sostenible de los recursos forestales y de fauna silvestre del Perú.',
+    q:'Para consultar el anuario de productos maderables en SERFOR, ¿qué ruta sigues?',
+    options:['Estadística → Informes de Género','Biblioteca Virtual → Producción Nacional','Estadístico → Publicaciones → Anuarios','Portal → Consulta rápida → Desembarque'],
+    correct:2,
+    explanation:'La ruta correcta es <strong>Estadístico → Publicaciones → Anuarios</strong>. Los anuarios forestales de SERFOR concentran datos históricos sobre producción maderable, volúmenes, regiones y tipos de especie.'
+  },
+  {
+    id:'inei-inf',title:'INEI Informes',icon:'📊',color:'#7c3aed',light:'#ede9fe',
+    intro:'El <strong>INEI (Instituto Nacional de Estadística e Informática)</strong> publica informes técnicos mensuales sobre la producción nacional por sectores. Estos informes son clave para monitorear el comportamiento de los sectores de exportación.',
+    q:'¿Dónde encuentras el informe técnico de Producción Nacional mensual en INEI?',
+    options:['Biblioteca Virtual → Informes Técnicos → Mensual','Índice Temático → Economía → Sectorial','Estadística Agropecuaria → Valor Bruto','Anuarios → Forestal'],
+    correct:0,
+    explanation:'La ruta correcta es <strong>Biblioteca Virtual → Informes Técnicos → Mensual</strong>. El INEI publica periódicamente informes técnicos de producción sectorial que permiten comparar la evolución mensual de los principales sectores productivos.'
+  },
+  {
+    id:'inei-est',title:'INEI Estadística',icon:'📈',color:'#d97706',light:'#fef3c7',
+    intro:'El <strong>INEI</strong> organiza su información estadística por índice temático, lo que facilita la búsqueda de datos sectoriales en áreas como pesca, agricultura, manufactura y comercio exterior.',
+    q:'Para consultar estadísticas sectoriales de pesca o agro en INEI, ¿qué ruta usarías?',
+    options:['Informes Técnicos → Trimestral','Biblioteca Virtual → Anuarios','Índice Temático → Economía → Estadísticas Sectoriales','Publicaciones → Producción Nacional'],
+    correct:2,
+    explanation:'La ruta correcta es <strong>Índice Temático → Economía → Estadísticas Sectoriales</strong>. Esta ruta da acceso directo a datos organizados por sector económico, facilitando la búsqueda de estadísticas específicas de pesca, agricultura y otros.'
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────────────
+let scores={siea:0,serfor:0,'inei-inf':0,'inei-est':0};
+let feedbackLog={};
+let answered={siea:false,serfor:false,'inei-inf':false,'inei-est':false};
+
+// ── Build modules ─────────────────────────────────────────────────────
+const modWrap=document.getElementById('modules-container');
+challenges.forEach(function(ch){
+  const div=document.createElement('div');
+  div.className='module';
+  div.id=ch.id;
+
+  let opts='';
+  const letters=['A','B','C','D'];
+  ch.options.forEach(function(opt,i){
+    opts+=`<button class="option-btn" id="opt-${ch.id}-${i}" onclick="answer('${ch.id}',${i})">
+      <span class="opt-letter">${letters[i]}</span>${opt}
+    </button>`;
+  });
+
+  div.innerHTML=`
+    <div class="page-header" style="background:linear-gradient(135deg,${ch.color},${ch.color}cc);">
+      <div><h1>${ch.icon} Módulo: ${ch.title}</h1><p>Herramientas de Investigación de Mercado · 5 puntos</p></div>
+      <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+    </div>
+    <div class="concept-box" style="border-left-color:${ch.color};">
+      <strong style="color:${ch.color};">📌 ¿Qué es ${ch.title}?</strong><br>${ch.intro}
+    </div>
+    <div class="card">
+      <div class="module-badge" style="background:${ch.color};">${ch.icon} Desafío ${ch.title} · 5 pts</div>
+      <p style="font-size:14px;font-weight:600;color:var(--sub);margin-bottom:16px;">❓ ${ch.q}</p>
+      <div class="quiz-progress"><div class="quiz-progress-fill" id="qp-${ch.id}" style="width:0%"></div></div>
+      ${opts}
+      <div class="feedback-box" id="fb-${ch.id}"></div>
+    </div>`;
+  modWrap.appendChild(div);
+});
+
+// ── Navigation ────────────────────────────────────────────────────────
+let currentBtn=document.getElementById('btn-home');
+function showModule(id,label,btn){
+  document.querySelectorAll('.module').forEach(function(m){m.classList.remove('active');});
+  document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  if(btn){btn.classList.add('active');currentBtn=btn;}
+  if(id==='diploma')buildDiploma();
+}
+
+// ── Save name ─────────────────────────────────────────────────────────
+function saveName(){
+  const name=document.getElementById('stuName').value.trim();
+  if(!name){alert('Por favor ingresa tu nombre completo.');return;}
+  localStorage.setItem('dh_stuName',name);
+  alert('¡Bienvenido, analista '+name+'! Ahora puedes comenzar los módulos.');
+  showModule('siea','SIEA',document.getElementById('btn-siea'));
+}
+
+// ── Answer ────────────────────────────────────────────────────────────
+function answer(moduleId,index){
+  if(answered[moduleId]){alert('Ya respondiste este módulo.');return;}
+  answered[moduleId]=true;
+
+  const ch=challenges.find(function(c){return c.id===moduleId;});
+  const isCorrect=(index===ch.correct);
+  const letters=['A','B','C','D'];
+  const fb=document.getElementById('fb-'+moduleId);
+
+  // Color all buttons
+  ch.options.forEach(function(_,i){
+    const btn=document.getElementById('opt-'+moduleId+'-'+i);
+    if(i===ch.correct){btn.classList.add('correct');}
+    else if(i===index&&!isCorrect){btn.classList.add('wrong');}
+    btn.disabled=true;
+  });
+
+  // Progress bar
+  document.getElementById('qp-'+moduleId).style.width='100%';
+
+  if(isCorrect){
+    scores[moduleId]=5;
+    fb.className='feedback-box ok';
+    fb.innerHTML='✅ <strong>¡Correcto!</strong> Has ganado <strong>5 puntos</strong>.<br><span style="font-size:12px;">'+ch.explanation+'</span>';
+    feedbackLog[moduleId]={title:ch.title,result:'Correcto ✅',score:5,detail:ch.explanation.replace(/<[^>]+>/g,'')};
+  }else{
+    fb.className='feedback-box fail';
+    fb.innerHTML='❌ <strong>Incorrecto.</strong> La respuesta correcta es: <strong>'+letters[ch.correct]+') '+ch.options[ch.correct]+'</strong><br><span style="font-size:12px;">'+ch.explanation+'</span>';
+    feedbackLog[moduleId]={title:ch.title,result:'Incorrecto ❌',score:0,detail:'Respuesta correcta: '+ch.options[ch.correct]+'. '+ch.explanation.replace(/<[^>]+>/g,'')};
+  }
+  fb.style.display='block';
+
+  updateTotal();
+  // Mark nav button as done
+  const navBtn=document.getElementById('btn-'+moduleId);
+  if(navBtn){
+    navBtn.classList.add('done');
+    navBtn.querySelector('.nb-pts').textContent=isCorrect?'✅ 5/5':'❌ 0/5';
+  }
+}
+
+// ── Update total ──────────────────────────────────────────────────────
+function updateTotal(){
+  const total=Object.values(scores).reduce(function(a,b){return a+b;},0);
+  document.getElementById('totalScore').textContent=total;
+  const lbl=document.getElementById('score-label');
+  if(total>=20)lbl.textContent='🌟 ¡EXCELENTE!';
+  else if(total>=13)lbl.textContent='✅ Aprobado';
+  else lbl.textContent=total+' / 20 puntos';
+  return total;
+}
+
+// ── Diploma ───────────────────────────────────────────────────────────
+function buildDiploma(){
+  const name=localStorage.getItem('dh_stuName')||document.getElementById('stuName')?.value||'Analista';
+  const total=updateTotal();
+  document.getElementById('diploma-name').textContent=name;
+  document.getElementById('diploma-score').textContent=total;
+  document.getElementById('diploma-date').textContent='Lima, '+new Date().toLocaleDateString('es-PE',{year:'numeric',month:'long',day:'numeric'});
+
+  let seal,title,subtitle,feedback,scoreColor;
+  if(total===20){
+    seal='🥇';title='DIPLOMA DE EXCELENCIA';subtitle='Calificación perfecta · Dominio total';
+    feedback='<strong>🌟 ¡EXCELENTE!</strong> Obtuviste el puntaje máximo. Demostraste dominio completo de las herramientas de investigación de mercado: SIEA, SERFOR, INEI Informes e INEI Estadística. Tu rendimiento refleja el estándar más alto de FacultyHub · Escuela demo.';
+    scoreColor='#059669';
+  }else if(total>=18){
+    seal='🥈';title='CERTIFICADO DE MÉRITO';subtitle='Calificación sobresaliente';
+    feedback='<strong>🌟 Sobresaliente.</strong> Demostraste un dominio sólido de las herramientas de investigación. Revisa los módulos en los que tuviste dificultades para alcanzar la excelencia.';
+    scoreColor='#0284c7';
+  }else if(total>=13){
+    seal='✅';title='CERTIFICADO DE APROBACIÓN';subtitle='Calificación aprobatoria';
+    feedback='<strong>✅ Felicitaciones, aprobaste.</strong> Lograste superar el mínimo requerido. Te recomendamos reforzar los módulos donde no obtuviste el puntaje completo para mejorar tu manejo de las herramientas de investigación de mercado.';
+    scoreColor='#7c3aed';
+  }else{
+    seal='📋';title='CONSTANCIA DE PARTICIPACIÓN';subtitle='Puntaje no aprobatorio — Sigue intentándolo';
+    feedback='<strong>📋 No has alcanzado el puntaje mínimo (13).</strong> Repasa los conceptos de cada herramienta: SIEA para datos agropecuarios, SERFOR para el sector forestal, e INEI para estadísticas e informes técnicos. ¡Puedes volver a intentarlo!';
+    scoreColor='#dc2626';
+  }
+
+  // Build detail feedback per module
+  let detailHtml='<br><strong>Detalle por módulo:</strong><ul style="margin:6px 0 0 16px;">';
+  challenges.forEach(function(ch){
+    const log=feedbackLog[ch.id];
+    if(log){
+      detailHtml+='<li><strong>'+log.title+':</strong> '+log.result+' ('+log.score+'/5)</li>';
+    }else{
+      detailHtml+='<li><strong>'+ch.title+':</strong> Sin responder</li>';
+    }
+  });
+  detailHtml+='</ul>';
+
+  document.getElementById('diploma-seal').textContent=seal;
+  document.getElementById('diploma-title').textContent=title;
+  document.getElementById('diploma-subtitle').textContent=subtitle;
+  document.getElementById('diploma-score').style.color=scoreColor;
+  document.getElementById('diploma-feedback').innerHTML=feedback+detailHtml;
+  document.getElementById('diploma-label').textContent='puntos de 20';
+}
+
+// ── Download PDF ──────────────────────────────────────────────────────
+function downloadCertificate(){
+  const statusEl=document.getElementById('pdf-status');
+  if(typeof window.jspdf==='undefined'){statusEl.textContent='Cargando librería...';return;}
+  statusEl.style.color='#0284c7';
+  statusEl.textContent='Generando PDF...';
+
+  const name=localStorage.getItem('dh_stuName')||'Analista';
+  const total=Object.values(scores).reduce(function(a,b){return a+b;},0);
+
+  let nivel,feedback;
+  if(total===20){nivel='EXCELENTE - Puntaje Perfecto';feedback='Obtuviste el puntaje máximo. Demostraste dominio completo de las herramientas de investigación de mercado.';}
+  else if(total>=18){nivel='SOBRESALIENTE';feedback='Dominio sólido de las herramientas. Revisa los módulos con dificultades para alcanzar la excelencia.';}
+  else if(total>=13){nivel='APROBADO';feedback='Superaste el puntaje mínimo requerido. Refuerza los módulos con puntaje incompleto.';}
+  else{nivel='NO APROBADO';feedback='No alcanzaste el puntaje mínimo (13). Repasa los conceptos de cada herramienta y vuelve a intentarlo.';}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  // Watermark
+  doc.saveGraphicsState();
+  doc.setGState(new doc.GState({opacity:0.04}));
+  doc.setFontSize(34);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+  doc.restoreGraphicsState();
+
+  // Header
+  doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+  doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+  doc.setFontSize(8);doc.setTextColor(255,255,255);
+  doc.text('FacultyHub · Escuela demo · Curso: Investigación de Mercados · Docente: Daniel Solar',W/2,H-8,{align:'center'});
+
+  // Banner
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,120,'F');
+  doc.setFontSize(22);doc.setTextColor(255,255,255);
+  doc.text('DATA HUNTER',W/2,50,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('Certificación en Herramientas de Investigación de Mercado',W/2,74,{align:'center'});
+  doc.setFontSize(10);
+  doc.text('FacultyHub · Escuela demo · Curso: Investigación de Mercados',W/2,96,{align:'center'});
+
+  // Badge docente
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=145;
+
+  // Score card
+  const scoreColors={20:[5,150,105],18:[2,132,199],13:[124,58,237],0:[220,38,38]};
+  const sc=total>=20?scoreColors[20]:total>=18?scoreColors[18]:total>=13?scoreColors[13]:scoreColors[0];
+  doc.setFillColor(sc[0],sc[1],sc[2]);
+  doc.roundedRect(40,y,W-80,70,8,8,'F');
+  doc.setFontSize(28);doc.setTextColor(255,255,255);
+  doc.text(total+'/20',W/2,y+36,{align:'center'});
+  doc.setFontSize(14);
+  doc.text(nivel,W/2,y+58,{align:'center'});
+  doc.setTextColor(0,0,0);y+=88;
+
+  // Analista
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Analista: '+name,40,y);y+=14;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString('es-PE',{year:'numeric',month:'long',day:'numeric'}),40,y);
+  doc.setTextColor(0,0,0);y+=20;
+
+  // Results table
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Detalle de resultados por módulo',40,y);y+=8;
+
+  const tableBody=challenges.map(function(ch){
+    const log=feedbackLog[ch.id];
+    return [
+      ch.title,
+      log?log.result:'Sin responder',
+      log?(log.score+'/5'):'0/5',
+      log?log.detail:'—'
+    ];
+  });
+  tableBody.push(['TOTAL GENERAL','',total+'/20','']);
+
+  doc.autoTable({
+    head:[['Módulo','Resultado','Puntos','Retroalimentación']],
+    body:tableBody,startY:y,
+    styles:{fontSize:8,cellPadding:5},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:70,fontStyle:'bold'},1:{cellWidth:70},2:{cellWidth:45,halign:'center'},3:{cellWidth:230}},
+    didParseCell:function(d){
+      if(d.row.index===tableBody.length-1&&d.section==='body'){
+        d.cell.styles.fillColor=[2,132,199];
+        d.cell.styles.textColor=[255,255,255];
+        d.cell.styles.fontStyle='bold';
+      }
+    },
+    margin:{left:40,right:40}
+  });
+  y=doc.lastAutoTable.finalY+20;
+
+  // Feedback general
+  doc.setFontSize(12);doc.setTextColor(7,89,133);
+  doc.text('Retroalimentación general',40,y);y+=12;
+  doc.setFontSize(10);doc.setTextColor(0,0,0);
+  const fw=doc.splitTextToSize(feedback,515);
+  doc.text(fw,40,y);y+=fw.length*12+18;
+
+  // Firma
+  if(y>H-100){doc.addPage();}
+  const firmY=Math.max(y,H-100);
+  doc.setDrawColor(2,132,199);
+  doc.line(40,firmY,210,firmY);
+  doc.setFontSize(11);doc.setTextColor(7,89,133);
+  doc.text('Daniel Solar',40,firmY+14);
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Docente · UD Investigación de Mercado',40,firmY+26);
+  doc.text('FacultyHub · Escuela demo',40,firmY+38);
+
+  doc.save('DataHunter_'+name.replace(/[\s,]/g,'_')+'.pdf');
+  statusEl.textContent='✅ Certificado descargado correctamente.';
+  statusEl.style.color='#16a34a';
+}
+
+// Load saved name
+window.addEventListener('load',function(){
+  const saved=localStorage.getItem('dh_stuName');
+  if(saved&&document.getElementById('stuName'))
+    document.getElementById('stuName').value=saved;
+});
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>

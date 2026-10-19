@@ -1,0 +1,192 @@
+/* Imperio Global · estilos de los temas por carrera (tema oscuro único) */
+:root{--tm:#ffc94d}
+
+/* selector de tema */
+.temas{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.tcard{position:relative;display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px 14px 12px;border-radius:10px;min-width:0;
+  background:linear-gradient(160deg,rgba(13,34,88,.75),rgba(4,12,34,.85));box-shadow:0 0 0 1px var(--line) inset;transition:transform .15s, box-shadow .2s}
+.tcard:hover{transform:translateY(-2px)}
+.tcard[aria-pressed="true"]{box-shadow:0 0 0 2px var(--tc) inset,0 0 28px color-mix(in srgb,var(--tc) 35%,transparent)}
+.tcard .ti{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--tc) 18%,transparent);color:var(--tc)}
+.tcard .ti svg{width:22px;height:22px}
+.tcard b{font-family:var(--display);font-size:15px;letter-spacing:.02em}
+.tcard .ca{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--tc)}
+.tcard p{margin:0;font-size:12px;color:var(--mute);line-height:1.4}
+.tema-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;padding:4px 9px;border-radius:999px;
+  color:var(--tm);background:color-mix(in srgb,var(--tm) 14%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--tm) 45%,transparent) inset}
+.rank .eyebrow{color:var(--tm)}
+
+.tema-body{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+/* ---- Ruta Global ---- */
+.tm-ruta{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+.map-wrap{border-radius:10px;background:radial-gradient(120% 120% at 30% 40%,rgba(47,123,255,.18),rgba(3,10,29,.6));box-shadow:0 0 0 1px var(--line) inset;padding:10px;min-width:0}
+canvas.map{display:block;width:100%;max-width:100%}
+.tm-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.tm-list li{display:grid;grid-template-columns:22px 28px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.tm-list li div{min-width:0;display:flex;flex-direction:column}
+.tm-list b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm-list span{font-size:11.5px;color:var(--mute)}
+.tm-list em{font-style:normal}
+.tm-list .mono{font-weight:700;font-size:13px;color:var(--ink)}
+.tm-list li.me b{color:var(--gold)}
+
+/* ---- Carrera de Contenedores ---- */
+.tm-cont{display:flex;flex-direction:column;gap:8px}
+.tm-cont .ports{position:relative;height:18px;margin-left:190px;margin-right:70px}
+.tm-cont .ports span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--mute);white-space:nowrap}
+.tm-cont .ports span.o,.tm-cont .ports span.f{color:#ff8a3d;font-weight:700}
+.lane{display:grid;grid-template-columns:180px minmax(0,1fr) 60px;gap:10px;align-items:center}
+.lane-l{display:flex;align-items:center;gap:8px;min-width:0}
+.lane-l b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane.me .lane-l b{color:var(--gold)}
+.lane-r{text-align:right;font-weight:700}
+.sea{position:relative;height:46px;border-radius:8px;overflow:visible;
+  background:linear-gradient(180deg,rgba(23,71,200,.35),rgba(7,23,65,.7)),repeating-linear-gradient(90deg,rgba(63,225,255,.08) 0 2px,transparent 2px 22px);
+  box-shadow:0 0 0 1px rgba(63,225,255,.18) inset}
+.sea::after{content:"";position:absolute;inset:auto 0 6px 0;height:6px;opacity:.5;
+  background:radial-gradient(circle at 6px -2px,transparent 6px,rgba(63,225,255,.35) 7px,transparent 8px) 0 0/14px 8px repeat-x;animation:waves 3s linear infinite}
+@keyframes waves{to{background-position:28px 0}}
+.sea .pt{position:absolute;top:4px;bottom:4px;width:2px;background:rgba(234,242,255,.18);transform:translateX(-1px)}
+.sea .aduana{position:absolute;top:0;bottom:0;width:10px;transform:translateX(-5px);background:repeating-linear-gradient(180deg,#ff4d6d 0 6px,#fff 6px 12px);opacity:.75;border-radius:2px}
+.sea .aduana span{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;color:#ff8fa3;white-space:nowrap}
+.lane:not(.first) .aduana span{display:none}
+.ship{position:absolute;top:50%;width:64px;transform:translate(-8%,-56%);transition:left 1.6s cubic-bezier(.45,0,.2,1);animation:bob 2.4s ease-in-out infinite}
+.ship svg{display:block;width:64px;height:31px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
+@keyframes bob{50%{transform:translate(-8%,-62%) rotate(-1.5deg)}}
+.ship.held{animation:held .5s 1.6s 3}
+@keyframes held{25%{transform:translate(-12%,-56%)}75%{transform:translate(-4%,-56%)}}
+.ship em{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-style:normal;font-family:var(--mono);font-size:10.5px;font-weight:700;white-space:nowrap;padding:1px 6px;border-radius:3px}
+.ship .sg{color:#03201a;background:var(--turq)}
+.ship .sh{color:#fff;background:var(--danger)}
+
+
+/* pistas: cielo (aviones) y carretera (camiones) */
+.sea.pista-sky{background:linear-gradient(180deg,rgba(90,140,255,.38),rgba(20,40,110,.7));box-shadow:0 0 0 1px rgba(169,139,255,.3) inset}
+.sea.pista-sky::after{inset:4px 0 auto 0;height:14px;opacity:.55;
+  background:radial-gradient(12px 6px at 20px 7px,rgba(255,255,255,.55),transparent 70%),radial-gradient(16px 7px at 90px 6px,rgba(255,255,255,.4),transparent 70%),radial-gradient(10px 5px at 150px 8px,rgba(255,255,255,.5),transparent 70%);
+  background-size:180px 14px;background-repeat:repeat-x;animation:nubes 9s linear infinite}
+@keyframes nubes{to{background-position:-180px 0}}
+.sea.pista-road{background:linear-gradient(180deg,#2a3245,#1a2030 45%,#1a2030 55%,#2a3245);box-shadow:0 0 0 1px rgba(44,240,194,.22) inset,0 -2px 0 #4b5670 inset,0 2px 0 #4b5670 inset}
+.sea.pista-road::after{inset:auto 0 calc(50% - 1px) 0;height:2px;opacity:.85;background:repeating-linear-gradient(90deg,#ffc94d 0 16px,transparent 16px 32px);animation:carril 1.2s linear infinite}
+@keyframes carril{to{background-position:-32px 0}}
+.sea.pista-road .pt{background:rgba(234,242,255,.12)}
+.sea.pista-road .aduana{background:repeating-linear-gradient(180deg,#ffc94d 0 6px,#0b0f1a 6px 12px)}
+.sea.pista-road .aduana span{color:#ffd879}
+.sea.pista-sky .aduana{background:repeating-linear-gradient(180deg,#a98bff 0 6px,#fff 6px 12px);opacity:.6}
+.sea.pista-sky .aduana span{color:#c9b8ff}
+.tm-sky .ports span.o,.tm-sky .ports span.f{color:#a98bff}
+.tm-road .ports span.o,.tm-road .ports span.f{color:#2cf0c2}
+.ship.veh-sky{animation:vuelo 2.8s ease-in-out infinite}
+@keyframes vuelo{50%{transform:translate(-8%,-70%) rotate(-3deg)}}
+.ship.veh-sky svg{filter:drop-shadow(0 8px 6px rgba(0,0,0,.35))}
+.ship.veh-road{animation:ruedas .35s steps(2) infinite}
+@keyframes ruedas{50%{transform:translate(-8%,-57%)}}
+.ship.veh-sky.held,.ship.veh-road.held{animation:held .5s 1.6s 3}
+
+/* ---- Modo Viral ---- */
+.tm-viral{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.vcard{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:14px;min-width:0;
+  background:linear-gradient(160deg,rgba(60,18,90,.55),rgba(8,14,44,.85));box-shadow:0 0 0 1px rgba(255,77,141,.22) inset}
+.vcard.trend{grid-column:span 2;background:linear-gradient(135deg,rgba(255,77,141,.35),rgba(140,107,255,.35) 50%,rgba(47,123,255,.3));box-shadow:0 0 0 2px #ff4d8d inset,0 0 40px rgba(255,77,141,.35)}
+.vcard.me .vtop b{color:var(--gold)}
+.vpos{position:absolute;top:12px;right:14px;color:var(--mute);font-size:12px}
+.tbadge{position:absolute;top:12px;right:12px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.12em;padding:4px 9px;border-radius:999px;color:#fff;
+  background:linear-gradient(90deg,#ff4d8d,#8c6bff);animation:tglow 1.6s ease-in-out infinite}
+@keyframes tglow{50%{box-shadow:0 0 18px #ff4d8d}}
+.vtop{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-right:28px;min-width:0}
+.trend .vtop{padding-right:130px}
+.vtop>div{min-width:0}
+.vtop>div{display:flex;flex-direction:column}
+.vtop b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd{font-size:11.5px;color:#ff8fb1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vring{display:grid;place-items:center;width:42px;height:42px;box-sizing:border-box;padding:2px;border-radius:50%;background:conic-gradient(#ff4d8d,#ffc94d,#8c6bff,#3fe1ff,#ff4d8d);flex:none}
+.trend .vring{width:52px;height:52px}
+.trend .vring{animation:spin 3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vring .av{border-radius:50%;transform:none;width:100%;height:100%;box-sizing:border-box;font-size:12px;box-shadow:0 0 0 2px #0a1030}
+.trend .vring .av{animation:spin 3s linear infinite reverse}
+.vnum{font-size:30px;font-weight:700;line-height:1;color:#fff}
+.trend .vnum{font-size:40px}
+.vlbl{font-size:11.5px;color:var(--mute)}
+.vstats{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--mute)}
+.vstats span{display:inline-flex;align-items:center;gap:5px}
+.vstats svg{width:13px;height:12px;fill:#ff4d8d}
+.vgain{font-style:normal;font-family:var(--mono);font-weight:700;color:#ff4d8d;background:rgba(255,77,141,.14);padding:2px 7px;border-radius:999px}
+.vflat{font-style:normal;color:var(--mute)}
+.hearts{position:absolute;inset:0;pointer-events:none}
+.hearts i{position:absolute;bottom:-20px;width:16px;height:15px;opacity:0;animation:heart 1.8s ease-out forwards}
+.hearts svg{width:100%;height:100%;fill:currentColor}
+@keyframes heart{0%{opacity:0;transform:translate(0,0) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-170px) scale(1.2)}}
+
+/* ---- Bolsa de Valores ---- */
+.tape{overflow:hidden;margin:-6px -4px 4px;padding:8px 0;border-block:1px solid rgba(44,240,194,.3);background:rgba(3,20,24,.5)}
+.tape>div{display:flex;gap:28px;width:max-content;animation:tape 26s linear infinite}
+.tape span{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.tape em{font-style:normal}
+@keyframes tape{to{transform:translateX(-50%)}}
+.tm-bolsa{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.chart{border-radius:10px;padding:8px;background:linear-gradient(180deg,rgba(3,26,30,.55),rgba(3,10,29,.6));box-shadow:0 0 0 1px rgba(44,240,194,.22) inset;overflow-x:auto;min-width:0}
+.chart svg{display:block;width:100%;min-width:440px;height:auto}
+.chart .gl{stroke:rgba(120,170,255,.14);stroke-width:1}
+.chart .ax{fill:var(--mute);font-family:var(--mono);font-size:10.5px}
+.chart .ln{fill:none;stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease}
+.chart .ln.lead{stroke-width:3.4;filter:drop-shadow(0 0 6px currentColor)}
+.chart .ln.on{stroke-dashoffset:0}
+.chart .lb{font-family:var(--mono);font-size:11px;font-weight:700}
+.chart .dot{transform-box:fill-box;transform-origin:center;animation:pop .5s 1.5s backwards}
+.quotes{width:100%;border-collapse:collapse;font-size:13px}
+.quotes th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:500;padding:0 6px 8px}
+.quotes td{padding:9px 6px;border-top:1px solid var(--line)}
+.quotes td:nth-child(3),.quotes td:nth-child(4){white-space:nowrap}
+.quotes td:nth-child(3),.quotes td:nth-child(4),.quotes th:nth-child(3),.quotes th:nth-child(4){text-align:right}
+.quotes .tk{font-family:var(--mono);font-weight:700;font-size:12px;padding:1px 6px;border-radius:3px;border-left:3px solid;background:rgba(255,255,255,.05);margin-right:6px}
+.quotes .nm{color:var(--mute);font-size:11.5px}
+.quotes tr.me td{color:var(--gold)}
+
+/* ---- Las 4 carreras ---- */
+.mix-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:10px;font-size:13.5px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 22%,transparent),transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--tc) 45%,transparent) inset}
+.mix-banner .ti{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--tc);background:color-mix(in srgb,var(--tc) 18%,transparent)}
+.mix-banner .ti svg{width:18px;height:18px}
+.mix-banner b{color:var(--tc)}
+.mix-dots{margin-left:auto;display:flex;gap:6px}
+.mix-dots i{width:10px;height:10px;border-radius:50%;background:color-mix(in srgb,var(--c) 30%,transparent)}
+.mix-dots i.on{background:var(--c);box-shadow:0 0 10px var(--c)}
+.tema-body .tema-body .eyebrow{color:var(--tm)}
+
+/* ---- mini vistas (celular) ---- */
+.mini-tema{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:12px;background:rgba(3,10,29,.55);box-shadow:0 0 0 1px var(--line) inset;text-align:left;width:100%;box-sizing:border-box}
+.mini-tema .mini-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tm)}
+.mini-map canvas{display:block;width:100%;max-width:100%}
+.mini-cap{font-size:12.5px;color:var(--mute)}
+.mini-cap b{color:var(--ink)}
+.mini-sea{height:44px;margin-top:6px}
+.mini-v{padding:12px}
+.mini-v .vtop{padding-right:44px}
+.mini-v.trend .vtop{padding-right:110px}
+.mini-v .vnum{font-size:28px}
+.mini-stock{display:flex;flex-direction:column;gap:6px}
+.mini-stock>div{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mini-stock b{font-size:20px}
+.mini-stock em{font-style:normal;font-size:13px}
+.mini-stock .tk{font-family:var(--mono);font-weight:700;font-size:12px;padding:1px 6px;border-radius:3px;border-left:3px solid;background:rgba(255,255,255,.06)}
+.mini-stock svg{width:100%;height:auto;display:block}
+.mini-stock .ln{fill:none;stroke-width:2.6;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.4s ease}
+.mini-stock .ln.on{stroke-dashoffset:0}
+.mini-stock .dot{transform-box:fill-box;transform-origin:center;animation:pop .5s 1.3s backwards}
+.mini-bar{height:10px}
+.carreras{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.carreras .tcard{padding:10px}
+.carreras .tcard p{display:none}
+.carreras .tcard b{font-size:13px}
+
+@media (max-width:900px){
+  .tm-ruta,.tm-bolsa{grid-template-columns:minmax(0,1fr)}
+  .lane{grid-template-columns:minmax(0,1fr) 54px;grid-template-areas:"l r" "s s";row-gap:4px}
+  .lane-l{grid-area:l}.lane-r{grid-area:r}.sea{grid-area:s}
+  .tm-cont .ports{margin-left:0;margin-right:0}
+  .tm-cont .ports span:not(.o):not(.f){display:none}
+  .vcard.trend{grid-column:auto}
+}
+@media (prefers-reduced-motion:reduce){.ship,.sea::after,.ship.veh-sky,.ship.veh-road,.tape>div,.vring,.tbadge{animation:none!important}}

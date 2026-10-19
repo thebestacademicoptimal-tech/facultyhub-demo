@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laboratorio: FODA Cruzado - IM // TERMINAL</title>
+<style>
+:root{
+  --bg:#f0f9ff; --card:#ffffff; --text:#0c4a6e; --sub:#0369a1;
+  --border:#bfdbfe; --accent:#0284c7;
+  --fo:#059669; --fo-l:#d1fae5;
+  --do:#7c3aed; --do-l:#ede9fe;
+  --fa:#d97706; --fa-l:#fef3c7;
+  --da:#dc2626; --da-l:#fee2e2;
+  --f:#0284c7; --f-l:#dbeafe;
+  --d:#64748b; --d-l:#f1f5f9;
+  --o:#059669; --o-l:#d1fae5;
+  --a:#dc2626; --a-l:#fee2e2;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 100%);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--text);min-height:100vh;padding:24px;}
+.container{max-width:1100px;margin:0 auto;}
+
+/* Watermark */
+.wm{position:fixed;top:0;left:0;width:100%;height:100%;
+  pointer-events:none;z-index:0;overflow:hidden;}
+.wm span{position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-size:52px;font-weight:800;color:rgba(2,132,199,0.05);
+  white-space:nowrap;user-select:none;letter-spacing:3px;}
+
+/* Header */
+.header{background:linear-gradient(135deg,#0284c7 0%,#0ea5e9 100%);
+  border-radius:18px;padding:1.25rem 1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 6px 24px rgba(2,132,199,0.35);position:relative;z-index:1;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+.header-left h1{font-size:20px;color:#fff;font-weight:800;margin-bottom:3px;}
+.header-left p{font-size:11px;color:rgba(255,255,255,0.8);}
+.badge-doc{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;
+  font-weight:700;padding:7px 16px;border-radius:20px;text-align:center;
+  line-height:1.6;border:1px solid rgba(255,255,255,0.35);white-space:nowrap;}
+.badge-doc small{font-size:8px;opacity:0.85;display:block;}
+
+/* Progress */
+.prog-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:0.85rem 1rem;margin-bottom:1rem;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.prog-top{display:flex;justify-content:space-between;
+  font-size:12px;color:var(--sub);font-weight:600;margin-bottom:6px;}
+.prog-bg{background:#e0f2fe;border-radius:99px;height:10px;overflow:hidden;}
+.prog-fill{height:10px;border-radius:99px;
+  background:linear-gradient(90deg,#0284c7,#38bdf8);transition:width 0.5s;}
+.prog-steps{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.pstep{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--sub);}
+.pdot{width:10px;height:10px;border-radius:50%;
+  border:2px solid #bfdbfe;transition:all 0.3s;}
+.pdot.on{border-color:currentColor;background:currentColor;}
+
+/* Instructions toggle */
+.instr{background:var(--card);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:1rem;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);position:relative;z-index:1;}
+.instr-hdr{display:flex;justify-content:space-between;align-items:center;
+  padding:0.8rem 1rem;cursor:pointer;background:#f0f9ff;}
+.instr-hdr p{font-size:13px;font-weight:600;color:var(--sub);}
+.instr-body{max-height:0;overflow:hidden;transition:max-height 0.35s,padding 0.35s;padding:0 1rem;}
+.instr-body.open{max-height:400px;padding:0.5rem 1rem 1rem;}
+.instr-body ol{font-size:12px;color:var(--text);padding-left:1.2rem;line-height:2.1;}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;margin-bottom:1rem;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06);position:relative;z-index:1;
+  transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 22px rgba(0,0,0,0.1);}
+.card-title{font-size:15px;font-weight:700;color:var(--sub);
+  margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* Inputs */
+input[type="text"],textarea,select{
+  width:100%;font-family:inherit;border:1px solid var(--border);
+  border-radius:8px;padding:8px 10px;font-size:13px;
+  background:var(--card);color:var(--text);
+  transition:border-color 0.2s,box-shadow 0.2s;}
+input:focus,textarea:focus,select:focus{
+  outline:none;border-color:#0284c7;
+  box-shadow:0 0 0 3px rgba(2,132,199,0.15);}
+textarea{resize:vertical;}
+label{font-size:12px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
+
+/* Students */
+.st-row{display:flex;gap:8px;margin-bottom:8px;}
+.st-row input{flex:1;}
+.rm-st{width:36px;padding:0;background:#fff;border:1px solid var(--border);
+  color:var(--text);border-radius:8px;font-size:14px;cursor:pointer;transition:all 0.2s;}
+.rm-st:hover{border-color:#dc2626;color:#dc2626;}
+#add-st{margin-top:6px;background:#e0f2fe;border:1px solid #93c5fd;
+  color:#075985;border-radius:8px;padding:8px 16px;
+  font-size:13px;cursor:pointer;font-family:inherit;transition:all 0.2s;}
+#add-st:hover{background:#bae6fd;}
+
+/* FODA Input section */
+.foda-inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1rem;}
+.foda-block{border-radius:12px;padding:1rem;border:2px solid transparent;}
+.foda-block label{margin-bottom:6px;}
+.foda-block textarea{margin-bottom:8px;font-size:12px;}
+.foda-block:last-child{margin-bottom:0;}
+.block-F{background:var(--f-l);border-color:var(--f);}
+.block-D{background:var(--d-l);border-color:var(--d);}
+.block-O{background:var(--o-l);border-color:var(--o);}
+.block-A{background:var(--a-l);border-color:var(--a);}
+.block-title{font-size:13px;font-weight:800;margin-bottom:10px;
+  display:flex;align-items:center;gap:6px;}
+
+/* FODA Cruzado Matrix */
+.matrix-wrap{overflow-x:auto;position:relative;z-index:1;}
+.foda-matrix{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+.foda-matrix td,.foda-matrix th{border:2px solid #bfdbfe;padding:0;vertical-align:top;}
+
+/* Matrix cells */
+.m-empty{background:#f8fdff;padding:12px;}
+.m-header{padding:14px 16px;font-size:13px;font-weight:800;line-height:1.5;}
+.m-header-f{background:linear-gradient(135deg,#0284c7,#38bdf8);color:#fff;}
+.m-header-d{background:linear-gradient(135deg,#475569,#64748b);color:#fff;}
+.m-header-o{background:linear-gradient(135deg,#059669,#34d399);color:#fff;}
+.m-header-a{background:linear-gradient(135deg,#dc2626,#f87171);color:#fff;}
+.m-tag{display:inline-block;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:20px;margin-bottom:6px;background:rgba(255,255,255,0.25);}
+
+/* Strategy cells */
+.m-strat{padding:10px 12px;}
+.m-strat-fo{background:var(--fo-l);}
+.m-strat-do{background:var(--do-l);}
+.m-strat-fa{background:var(--fa-l);}
+.m-strat-da{background:var(--da-l);}
+.strat-title{font-size:11px;font-weight:800;letter-spacing:0.5px;
+  padding:4px 10px;border-radius:20px;color:#fff;
+  display:inline-block;margin-bottom:8px;}
+.strat-fo .strat-title{background:var(--fo);}
+.strat-do .strat-title{background:var(--do);}
+.strat-fa .strat-title{background:var(--fa);}
+.strat-da .strat-title{background:var(--da);}
+.m-strat textarea{font-size:12px;min-height:90px;
+  background:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.5);}
+
+/* Concept box */
+.concept-box{background:#f0f9ff;border:1px solid #bfdbfe;
+  border-left:5px solid #0284c7;border-radius:10px;
+  padding:1rem 1.25rem;margin-bottom:1rem;
+  font-size:13px;line-height:1.7;color:var(--text);
+  position:relative;z-index:1;}
+.concept-box strong{color:#0284c7;}
+
+/* Buttons */
+.btn-primary{background:#0284c7;border:none;color:#fff;padding:12px 28px;
+  border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 14px rgba(2,132,199,0.35);transition:all 0.2s;}
+.btn-primary:hover{background:#0369a1;transform:translateY(-1px);}
+.btn-red{background:#fff;border:2px solid #fecaca;color:#dc2626;
+  padding:12px 22px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;}
+.btn-red:hover{background:#fef2f2;}
+.actions{display:flex;gap:10px;margin-top:1rem;flex-wrap:wrap;position:relative;z-index:1;}
+.autosave{font-size:10px;color:#059669;margin-top:4px;position:relative;z-index:1;}
+#pdf-status{font-size:12px;color:#0284c7;margin-top:6px;}
+.footer{margin-top:1.5rem;text-align:center;font-size:11px;color:#93c5fd;
+  position:relative;z-index:1;}
+.footer strong{color:#0284c7;}
+
+/* Summary legend */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1rem;position:relative;z-index:1;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+  padding:5px 12px;border-radius:20px;border:1px solid transparent;}
+
+@media(max-width:680px){
+  .foda-inputs{grid-template-columns:1fr;}
+  .header{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<div id="im-back"><a href="../index.html">&#8592; Volver al índice</a><span>Semana 4 · FODA Cruzado</span></div>
+<style id="im-back-style">
+#im-back{position:fixed;left:0;right:0;top:0;z-index:99999;display:flex;align-items:center;gap:14px;
+ background:#0a0f1c;border-bottom:1px solid #233150;padding:9px 16px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:#8b98b5;}
+#im-back a{color:#22d3ee;text-decoration:none;font-weight:700;white-space:nowrap;}
+#im-back a:hover{text-decoration:underline;}
+#im-back span{color:#8b98b5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body{padding-top:42px !important;}
+@media print{#im-back{display:none !important;} body{padding-top:0 !important;}}
+</style>
+
+<div class="wm"><span>Docente: Daniel Solar</span></div>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>🔄 Laboratorio · FODA Cruzado</h1>
+    <p>IM // TERMINAL · Investigación de Mercado · Análisis Estratégico</p>
+  </div>
+  <div class="badge-doc"><small>Docente</small>Daniel Solar</div>
+</div>
+
+<!-- Progress -->
+<div class="prog-wrap">
+  <div class="prog-top">
+    <span>Progreso del laboratorio</span>
+    <span id="pct-lbl">0%</span>
+  </div>
+  <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  <div class="prog-steps" id="prog-steps"></div>
+</div>
+
+<!-- Instrucciones -->
+<div class="instr">
+  <div class="instr-hdr" id="instr-hdr">
+    <p>📋 ¿Cómo completar este laboratorio?</p>
+    <span id="instr-arr" style="font-size:16px;color:#0284c7;">▼</span>
+  </div>
+  <div class="instr-body" id="instr-body">
+    <ol>
+      <li>Registra los <strong>integrantes del equipo</strong> (máximo 5) y el producto a analizar.</li>
+      <li>En la sección <strong>"Factores FODA"</strong>, ingresa las Fortalezas, Debilidades, Oportunidades y Amenazas del producto.</li>
+      <li>Completa la <strong>Matriz FODA Cruzado</strong> con las estrategias que cruzan los factores:
+        <br>· <span style="color:#059669;font-weight:700;">FO</span>: Fortalezas + Oportunidades (estrategias ofensivas)
+        <br>· <span style="color:#7c3aed;font-weight:700;">DO</span>: Debilidades + Oportunidades (estrategias de reorientación)
+        <br>· <span style="color:#d97706;font-weight:700;">FA</span>: Fortalezas + Amenazas (estrategias defensivas)
+        <br>· <span style="color:#dc2626;font-weight:700;">DA</span>: Debilidades + Amenazas (estrategias de supervivencia)
+      </li>
+      <li>Redacta el <strong>análisis grupal</strong> y descarga el PDF.</li>
+    </ol>
+    <p style="font-size:11px;color:#0284c7;margin:6px 0 0 0;">💾 Tu avance se guarda automáticamente en el navegador.</p>
+  </div>
+</div>
+
+<!-- Concepto -->
+<div class="concept-box">
+  <strong>📌 ¿Qué es el FODA Cruzado?</strong><br>
+  El FODA Cruzado (o Matriz TOWS) es una herramienta de análisis estratégico que combina los factores internos (Fortalezas y Debilidades) con los factores externos (Oportunidades y Amenazas) para generar estrategias concretas. A diferencia del FODA tradicional, el FODA Cruzado <strong>genera acciones estratégicas</strong> en cuatro cuadrantes: FO, DO, FA y DA.
+</div>
+
+<!-- Leyenda -->
+<div class="legend">
+  <div class="leg-item" style="background:var(--fo-l);border-color:var(--fo);color:var(--fo);">🟢 FO · Ofensivas</div>
+  <div class="leg-item" style="background:var(--do-l);border-color:var(--do);color:var(--do);">🟣 DO · Reorientación</div>
+  <div class="leg-item" style="background:var(--fa-l);border-color:var(--fa);color:var(--fa);">🟡 FA · Defensivas</div>
+  <div class="leg-item" style="background:var(--da-l);border-color:var(--da);color:var(--da);">🔴 DA · Supervivencia</div>
+</div>
+
+<!-- Integrantes -->
+<div class="card">
+  <p class="card-title">👥 Integrantes del equipo (máx. 5)</p>
+  <div id="students-list"></div>
+  <button id="add-st">+ Agregar integrante</button>
+  <div style="margin-top:14px;">
+    <label>📦 Producto / empresa a analizar</label>
+    <input type="text" id="cfg-producto" placeholder="Ej: Café Especial, Pota Congelada, Quinua Orgánica...">
+  </div>
+</div>
+
+<!-- Factores FODA -->
+<div class="card">
+  <p class="card-title">🧩 Factores FODA</p>
+  <div class="foda-inputs">
+    <div class="foda-block block-F">
+      <div class="block-title" style="color:var(--f);">💪 Fortalezas (F)</div>
+      <label>F1. Primera fortaleza</label>
+      <input type="text" id="F1" placeholder="Ej: Alta calidad del producto">
+      <label style="margin-top:8px;">F2. Segunda fortaleza</label>
+      <input type="text" id="F2" placeholder="Ej: Tradición en cultivo">
+      <label style="margin-top:8px;">F3. Tercera fortaleza (opcional)</label>
+      <input type="text" id="F3" placeholder="Ej: Certificación orgánica">
+    </div>
+    <div class="foda-block block-D">
+      <div class="block-title" style="color:var(--d);">⚠️ Debilidades (D)</div>
+      <label>D1. Primera debilidad</label>
+      <input type="text" id="D1" placeholder="Ej: Poco consumo interno">
+      <label style="margin-top:8px;">D2. Segunda debilidad</label>
+      <input type="text" id="D2" placeholder="Ej: Infraestructura limitada">
+      <label style="margin-top:8px;">D3. Tercera debilidad (opcional)</label>
+      <input type="text" id="D3" placeholder="Ej: Bajo posicionamiento de marca">
+    </div>
+    <div class="foda-block block-O">
+      <div class="block-title" style="color:var(--o);">🚀 Oportunidades (O)</div>
+      <label>O1. Primera oportunidad</label>
+      <input type="text" id="O1" placeholder="Ej: Expansión de mercados">
+      <label style="margin-top:8px;">O2. Segunda oportunidad</label>
+      <input type="text" id="O2" placeholder="Ej: Apoyo gubernamental">
+      <label style="margin-top:8px;">O3. Tercera oportunidad (opcional)</label>
+      <input type="text" id="O3" placeholder="Ej: Tendencia 'healthy food'">
+    </div>
+    <div class="foda-block block-A">
+      <div class="block-title" style="color:var(--a);">🛡️ Amenazas (A)</div>
+      <label>A1. Primera amenaza</label>
+      <input type="text" id="A1" placeholder="Ej: Fluctuación de la demanda">
+      <label style="margin-top:8px;">A2. Segunda amenaza</label>
+      <input type="text" id="A2" placeholder="Ej: Otros países productores">
+      <label style="margin-top:8px;">A3. Tercera amenaza (opcional)</label>
+      <input type="text" id="A3" placeholder="Ej: Cambios en regulaciones">
+    </div>
+  </div>
+</div>
+
+<!-- Matriz Cruzada -->
+<div class="card">
+  <p class="card-title">🔄 Matriz FODA Cruzado — Estrategias</p>
+  <div class="matrix-wrap">
+  <table class="foda-matrix">
+    <tbody>
+      <!-- Row 0: headers -->
+      <tr>
+        <td style="width:22%;"><div class="m-empty" style="min-height:90px;">
+          <div style="font-size:11px;font-weight:700;color:var(--sub);margin-bottom:8px;">FODA CRUZADO</div>
+          <div id="matrix-producto" style="font-size:12px;color:#0369a1;font-style:italic;"></div>
+        </div></td>
+        <td style="width:39%;"><div class="m-header m-header-f">
+          <div class="m-tag">INTERNO (+)</div><br>
+          💪 <strong>FORTALEZAS</strong><br>
+          <div id="mh-f" style="font-size:11px;font-weight:400;margin-top:6px;opacity:0.9;line-height:1.6;"></div>
+        </div></td>
+        <td style="width:39%;"><div class="m-header m-header-d">
+          <div class="m-tag">INTERNO (−)</div><br>
+          ⚠️ <strong>DEBILIDADES</strong><br>
+          <div id="mh-d" style="font-size:11px;font-weight:400;margin-top:6px;opacity:0.9;line-height:1.6;"></div>
+        </div></td>
+      </tr>
+      <!-- Row 1: Oportunidades -->
+      <tr>
+        <td><div class="m-header m-header-o" style="min-height:130px;">
+          <div class="m-tag">EXTERNO (+)</div><br>
+          🚀 <strong>OPORTUNIDADES</strong><br>
+          <div id="mh-o" style="font-size:11px;font-weight:400;margin-top:6px;opacity:0.9;line-height:1.6;"></div>
+        </div></td>
+        <td><div class="m-strat m-strat-fo strat-fo">
+          <span class="strat-title">ESTRATEGIAS FO</span>
+          <p style="font-size:11px;color:var(--fo);margin-bottom:6px;font-style:italic;">Usa Fortalezas para aprovechar Oportunidades</p>
+          <textarea id="strat-fo" placeholder="Ej: F1O1. Promocionar la calidad del producto en los nuevos mercados&#10;F2O2. Aprovechar las campañas impulsadoras de producto bandera." rows="5"></textarea>
+        </div></td>
+        <td><div class="m-strat m-strat-do strat-do">
+          <span class="strat-title">ESTRATEGIAS DO</span>
+          <p style="font-size:11px;color:var(--do);margin-bottom:6px;font-style:italic;">Supera Debilidades usando Oportunidades</p>
+          <textarea id="strat-do" placeholder="Ej: D1O2. Impulsar el producto como uno de exportación exclusivamente.&#10;D2O1. Justificar un plan de expansión de infraestructura." rows="5"></textarea>
+        </div></td>
+      </tr>
+      <!-- Row 2: Amenazas -->
+      <tr>
+        <td><div class="m-header m-header-a" style="min-height:130px;">
+          <div class="m-tag">EXTERNO (−)</div><br>
+          🛡️ <strong>AMENAZAS</strong><br>
+          <div id="mh-a" style="font-size:11px;font-weight:400;margin-top:6px;opacity:0.9;line-height:1.6;"></div>
+        </div></td>
+        <td><div class="m-strat m-strat-fa strat-fa">
+          <span class="strat-title">ESTRATEGIAS FA</span>
+          <p style="font-size:11px;color:var(--fa);margin-bottom:6px;font-style:italic;">Usa Fortalezas para minimizar Amenazas</p>
+          <textarea id="strat-fa" placeholder="Ej: F1A1. Enfatizar la alta calidad del producto frente a la competencia.&#10;F2A2. Promocionar la historia del cultivo y tradición del producto." rows="5"></textarea>
+        </div></td>
+        <td><div class="m-strat m-strat-da strat-da">
+          <span class="strat-title">ESTRATEGIAS DA</span>
+          <p style="font-size:11px;color:var(--da);margin-bottom:6px;font-style:italic;">Reduce Debilidades y evita Amenazas</p>
+          <textarea id="strat-da" placeholder="Ej: D1A1. Desarrollar nuevas formas de consumo interno.&#10;D2A2. Investigar las ventajas de una mejor infraestructura." rows="5"></textarea>
+        </div></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Análisis grupal -->
+<div class="card">
+  <p class="card-title">💬 Análisis grupal</p>
+  <p style="font-size:12px;color:var(--sub);margin-bottom:8px;">¿Cuál cuadrante estratégico es más relevante para el producto analizado y por qué? ¿Qué estrategia recomendarían priorizar?</p>
+  <textarea id="analysis" rows="4" placeholder="Escriban aquí el análisis y conclusiones del equipo..."></textarea>
+</div>
+
+<!-- Botones -->
+<div class="actions">
+  <button class="btn-red" id="rst-btn">↺ Reiniciar</button>
+  <button class="btn-primary" id="pdf-btn">⬇ Descargar PDF</button>
+</div>
+<p id="pdf-status"></p>
+<p class="autosave" id="autosave-lbl"></p>
+
+<div class="footer">
+  IM // TERMINAL · Investigación de Mercado · <strong>Docente: Daniel Solar</strong><br>
+  <span style="font-size:10px;color:#bae6fd;">Desarrollado por Daniel Solar</span>
+</div>
+</div>
+
+<script src="../assets/vendor/jspdf.umd.min.js"></script>
+<script src="../assets/vendor/jspdf.plugin.autotable.min.js"></script>
+<script>
+// ── Progress ───────────────────────────────────────────────────────────
+const stepDefs=[
+  {lbl:'Integrantes',clr:'#0284c7'},
+  {lbl:'Producto',clr:'#0284c7'},
+  {lbl:'Fortalezas',clr:'#0284c7'},
+  {lbl:'Debilidades',clr:'#64748b'},
+  {lbl:'Oportunidades',clr:'#059669'},
+  {lbl:'Amenazas',clr:'#dc2626'},
+  {lbl:'Est. FO',clr:'#059669'},
+  {lbl:'Est. DO',clr:'#7c3aed'},
+  {lbl:'Est. FA',clr:'#d97706'},
+  {lbl:'Est. DA',clr:'#dc2626'},
+  {lbl:'Análisis',clr:'#0284c7'}
+];
+const stepsWrap=document.getElementById('prog-steps');
+stepDefs.forEach(function(s,i){
+  const el=document.createElement('div');
+  el.className='pstep';
+  el.innerHTML='<div class="pdot" id="pd-'+i+'" style="color:'+s.clr+'"></div><span>'+s.lbl+'</span>';
+  stepsWrap.appendChild(el);
+});
+
+function setDot(i,on){
+  const d=document.getElementById('pd-'+i);
+  if(d)d.className='pdot'+(on?' on':'');
+}
+
+function hasVal(id){return (document.getElementById(id)?.value||'').trim().length>2;}
+function hasTA(id){return (document.getElementById(id)?.value||'').trim().length>5;}
+
+function updateProgress(){
+  let done=0;
+  const hasSt=Array.from(document.querySelectorAll('.st-name')).some(function(i){return i.value.trim();});
+  if(hasSt){done++;setDot(0,true);}else setDot(0,false);
+  const hasProd=hasVal('cfg-producto');
+  if(hasProd){done++;setDot(1,true);}else setDot(1,false);
+  const hF=hasVal('F1');if(hF){done++;setDot(2,true);}else setDot(2,false);
+  const hD=hasVal('D1');if(hD){done++;setDot(3,true);}else setDot(3,false);
+  const hO=hasVal('O1');if(hO){done++;setDot(4,true);}else setDot(4,false);
+  const hA=hasVal('A1');if(hA){done++;setDot(5,true);}else setDot(5,false);
+  const hFO=hasTA('strat-fo');if(hFO){done++;setDot(6,true);}else setDot(6,false);
+  const hDO=hasTA('strat-do');if(hDO){done++;setDot(7,true);}else setDot(7,false);
+  const hFA=hasTA('strat-fa');if(hFA){done++;setDot(8,true);}else setDot(8,false);
+  const hDA=hasTA('strat-da');if(hDA){done++;setDot(9,true);}else setDot(9,false);
+  const hAN=hasTA('analysis');if(hAN){done++;setDot(10,true);}else setDot(10,false);
+  const pct=Math.round((done/11)*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('pct-lbl').textContent=pct+'%';
+  updateMatrixHeaders();
+}
+
+// ── Update matrix headers live ─────────────────────────────────────────
+function gv(id){return (document.getElementById(id)?.value||'').trim();}
+
+function updateMatrixHeaders(){
+  const prod=gv('cfg-producto');
+  document.getElementById('matrix-producto').textContent=prod||'Ingresa el producto arriba';
+
+  // Fortalezas
+  let fHtml='';
+  ['F1','F2','F3'].forEach(function(k){
+    const v=gv(k);if(v)fHtml+='<strong>'+k+'.</strong> '+v+'<br>';
+  });
+  document.getElementById('mh-f').innerHTML=fHtml||'<em>Sin datos</em>';
+
+  // Debilidades
+  let dHtml='';
+  ['D1','D2','D3'].forEach(function(k){
+    const v=gv(k);if(v)dHtml+='<strong>'+k+'.</strong> '+v+'<br>';
+  });
+  document.getElementById('mh-d').innerHTML=dHtml||'<em>Sin datos</em>';
+
+  // Oportunidades
+  let oHtml='';
+  ['O1','O2','O3'].forEach(function(k){
+    const v=gv(k);if(v)oHtml+='<strong>'+k+'.</strong> '+v+'<br>';
+  });
+  document.getElementById('mh-o').innerHTML=oHtml||'<em>Sin datos</em>';
+
+  // Amenazas
+  let aHtml='';
+  ['A1','A2','A3'].forEach(function(k){
+    const v=gv(k);if(v)aHtml+='<strong>'+k+'.</strong> '+v+'<br>';
+  });
+  document.getElementById('mh-a').innerHTML=aHtml||'<em>Sin datos</em>';
+}
+
+// ── Instructions ──────────────────────────────────────────────────────
+document.getElementById('instr-hdr').addEventListener('click',function(){
+  const b=document.getElementById('instr-body');
+  const a=document.getElementById('instr-arr');
+  b.classList.toggle('open');
+  a.textContent=b.classList.contains('open')?'▲':'▼';
+});
+
+// ── Students ──────────────────────────────────────────────────────────
+const MAX_ST=5;
+let stCount=1;
+const stList=document.getElementById('students-list');
+
+function addStudentRow(idx){
+  const row=document.createElement('div');
+  row.className='st-row';row.id='str-'+idx;
+  row.innerHTML=
+    '<input type="text" class="st-name" placeholder="Nombre">'+
+    '<input type="text" class="st-last" placeholder="Apellido">'+
+    '<button class="rm-st" aria-label="Eliminar">✕</button>';
+  stList.appendChild(row);
+  row.querySelectorAll('input').forEach(function(i){
+    i.addEventListener('input',function(){updateProgress();save();});
+  });
+}
+
+function updateAddBtn(){
+  const btn=document.getElementById('add-st');
+  btn.disabled=stCount>=MAX_ST;
+  btn.style.opacity=stCount>=MAX_ST?'0.5':'1';
+}
+
+stList.addEventListener('click',function(e){
+  const btn=e.target.closest('.rm-st');
+  if(!btn||stList.children.length<=1)return;
+  btn.closest('.st-row').remove();stCount--;
+  updateAddBtn();updateProgress();save();
+});
+
+document.getElementById('add-st').addEventListener('click',function(){
+  if(stCount>=MAX_ST)return;
+  addStudentRow(stCount);stCount++;updateAddBtn();
+});
+
+addStudentRow(0);
+
+// ── Attach events ─────────────────────────────────────────────────────
+['F1','F2','F3','D1','D2','D3','O1','O2','O3','A1','A2','A3',
+ 'strat-fo','strat-do','strat-fa','strat-da','analysis','cfg-producto'].forEach(function(id){
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('input',function(){updateProgress();save();});
+});
+
+// ── Autosave ──────────────────────────────────────────────────────────
+function save(){
+  try{
+    const d={
+      producto:gv('cfg-producto'),
+      students:[],
+      factors:{},
+      strats:{},
+      analysis:gv('analysis')
+    };
+    stList.querySelectorAll('.st-row').forEach(function(r){
+      d.students.push({n:r.querySelector('.st-name').value,a:r.querySelector('.st-last').value});
+    });
+    ['F1','F2','F3','D1','D2','D3','O1','O2','O3','A1','A2','A3'].forEach(function(k){
+      d.factors[k]=gv(k);
+    });
+    ['fo','do','fa','da'].forEach(function(k){
+      d.strats[k]=gv('strat-'+k);
+    });
+    localStorage.setItem('foda_cruz_v2',JSON.stringify(d));
+    const lbl=document.getElementById('autosave-lbl');
+    lbl.textContent='💾 Guardado a las '+new Date().toLocaleTimeString();
+    setTimeout(function(){lbl.textContent='';},2500);
+  }catch(e){}
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem('foda_cruz_v2');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.getElementById('cfg-producto').value=d.producto||'';
+    document.getElementById('analysis').value=d.analysis||'';
+    if(d.students&&d.students.length>0){
+      stList.innerHTML='';stCount=0;
+      d.students.forEach(function(s,i){
+        addStudentRow(i);
+        const row=document.getElementById('str-'+i);
+        row.querySelector('.st-name').value=s.n||'';
+        row.querySelector('.st-last').value=s.a||'';
+        stCount++;
+      });
+      updateAddBtn();
+    }
+    if(d.factors){
+      Object.keys(d.factors).forEach(function(k){
+        const el=document.getElementById(k);if(el)el.value=d.factors[k]||'';
+      });
+    }
+    if(d.strats){
+      Object.keys(d.strats).forEach(function(k){
+        const el=document.getElementById('strat-'+k);if(el)el.value=d.strats[k]||'';
+      });
+    }
+    updateProgress();
+  }catch(e){}
+}
+
+loadSaved();
+
+// ── Reset ─────────────────────────────────────────────────────────────
+document.getElementById('rst-btn').addEventListener('click',function(){
+  if(!confirm('¿Reiniciar todo el laboratorio? Se perderán los datos.'))return;
+  document.getElementById('cfg-producto').value='';
+  document.getElementById('analysis').value='';
+  ['F1','F2','F3','D1','D2','D3','O1','O2','O3','A1','A2','A3'].forEach(function(k){
+    const el=document.getElementById(k);if(el)el.value='';
+  });
+  ['fo','do','fa','da'].forEach(function(k){
+    const el=document.getElementById('strat-'+k);if(el)el.value='';
+  });
+  stList.innerHTML='';stCount=0;addStudentRow(0);stCount=1;updateAddBtn();
+  try{localStorage.removeItem('foda_cruz_v2');}catch(e){}
+  document.getElementById('pdf-status').textContent='';
+  updateProgress();
+});
+
+// ── PDF ───────────────────────────────────────────────────────────────
+document.getElementById('pdf-btn').addEventListener('click',function(){
+  const statusEl=document.getElementById('pdf-status');
+  if(typeof window.jspdf==='undefined'){statusEl.textContent='Cargando librería...';return;}
+  statusEl.style.color='#0284c7';
+  statusEl.textContent='Generando PDF...';
+
+  const students=[];
+  stList.querySelectorAll('.st-row').forEach(function(r){
+    const n=r.querySelector('.st-name').value.trim();
+    const a=r.querySelector('.st-last').value.trim();
+    if(n||a)students.push((n+' '+a).trim());
+  });
+
+  const producto=gv('cfg-producto')||'Sin especificar';
+  const analysis=gv('analysis');
+  const factors={};
+  ['F1','F2','F3','D1','D2','D3','O1','O2','O3','A1','A2','A3'].forEach(function(k){
+    factors[k]=gv(k);
+  });
+  const strats={fo:gv('strat-fo'),do:gv('strat-do'),fa:gv('strat-fa'),da:gv('strat-da')};
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+
+  function decor(){
+    doc.saveGraphicsState();
+    doc.setGState(new doc.GState({opacity:0.04}));
+    doc.setFontSize(34);doc.setTextColor(2,132,199);
+    doc.text('Docente: Daniel Solar',W/2,H/2,{align:'center',angle:35});
+    doc.restoreGraphicsState();
+    doc.setFillColor(2,132,199);doc.rect(0,0,W,7,'F');
+    doc.setFillColor(2,132,199);doc.rect(0,H-22,W,22,'F');
+    doc.setFontSize(8);doc.setTextColor(255,255,255);
+    doc.text('IM // TERMINAL · Investigación de Mercado · Docente: Daniel Solar · Desarrollado por Daniel Solar',W/2,H-8,{align:'center'});
+    doc.setTextColor(0,0,0);
+  }
+
+  decor();
+  // Banner
+  doc.setFillColor(2,132,199);doc.rect(0,7,W,95,'F');
+  doc.setFontSize(20);doc.setTextColor(255,255,255);
+  doc.text('Laboratorio · FODA Cruzado',W/2,42,{align:'center'});
+  doc.setFontSize(13);
+  doc.text('Producto / Empresa: '+producto,W/2,66,{align:'center'});
+  doc.setFontSize(9);
+  doc.text('IM // TERMINAL · Investigación de Mercado',W/2,84,{align:'center'});
+  doc.setFillColor(255,255,255);doc.roundedRect(W-155,14,115,18,4,4,'F');
+  doc.setFontSize(8);doc.setTextColor(2,132,199);
+  doc.text('Docente: Daniel Solar',W-97.5,26,{align:'center'});
+  doc.setTextColor(0,0,0);
+
+  let y=115;
+  const intLine='Integrantes: '+(students.length?students.join(' · '):'Sin registrar');
+  const wInt=doc.splitTextToSize(intLine,760);
+  doc.setFontSize(10);doc.text(wInt,30,y);
+  y+=wInt.length*12+2;
+  doc.setFontSize(9);doc.setTextColor(100,100,100);
+  doc.text('Fecha: '+new Date().toLocaleDateString(),30,y);
+  doc.setTextColor(0,0,0);y+=18;
+
+  // Factores FODA table
+  doc.setFontSize(11);doc.setTextColor(7,89,133);
+  doc.text('Factores FODA',30,y);y+=7;
+
+  const factoresBody=[
+    ['F1',factors.F1||'—','D1',factors.D1||'—'],
+    ['F2',factors.F2||'—','D2',factors.D2||'—'],
+    ['F3',factors.F3||'—','D3',factors.D3||'—'],
+    ['O1',factors.O1||'—','A1',factors.A1||'—'],
+    ['O2',factors.O2||'—','A2',factors.A2||'—'],
+    ['O3',factors.O3||'—','A3',factors.A3||'—']
+  ];
+  doc.autoTable({
+    head:[['Factor','Fortaleza','Factor','Debilidad']],
+    body:factoresBody,startY:y,
+    styles:{fontSize:9,cellPadding:4},
+    headStyles:{fillColor:[2,132,199]},
+    columnStyles:{0:{cellWidth:30,fontStyle:'bold',halign:'center'},1:{cellWidth:200},2:{cellWidth:30,fontStyle:'bold',halign:'center'},3:{cellWidth:200}},
+    didParseCell:function(d){
+      if(d.section==='body'){
+        if(d.column.index===0){d.cell.styles.textColor=[2,132,199];}
+        if(d.column.index===2){d.cell.styles.textColor=[100,116,139];}
+        if(d.row.index>=3&&d.column.index===0){d.cell.styles.textColor=[5,150,105];}
+        if(d.row.index>=3&&d.column.index===2){d.cell.styles.textColor=[220,38,38];}
+      }
+    },
+    margin:{left:30,right:30},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+14;
+
+  // Estrategias cruzadas
+  doc.setFontSize(11);doc.setTextColor(7,89,133);
+  doc.text('Estrategias FODA Cruzado',30,y);y+=7;
+
+  const strBody=[
+    [{content:'✅ ESTRATEGIAS FO',styles:{fillColor:[5,150,105],textColor:[255,255,255],fontStyle:'bold'}},
+     {content:'🔵 ESTRATEGIAS DO',styles:{fillColor:[124,58,237],textColor:[255,255,255],fontStyle:'bold'}}],
+    [strats.fo||'—',strats.do||'—'],
+    [{content:'🟡 ESTRATEGIAS FA',styles:{fillColor:[217,119,6],textColor:[255,255,255],fontStyle:'bold'}},
+     {content:'🔴 ESTRATEGIAS DA',styles:{fillColor:[220,38,38],textColor:[255,255,255],fontStyle:'bold'}}],
+    [strats.fa||'—',strats.da||'—']
+  ];
+
+  doc.autoTable({
+    body:strBody,startY:y,
+    styles:{fontSize:9,cellPadding:8},
+    columnStyles:{0:{cellWidth:230},1:{cellWidth:230}},
+    margin:{left:30,right:30},
+    didDrawPage:decor
+  });
+  y=doc.lastAutoTable.finalY+14;
+
+  if(analysis){
+    if(y>H-80){doc.addPage();decor();y=30;}
+    doc.setFontSize(11);doc.setTextColor(7,89,133);
+    doc.text('Análisis grupal',30,y);y+=12;
+    doc.setFontSize(9);doc.setTextColor(0,0,0);
+    const aw=doc.splitTextToSize(analysis,760);
+    doc.text(aw,30,y);
+  }
+
+  const fn='FODA_Cruzado_'+(producto.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')||'IM')+'.pdf';
+  doc.save(fn);
+  statusEl.textContent='✅ PDF descargado correctamente.';
+  statusEl.style.color='#16a34a';
+});
+
+updateProgress();
+</script>
+<script src="../assets/juegos/config.js"></script>
+<script src="../assets/juegos/lab-registro.js"></script>
+</body>
+</html>
