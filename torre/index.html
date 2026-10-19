@@ -2750,7 +2750,7 @@ loadWorkbook(buildDemoWorkbook(), 'Demo FacultyHub · datos ficticios');
   background:#0c1a3a;color:#fff;border:1px solid rgba(255,255,255,.22);box-shadow:0 8px 24px -8px rgba(12,26,58,.6);font:600 13px/1 inherit;font-family:inherit;opacity:.94;transition:transform .15s ease,opacity .15s ease,background .15s ease}
 #fh-nav-btn:hover,#fh-nav-btn:focus-visible,#fh-nav-btn[aria-expanded="true"]{opacity:1;background:#173a8c;outline:none}
 #fh-nav-btn:hover{transform:translateY(-2px)}
-#fh-nav-panel{position:absolute;left:0;bottom:calc(100% + 10px);width:min(310px,calc(100vw - 28px));background:#fff;color:#0c1a3a;border:1px solid #d7dfee;border-radius:16px;box-shadow:0 24px 60px -18px rgba(12,26,58,.5);padding:8px;animation:fhpop .16s ease-out}
+#fh-nav-panel{position:absolute;left:0;bottom:calc(100% + 10px);width:min(310px,calc(100vw - 28px));background:#fff;color:#0c1a3a;border:1px solid #d7dfee;border-radius:16px;box-shadow:0 24px 60px -18px rgba(12,26,58,.5);padding:8px;animation:fhpop .16s ease-out;max-height:calc(100vh - 90px);max-height:calc(100dvh - 90px);overflow-y:auto}
 #fh-nav-panel[hidden]{display:none}
 @keyframes fhpop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 #fh-nav-panel .fh-t{margin:6px 10px 6px;font:700 11px/1 inherit;font-family:inherit;letter-spacing:.09em;text-transform:uppercase;color:#6b7a99}
