@@ -133,6 +133,12 @@ section.block{padding:72px 0}
 .tile .key b{color:var(--mark)}
 .tile .btn{margin-top:auto;align-self:flex-start}
 
+.mobile-note{display:none;margin:-16px 0 28px;padding:14px 18px;border-radius:12px;background:#FFF6D1;border:1px solid #F1D774;color:#5B4A06;font-size:15px}
+.contact{padding:88px 0 24px}
+.contact-in{display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;border:2px solid var(--ink);border-radius:24px;padding:40px clamp(22px,4vw,48px);background:#fff}
+.contact h2{font:800 clamp(28px,3.2vw,40px)/1.08 var(--display);letter-spacing:-.02em;margin-bottom:10px}
+.contact p{color:var(--muted);max-width:52ch}
+footer a{color:var(--text)}
 footer{padding:56px 0 64px;color:var(--muted);font-size:15px}
 footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:28px}
 footer button{background:none;border:0;color:var(--text);font:inherit;text-decoration:underline;cursor:pointer}
@@ -143,6 +149,7 @@ footer button{background:none;border:0;color:var(--text);font:inherit;text-decor
   .demo:nth-child(even) .shot{order:0}
   .aula-grid{grid-template-columns:1fr}
   .top nav{display:none}
+  .mobile-note{display:block}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition-duration:.01ms!important;animation-duration:.01ms!important}
@@ -213,6 +220,7 @@ footer button{background:none;border:0;color:var(--text);font:inherit;text-decor
         <h2 id="gestion-t">Gestión académica</h2>
         <p>Herramientas para quien programa docentes, calcula pagos y responde a dirección académica.</p>
       </div>
+      <p class="mobile-note">Estás en el celular: estas cuatro herramientas son tableros de trabajo y se aprovechan mejor en una computadora.</p>
 
       <article class="demo">
         <a class="shot" href="torre/" aria-label="Abrir la demo de Torre de Control">
@@ -320,11 +328,21 @@ footer button{background:none;border:0;color:var(--text);font:inherit;text-decor
       </div>
     </section>
   </div>
+
+  <section class="contact" aria-labelledby="contact-t">
+    <div class="wrap contact-in">
+      <div>
+        <h2 id="contact-t">¿Tu institución todavía programa a mano?</h2>
+        <p>Si gestionas docentes, horarios o seguimiento de alumnos y quieres dejar atrás las hojas de cálculo, conversemos.</p>
+      </div>
+      <a class="btn btn-ink" href="https://www.linkedin.com/in/daniel-s-116119a0/" target="_blank" rel="noopener">Escríbeme en LinkedIn</a>
+    </div>
+  </section>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>Diseñado y desarrollado por Daniel Solar Giraldo. Nombres, códigos, tarifas y notas de estas demos son ficticios.</span>
+    <span>Diseñado y desarrollado por <a href="https://www.linkedin.com/in/daniel-s-116119a0/" target="_blank" rel="noopener">Daniel Solar Giraldo</a>. Nombres, códigos, tarifas y notas de estas demos son ficticios.</span>
     <button type="button" id="replay">Ver la presentación otra vez</button>
   </div>
 </footer>
